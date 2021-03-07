@@ -1,5 +1,8 @@
 # Tor Operator
 
+[![codecov](https://codecov.io/gh/agabani/tor-operator/branch/main/graph/badge.svg?token=QNRWD8VOPI)](https://codecov.io/gh/agabani/tor-operator)
+[![Rust](https://github.com/agabani/tor-operator/actions/workflows/rust.yaml/badge.svg)](https://github.com/agabani/tor-operator/actions/workflows/rust.yaml)
+
 ## Problem Statement
 
 I would like to access my Raspberry Pi Kubernetes Cluster from the internet without needing to open up ports on my router.
