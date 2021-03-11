@@ -28,11 +28,3 @@ Cons: Paid. Extra servers to maintain.
   * Unix/Windows
 * Tor Network Kata
 
-## Dependencies
-
-Windows:
-
-Using msys2:
-```
-pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-rust
-```
