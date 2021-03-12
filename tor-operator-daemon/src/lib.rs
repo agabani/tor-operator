@@ -1,3 +1,7 @@
+mod startup;
+
+pub use startup::run;
+
 #[cfg(test)]
 mod tests {
     #[test]
