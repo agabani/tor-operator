@@ -1,0 +1,10 @@
+.git/
+.github/
+.idea/
+target/
+.dockerignore
+.editorconfig
+.gitattributes
+.gitignore
+README.md
+Dockerfile
