@@ -7,5 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+config = "0.10.1"
 libtor = { version = "44.7.0+0.4.4.7", features = ["vendored-openssl"] }
 libtor-sys = { version = "44.7.0+0.4.4.7", features = ["vendored-openssl"] }
+serde = { version = "1.0.124", features = ["serde_derive"] }

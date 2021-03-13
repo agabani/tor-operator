@@ -1,13 +1,20 @@
+use crate::configuration::Configuration;
 use libtor::{HiddenServiceVersion, Tor, TorAddress, TorFlag};
 
 pub fn run() {
+    let configuration = Configuration::load().expect("Failed to load configuration.");
+
     Tor::new()
         .flag(TorFlag::DataDirectory("/tmp/tor-rust".into()))
         .flag(TorFlag::HiddenServiceDir("/tmp/tor-rust/hs-dir".into()))
         .flag(TorFlag::HiddenServiceVersion(HiddenServiceVersion::V3))
         .flag(TorFlag::HiddenServicePort(
-            TorAddress::Port(80),
-            Some(TorAddress::AddressPort("127.0.0.1".into(), 8080)).into(),
+            TorAddress::Port(configuration.virtual_port),
+            Some(TorAddress::AddressPort(
+                configuration.target_address,
+                configuration.target_port,
+            ))
+            .into(),
         ))
         .start()
         .unwrap();
