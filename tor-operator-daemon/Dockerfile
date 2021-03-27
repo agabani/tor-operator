@@ -1,5 +1,5 @@
 # 1: Build
-FROM rust:1.50.0 as builder
+FROM rust:1.51.0 as builder
 WORKDIR /usr/src
 
 # 1a: Prepare for static linking
@@ -20,6 +20,6 @@ COPY tor-operator-daemon .
 RUN cargo build --release
 
 # 2: Copy the exe and extra files to an empty Docker image
-FROM rust:1.50.0-slim-buster
+FROM rust:1.51.0-slim-buster
 COPY --from=builder /usr/src/app/target/release/tor-operator-daemon .
 CMD ["./tor-operator-daemon"]
