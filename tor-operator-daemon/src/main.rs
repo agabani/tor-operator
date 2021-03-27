@@ -1,5 +1,7 @@
 use tor_operator_daemon::run;
 
-fn main() {
-    run();
+#[actix_web::main]
+async fn main() -> Result<(), ()> {
+    run().await;
+    Ok(())
 }
