@@ -6,9 +6,9 @@ replicaCount: 1
 
 image:
   repository: agabani/tor-operator
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "daemon-92042e90"
+  tag: "daemon-latest"
 
 imagePullSecrets: []
 nameOverride: ""
