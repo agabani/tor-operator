@@ -23,7 +23,8 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-podAnnotations: {}
+podAnnotations:
+  container.apparmor.security.beta.kubernetes.io/test-daemon: runtime/default
 
 podSecurityContext: {}
   # fsGroup: 2000
