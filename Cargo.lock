@@ -1362,6 +1362,10 @@ dependencies = [
 [[package]]
 name = "tor-operator"
 version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "tokio",
+]
 
 [[package]]
 name = "tor-operator-daemon"
