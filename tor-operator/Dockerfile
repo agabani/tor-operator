@@ -28,5 +28,5 @@ FROM rust:1.51.0-slim-buster
 RUN groupadd --gid 1000 appuser && \
     useradd --uid 1000 --gid 1000 --shell /bin/sh appuser
 USER 1000:1000
-COPY --chown=appuser --from=builder /home/appuser/app/target/release/tor-operator-daemon /home/appuser/tor-operator-daemon
-CMD ["./home/appuser/tor-operator-daemon"]
+COPY --chown=appuser --from=builder /home/appuser/app/target/release/tor-operator /home/appuser/tor-operator
+CMD ["./home/appuser/tor-operator"]
