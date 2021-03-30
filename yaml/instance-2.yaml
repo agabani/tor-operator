@@ -1,0 +1,9 @@
+---
+apiVersion: tor-operator.agabani/v1
+kind: TorHiddenService
+metadata:
+  name: test
+spec:
+  target_address: 127.0.0.1
+  target_port: 8082
+  virtual_port: 80
