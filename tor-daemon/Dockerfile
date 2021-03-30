@@ -11,7 +11,8 @@ WORKDIR /home/appuser
 RUN cargo new --bin app
 WORKDIR /home/appuser/app
 RUN cargo new --bin tor-daemon && \
-    cargo new --bin tor-operator
+    cargo new --bin tor-operator && \
+    cp ./tor-operator/src/main.rs ./tor-operator/src/main_crd_gen.rs
 COPY --chown=appuser Cargo.lock Cargo.toml ./
 COPY --chown=appuser tor-daemon/Cargo.toml ./tor-daemon/
 COPY --chown=appuser tor-operator/Cargo.toml ./tor-operator/
