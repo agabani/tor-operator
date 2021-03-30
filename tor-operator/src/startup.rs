@@ -1,10 +1,18 @@
+use crate::operator::Operator;
 use actix_web::{web, App, HttpResponse, HttpServer};
+use kube::Client;
 
 pub async fn run() {
-    let server = HttpServer::new(|| {
+    let client = Client::try_default()
+        .await
+        .expect("Failed to create client");
+    let (operator, drainer) = Operator::new(client).await;
+
+    let server = HttpServer::new(move || {
         App::new()
             .route("/health/liveness", web::get().to(HttpResponse::Ok))
             .route("/health/readiness", web::get().to(HttpResponse::Ok))
+            .data(operator.clone())
     })
     .bind("0.0.0.0:8080")
     .expect("Failed to bind to 0.0.0.0:8080")
@@ -12,6 +20,9 @@ pub async fn run() {
     .run();
 
     tokio::select! {
+        result = drainer => {
+            println!("drainer stopped: {:?}", result)
+        },
         result = server => {
             println!("server stopped: {:?}", result)
         },

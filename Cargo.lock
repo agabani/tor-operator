@@ -2125,6 +2125,7 @@ name = "tor-operator"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "futures",
  "k8s-openapi",
  "kube",
  "kube-runtime",
