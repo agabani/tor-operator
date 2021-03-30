@@ -2109,6 +2109,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tor-daemon"
+version = "0.1.0"
+dependencies = [
+ "actix-web",
+ "config",
+ "libtor",
+ "libtor-sys",
+ "serde 1.0.125",
+ "tokio",
+]
+
+[[package]]
 name = "tor-operator"
 version = "0.1.0"
 dependencies = [
@@ -2120,18 +2132,6 @@ dependencies = [
  "serde 1.0.125",
  "serde_json",
  "serde_yaml",
- "tokio",
-]
-
-[[package]]
-name = "tor-operator-daemon"
-version = "0.1.0"
-dependencies = [
- "actix-web",
- "config",
- "libtor",
- "libtor-sys",
- "serde 1.0.125",
  "tokio",
 ]
 

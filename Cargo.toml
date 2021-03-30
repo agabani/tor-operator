@@ -1,6 +1,6 @@
 [workspace]
 
 members = [
+    "tor-daemon",
     "tor-operator",
-    "tor-operator-daemon",
 ]
