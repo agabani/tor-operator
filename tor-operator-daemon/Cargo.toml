@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 actix-web = "4.0.0-beta.4"
 config = "0.11.0"
-libtor = { version = "45.6.0", features = ["vendored-openssl"] }
+libtor = { version = "45.7.0", features = ["vendored-openssl"] }
 libtor-sys = { version = "45.7.0", features = ["vendored-openssl"] }
 serde = { version = "1.0.125", features = ["serde_derive"] }
 tokio = { version = "1.4.0", features = ["macros"] }
