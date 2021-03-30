@@ -1,4 +1,4 @@
-use tor_operator_daemon::run;
+use tor_daemon::run;
 
 #[actix_web::main]
 async fn main() -> Result<(), ()> {
