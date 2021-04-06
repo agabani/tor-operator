@@ -13,6 +13,8 @@ use serde_json::{json, Value};
     status = "TorHiddenServiceStatus"
 )]
 pub struct TorHiddenServiceSpec {
+    pub hs_ed25519_public_key: String,
+    pub hs_ed25519_secret_key: String,
     pub target_address: String,
     pub target_port: u16,
     pub virtual_port: u16,

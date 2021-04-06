@@ -1,6 +1,7 @@
 use k8s_openapi::api::apps::v1::{Deployment, DeploymentSpec};
 use k8s_openapi::api::core::v1::{
     Container, ContainerPort, EnvVar, HTTPGetAction, PodSpec, PodTemplateSpec, Probe,
+    SecretVolumeSource, Volume, VolumeMount,
 };
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::LabelSelector;
 use k8s_openapi::apimachinery::pkg::util::intstr::IntOrString;
@@ -9,6 +10,8 @@ use kube::Api;
 use std::collections::BTreeMap;
 
 pub struct DaemonDeployment {
+    pub hs_ed25519_public_key: String,
+    pub hs_ed25519_secret_key: String,
     pub name: String,
     pub virtual_port: u16,
     pub target_address: String,
@@ -69,6 +72,12 @@ fn document(deployment: &DaemonDeployment) -> Deployment {
                 }),
                 spec: Some(PodSpec {
                     containers: vec![Container {
+                        command: Some(vec!["sh".to_string(), "-c".to_string(), "\
+                        mkdir -p /tmp/tor-rust/hs-dir && \
+                        cp /tmp/secrets/hs_ed25519_public_key/hs_ed25519_public_key /tmp/tor-rust/hs-dir && \
+                        cp /tmp/secrets/hs_ed25519_secret_key/hs_ed25519_secret_key /tmp/tor-rust/hs-dir && \
+                        chmod -R 700 /tmp/tor-rust && \
+                        ./home/appuser/tor-daemon".to_string()]),
                         env: Some(vec![
                             EnvVar {
                                 name: "app_virtual_port".to_string(),
@@ -111,8 +120,38 @@ fn document(deployment: &DaemonDeployment) -> Deployment {
                             }),
                             ..Probe::default()
                         }),
+                        volume_mounts: Some(vec![
+                            VolumeMount {
+                                mount_path: "/tmp/secrets/hs_ed25519_public_key".to_string(),
+                                name: "hs-ed25519-public-key".to_string(),
+                                ..VolumeMount::default()
+                            },
+                            VolumeMount {
+                                mount_path: "/tmp/secrets/hs_ed25519_secret_key".to_string(),
+                                name: "hs-ed25519-secret-key".to_string(),
+                                ..VolumeMount::default()
+                            },
+                        ]),
                         ..Container::default()
                     }],
+                    volumes: Some(vec![
+                        Volume {
+                            name: "hs-ed25519-public-key".to_string(),
+                            secret: Some(SecretVolumeSource {
+                                secret_name: Some(deployment.hs_ed25519_public_key.clone()),
+                                ..SecretVolumeSource::default()
+                            }),
+                            ..Volume::default()
+                        },
+                        Volume {
+                            name: "hs-ed25519-secret-key".to_string(),
+                            secret: Some(SecretVolumeSource {
+                                secret_name: Some(deployment.hs_ed25519_secret_key.clone()),
+                                ..SecretVolumeSource::default()
+                            }),
+                            ..Volume::default()
+                        },
+                    ]),
                     ..PodSpec::default()
                 }),
             },

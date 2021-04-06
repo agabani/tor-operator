@@ -20,6 +20,10 @@ spec:
           properties:
             spec:
               properties:
+                hs_ed25519_public_key:
+                  type: string
+                hs_ed25519_secret_key:
+                  type: string
                 target_address:
                   type: string
                 target_port:
@@ -31,6 +35,8 @@ spec:
                   minimum: 0.0
                   type: integer
               required:
+                - hs_ed25519_public_key
+                - hs_ed25519_secret_key
                 - target_address
                 - target_port
                 - virtual_port
@@ -46,4 +52,3 @@ spec:
       storage: true
       subresources:
         status: {}
-
