@@ -80,6 +80,8 @@ async fn reconcile(
 
     // prepare data
     let daemon_deployment = DaemonDeployment {
+        hs_ed25519_public_key: spec.hs_ed25519_public_key.clone(),
+        hs_ed25519_secret_key: spec.hs_ed25519_secret_key.clone(),
         name,
         virtual_port: spec.virtual_port,
         target_address: spec.target_address.to_owned(),
