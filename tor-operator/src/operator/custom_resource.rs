@@ -1,4 +1,4 @@
-use kube::api::{Meta, Patch, PatchParams};
+use kube::api::{Patch, PatchParams, Resource};
 use kube::Api;
 use serde_json::{json, Value};
 

@@ -2,6 +2,7 @@ use crate::configuration::Configuration;
 use actix_web::{web, App, HttpResponse, HttpServer};
 use libtor::{HiddenServiceVersion, Tor, TorAddress, TorFlag};
 
+#[tracing::instrument]
 pub async fn run() {
     let configuration = Configuration::load().expect("Failed to load configuration.");
 
@@ -31,10 +32,10 @@ pub async fn run() {
 
     tokio::select! {
         result = server => {
-            println!("server stopped: {:?}", result)
+            tracing::info!(result = ?result, "Server terminated");
         },
         result = async { tor.join() } => {
-            println!("tor stopped: {:?}", result)
+            tracing::info!(result = ?result, "Tor terminated");
         },
     }
 }
