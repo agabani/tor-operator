@@ -2,6 +2,7 @@ use crate::operator::Operator;
 use actix_web::{web, App, HttpResponse, HttpServer};
 use kube::Client;
 
+#[tracing::instrument]
 pub async fn run() {
     let client = Client::try_default()
         .await
@@ -21,10 +22,10 @@ pub async fn run() {
 
     tokio::select! {
         result = drainer => {
-            println!("drainer stopped: {:?}", result)
+            tracing::info!(result = ?result, "Drainer terminated");
         },
         result = server => {
-            println!("server stopped: {:?}", result)
+            tracing::info!(result = ?result, "Server terminated");
         },
     }
 }

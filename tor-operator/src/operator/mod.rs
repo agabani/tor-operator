@@ -7,8 +7,8 @@ pub use custom_resource::TorHiddenService;
 use custom_resource::TorHiddenServiceSpec;
 use futures::{future, FutureExt, StreamExt};
 use k8s_openapi::api::apps::v1::Deployment;
-use kube::api::{ListParams, Meta};
-use kube::{Api, Client};
+use kube::api::ListParams;
+use kube::{Api, Client, Resource};
 use kube_runtime::controller::{Context, ReconcilerAction};
 use kube_runtime::Controller;
 use std::fmt::Formatter;
@@ -30,7 +30,7 @@ impl Operator {
             .run(reconcile, error_policy, context)
             .filter_map(|x| async move { std::result::Result::ok(x) })
             .for_each(|o| {
-                println!("Reconciled {:?}", o);
+                tracing::info!(tor_hidden_service = ?o, "Reconciliation finished");
                 future::ready(())
             })
             .boxed();
@@ -66,12 +66,12 @@ impl From<kube::Error> for OperatorError {
     }
 }
 
+#[tracing::instrument(skip(ctx))]
 async fn reconcile(
     tor_hidden_service: TorHiddenService,
     ctx: Context<State>,
 ) -> Result<ReconcilerAction, OperatorError> {
-    // logging.
-    println!("Reconcile TorHiddenService {:?}", &tor_hidden_service);
+    tracing::info!("Reconciliation started");
 
     // metadata
     let name = tor_hidden_service.name();
@@ -109,8 +109,9 @@ async fn reconcile(
     })
 }
 
+#[tracing::instrument(skip(_ctx))]
 fn error_policy(error: &OperatorError, _ctx: Context<State>) -> ReconcilerAction {
-    println!("Reconcile failed: {}", error);
+    println!("Reconciliation failed");
 
     ReconcilerAction {
         requeue_after: Some(std::time::Duration::from_secs(360)),

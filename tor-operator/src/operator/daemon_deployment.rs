@@ -5,8 +5,8 @@ use k8s_openapi::api::core::v1::{
 };
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::LabelSelector;
 use k8s_openapi::apimachinery::pkg::util::intstr::IntOrString;
-use kube::api::{DeleteParams, Meta, ObjectMeta, PostParams};
-use kube::Api;
+use kube::api::{DeleteParams, ObjectMeta, PostParams};
+use kube::{Api, Resource};
 use std::collections::BTreeMap;
 
 pub struct DaemonDeployment {
