@@ -11,9 +11,13 @@ help:
 build:
   @cargo build --release
 
+# cli controller run
+cli-controller-run:
+  @cargo run -- controller run
+
 # cli crd generate
 cli-crd-generate:
-  @cargo run -- crd generate -o ./helm/templates/crd.yaml
+  @cargo run -- crd generate --output ./helm/templates/crd.yaml
 
 # docker build
 docker-build:

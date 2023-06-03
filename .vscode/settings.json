@@ -6,7 +6,9 @@
     "agabani",
     "apiextensions",
     "apiserver",
+    "livez",
     "openapi",
+    "readyz",
     "schemars"
   ]
 }

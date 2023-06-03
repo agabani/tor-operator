@@ -1,31 +1,43 @@
 use std::{fs::File, io::Write};
 
 use tor_operator::{
-    cli::{parse, CliArgs, Commands, CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat},
-    crd,
+    cli::{
+        parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
+        CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat,
+    },
+    crd, http_server,
 };
 
-fn main() {
-    let cli_args = &parse();
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
 
-    match &cli_args.command {
-        Commands::Crd(crd_args) => match &crd_args.command {
-            CrdCommands::Generate(crd_generate_args) => {
-                crd_generate(cli_args, crd_args, crd_generate_args);
-            }
+    let cli = &parse();
+
+    match &cli.command {
+        CliCommands::Controller(controller) => match &controller.command {
+            ControllerCommands::Run(run) => controller_run(cli, controller, run).await,
+        },
+        CliCommands::Crd(crd) => match &crd.command {
+            CrdCommands::Generate(generate) => crd_generate(cli, crd, generate),
         },
     }
 }
 
-fn crd_generate(_cli_args: &CliArgs, _crd_args: &CrdArgs, crd_generate_args: &CrdGenerateArgs) {
+async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
+    let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
+    http_server::run(addr).await;
+}
+
+fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
     let crd = crd::generate();
 
-    let content = match crd_generate_args.format {
+    let content = match generate.format {
         CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd).unwrap(),
         CrdGenerateArgsFormat::Yaml => serde_yaml::to_string(&crd).unwrap(),
     };
 
-    if let Some(output) = &crd_generate_args.output {
+    if let Some(output) = &generate.output {
         File::create(output)
             .unwrap()
             .write_all(content.as_bytes())
