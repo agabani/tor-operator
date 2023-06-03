@@ -51,6 +51,28 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Create the name of the cluster role to use
+*/}}
+{{- define "tor-operator.clusterRoleName" -}}
+{{- if .Values.clusterRole.create }}
+{{- default (include "tor-operator.fullname" .) .Values.clusterRole.name }}
+{{- else }}
+{{- default "default" .Values.clusterRole.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the cluster role binding to use
+*/}}
+{{- define "tor-operator.clusterRoleBindingName" -}}
+{{- if .Values.clusterRoleBinding.create }}
+{{- default (include "tor-operator.fullname" .) .Values.clusterRoleBinding.name }}
+{{- else }}
+{{- default "default" .Values.clusterRoleBinding.name }}
+{{- end }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "tor-operator.serviceAccountName" -}}

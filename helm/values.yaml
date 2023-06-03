@@ -14,6 +14,30 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+customResourceDefinition:
+  # Specifies whether a custom resource definition should be created
+  create: true
+  # Annotations to add to the custom resource definition
+  annotations: {}
+
+clusterRole:
+  # Specifies whether a cluster role should be created
+  create: true
+  # Annotations to add to the cluster role
+  annotations: {}
+  # The name of the cluster role to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+clusterRoleBinding:
+  # Specifies whether a cluster role binding should be created
+  create: true
+  # Annotations to add to the cluster role binding
+  annotations: {}
+  # The name of the cluster role binding to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
