@@ -2,15 +2,16 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand};
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Parser, Debug)]
-pub struct Cli {
+pub struct CliArgs {
     #[command(subcommand)]
     pub command: Commands,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// CRD
+    /// Custom Resource Definition
     Crd(CrdArgs),
 }
 
@@ -33,6 +34,6 @@ pub struct CrdGenerateArgs {
 }
 
 #[must_use]
-pub fn parse() -> Cli {
-    Cli::parse()
+pub fn parse() -> CliArgs {
+    CliArgs::parse()
 }

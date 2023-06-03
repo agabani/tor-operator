@@ -16,6 +16,6 @@ pub struct TorSpec {}
 pub struct TorStatus {}
 
 #[must_use]
-pub fn crd() -> CustomResourceDefinition {
+pub fn generate_crd() -> CustomResourceDefinition {
     Tor::crd()
 }

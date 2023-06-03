@@ -7,6 +7,10 @@ GIT_COMMIT := `git rev-parse --verify --short HEAD`
 help:
   @just --list
 
+# cli crd generate
+cli-crd-generate:
+  @cargo run -- crd generate -o ./helm/templates/crd.yaml
+
 # docker build
 docker-build:
   docker build \
@@ -31,7 +35,3 @@ kube-clean:
 # kube run
 kube-run:
   @tilt up
-
-# run crd
-run-crd-generate:
-  @cargo run -- crd generate -o ./helm/templates/crd.yaml
