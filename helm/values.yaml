@@ -38,6 +38,24 @@ clusterRoleBinding:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+role:
+  # Specifies whether a role should be created
+  create: true
+  # Annotations to add to the role
+  annotations: {}
+  # The name of the role to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+roleBinding:
+  # Specifies whether a role binding should be created
+  create: true
+  # Annotations to add to the role binding
+  annotations: {}
+  # The name of the role binding to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true

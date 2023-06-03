@@ -73,6 +73,28 @@ Create the name of the cluster role binding to use
 {{- end }}
 
 {{/*
+Create the name of the role to use
+*/}}
+{{- define "tor-operator.roleName" -}}
+{{- if .Values.role.create }}
+{{- default (include "tor-operator.fullname" .) .Values.role.name }}
+{{- else }}
+{{- default "default" .Values.role.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the role binding to use
+*/}}
+{{- define "tor-operator.roleBindingName" -}}
+{{- if .Values.roleBinding.create }}
+{{- default (include "tor-operator.fullname" .) .Values.roleBinding.name }}
+{{- else }}
+{{- default "default" .Values.roleBinding.name }}
+{{- end }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "tor-operator.serviceAccountName" -}}
