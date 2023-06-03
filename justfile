@@ -7,6 +7,10 @@ GIT_COMMIT := `git rev-parse --verify --short HEAD`
 help:
   @just --list
 
+# build
+build:
+  @cargo build --release
+
 # cli crd generate
 cli-crd-generate:
   @cargo run -- crd generate -o ./helm/templates/crd.yaml
