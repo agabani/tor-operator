@@ -1,14 +1,26 @@
 load('ext://namespace', 'namespace_create')
 
-namespace_create('tor-operator')
-
+# =============================================================================
+# Tor Operator
+# =============================================================================
 docker_build('agabani/tor-operator:dev', '.')
 
-yaml = helm(
+namespace_create('tor-operator')
+
+k8s_yaml(helm(
     './helm',
     name='tor-operator',
     namespace = 'tor-operator',
     values='./Tiltfile.yaml'
-)
+))
 
-k8s_yaml(yaml)
+# =============================================================================
+# Example
+# =============================================================================
+namespace_create('example')
+
+k8s_yaml(helm(
+    './example',
+    name='example',
+    namespace = 'example'
+))
