@@ -9,9 +9,7 @@ RUN apt update && \
 WORKDIR /root
 
 COPY --chown=0 .docker/main.rs src/
-COPY --chown=0 .docker/lib.rs src/
-COPY --chown=0 Cargo.lock .
-COPY --chown=0 Cargo.toml .
+COPY --chown=0 Cargo.toml Cargo.lock ./
 
 RUN cargo build --target x86_64-unknown-linux-musl --release
 
@@ -23,6 +21,7 @@ RUN cargo build --target x86_64-unknown-linux-musl --release
 # 2: Copy the excutable and extra files to an empty Docker image
 FROM scratch
 
-COPY --chown=0 --from=build /root/target/x86_64-unknown-linux-musl/release/tor-operator .
+COPY --chown=0 --from=build /root/target/x86_64-unknown-linux-musl/release/tor-operator /usr/bin/tor-operator
 
-CMD [ "/tor-operator" ]
+ENTRYPOINT [ "tor-operator" ]
+CMD [ "--help" ]
