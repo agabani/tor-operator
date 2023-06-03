@@ -1,22 +1,22 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: tors.agabani.co.uk
+  name: onionservices.tor.agabani.co.uk
 spec:
-  group: agabani.co.uk
+  group: tor.agabani.co.uk
   names:
     categories: []
-    kind: Tor
-    plural: tors
+    kind: OnionService
+    plural: onionservices
     shortNames: []
-    singular: tor
+    singular: onionservice
   scope: Cluster
   versions:
   - additionalPrinterColumns: []
     name: v1
     schema:
       openAPIV3Schema:
-        description: Auto-generated derived type for TorSpec via `CustomResource`
+        description: Auto-generated derived type for OnionServiceSpec via `CustomResource`
         properties:
           spec:
             type: object
@@ -25,7 +25,7 @@ spec:
             type: object
         required:
         - spec
-        title: Tor
+        title: OnionService
         type: object
     served: true
     storage: true

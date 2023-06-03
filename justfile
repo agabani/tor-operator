@@ -17,7 +17,7 @@ cli-controller-run:
 
 # cli crd generate
 cli-crd-generate:
-  @cargo run -- crd generate --output ./helm/templates/crd.yaml
+  @cargo run -- crd generate --output ./helm/templates
 
 # docker build
 docker-build:

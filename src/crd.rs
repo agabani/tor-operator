@@ -5,17 +5,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
 #[kube(
-    group = "agabani.co.uk",
-    kind = "Tor",
-    status = "TorStatus",
+    group = "tor.agabani.co.uk",
+    kind = "OnionService",
+    status = "OnionServiceStatus",
     version = "v1"
 )]
-pub struct TorSpec {}
+pub struct OnionServiceSpec {}
 
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
-pub struct TorStatus {}
+pub struct OnionServiceStatus {}
 
 #[must_use]
-pub fn generate() -> CustomResourceDefinition {
-    Tor::crd()
+pub fn generate_onion_service() -> CustomResourceDefinition {
+    OnionService::crd()
 }

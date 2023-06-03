@@ -30,7 +30,7 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 }
 
 fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
-    let crd = crd::generate();
+    let crd = crd::generate_onion_service();
 
     let content = match generate.format {
         CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd).unwrap(),
@@ -38,7 +38,12 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
     };
 
     if let Some(output) = &generate.output {
-        File::create(output)
+        let path = match generate.format {
+            CrdGenerateArgsFormat::Json => output.join("onionservice.json"),
+            CrdGenerateArgsFormat::Yaml => output.join("onionservice.yaml"),
+        };
+
+        File::create(path)
             .unwrap()
             .write_all(content.as_bytes())
             .unwrap();
