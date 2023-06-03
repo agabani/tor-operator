@@ -31,3 +31,7 @@ kube-clean:
 # kube run
 kube-run:
   @tilt up
+
+# run crd
+run-crd-generate:
+  @cargo run -- crd generate -o ./helm/templates/crd.yaml
