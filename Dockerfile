@@ -19,7 +19,7 @@ COPY --chown=0 . .
 RUN cargo build --target x86_64-unknown-linux-musl --release
 
 # 2: Copy the excutable and extra files to an empty Docker image
-FROM scratch
+FROM gcr.io/distroless/static
 
 COPY --chown=0 --from=build /root/target/x86_64-unknown-linux-musl/release/tor-operator /usr/bin/tor-operator
 

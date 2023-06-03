@@ -5,7 +5,7 @@ use tor_operator::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
         CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat,
     },
-    crd, http_server,
+    controller, crd, http_server,
 };
 
 #[tokio::main]
@@ -26,7 +26,14 @@ async fn main() {
 
 async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
-    http_server::run(addr).await;
+
+    let http_server = http_server::run(addr);
+    let controller = controller::run();
+
+    tokio::select! {
+        _ = http_server => {},
+        _ = controller => {},
+    }
 }
 
 fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {

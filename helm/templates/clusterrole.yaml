@@ -1,0 +1,8 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tor-operator.fullname" . }}
+rules:
+  - apiGroups: ["tor.agabani.co.uk"]
+    resources: ["onionservices"]
+    verbs: ["list", "watch"]
