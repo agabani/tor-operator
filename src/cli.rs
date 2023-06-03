@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Parser, Debug)]
@@ -29,8 +29,17 @@ pub enum CrdCommands {
 
 #[derive(Args, Debug)]
 pub struct CrdGenerateArgs {
-    #[arg(short, long)]
+    #[arg(short, long, value_enum, default_value_t = CrdGenerateArgsFormat::Yaml)]
+    pub format: CrdGenerateArgsFormat,
+
+    #[arg(short, long, value_hint = clap::ValueHint::DirPath)]
     pub output: Option<PathBuf>,
+}
+
+#[derive(ValueEnum, Debug, Clone)]
+pub enum CrdGenerateArgsFormat {
+    Json,
+    Yaml,
 }
 
 #[must_use]

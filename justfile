@@ -35,3 +35,7 @@ kube-clean:
 # kube run
 kube-run:
   @tilt up
+
+# lint
+lint:
+  @cargo clippy

@@ -1,7 +1,7 @@
 use std::{fs::File, io::Write};
 
 use tor_operator::{
-    cli::{parse, CliArgs, Commands, CrdArgs, CrdCommands, CrdGenerateArgs},
+    cli::{parse, CliArgs, Commands, CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat},
     crd,
 };
 
@@ -18,15 +18,19 @@ fn main() {
 }
 
 fn crd_generate(_cli_args: &CliArgs, _crd_args: &CrdArgs, crd_generate_args: &CrdGenerateArgs) {
-    let crd = crd::generate_crd();
+    let crd = crd::generate();
 
-    let yaml = serde_yaml::to_string(&crd).unwrap();
+    let content = match crd_generate_args.format {
+        CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd).unwrap(),
+        CrdGenerateArgsFormat::Yaml => serde_yaml::to_string(&crd).unwrap(),
+    };
 
     if let Some(output) = &crd_generate_args.output {
-        let mut file = File::create(output).unwrap();
-        file.write_all(yaml.as_bytes()).unwrap();
-        return;
+        File::create(output)
+            .unwrap()
+            .write_all(content.as_bytes())
+            .unwrap();
+    } else {
+        print!("{content}");
     }
-
-    println!("{yaml}");
 }
