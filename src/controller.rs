@@ -355,7 +355,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                                     },
                                 ]),
                                 optional: Some(false),
-                                secret_name: Some("hidden-service".into()),
+                                secret_name: Some(object.spec.secret_name.clone()),
                             }),
                             ..Default::default()
                         },

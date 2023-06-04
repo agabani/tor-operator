@@ -13,6 +13,8 @@ use serde::{Deserialize, Serialize};
 )]
 pub struct OnionServiceSpec {
     pub hidden_service_ports: Vec<OnionServiceSpecHiddenServicePort>,
+
+    pub secret_name: String,
 }
 
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]

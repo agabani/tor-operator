@@ -42,8 +42,11 @@ spec:
                   - virtport
                   type: object
                 type: array
+              secret_name:
+                type: string
             required:
             - hidden_service_ports
+            - secret_name
             type: object
           status:
             nullable: true
