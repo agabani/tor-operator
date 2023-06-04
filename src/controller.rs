@@ -75,15 +75,37 @@ struct Context {
  */
 #[tracing::instrument(skip(object, ctx))]
 async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Action, Error> {
+    const APP_KUBERNETES_IO_COMPONENT: &str = "onion-service";
+    const APP_KUBERNETES_IO_NAME: &str = "tor";
+    const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
+
     tracing::info!("reconciling");
+
+    let object_name = object
+        .metadata
+        .name
+        .as_ref()
+        .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?;
 
     let deployment = Deployment {
         metadata: ObjectMeta {
-            name: format!("onion-service-{}", object.metadata.name.as_ref().unwrap()).into(),
+            name: Some(format!(
+                "{APP_KUBERNETES_IO_NAME}-{APP_KUBERNETES_IO_COMPONENT}-{object_name}"
+            )),
             labels: Some(BTreeMap::from([
-                ("app.kubernetes.io/instance".into(), "tor".into()),
-                ("app.kubernetes.io/managed-by".into(), "tor-operator".into()),
-                ("app.kubernetes.io/name".into(), "tor".into()),
+                (
+                    "app.kubernetes.io/component".into(),
+                    APP_KUBERNETES_IO_COMPONENT.into(),
+                ),
+                ("app.kubernetes.io/instance".into(), object_name.into()),
+                (
+                    "app.kubernetes.io/managed-by".into(),
+                    APP_KUBERNETES_IO_MANAGED_BY.into(),
+                ),
+                (
+                    "app.kubernetes.io/name".into(),
+                    APP_KUBERNETES_IO_NAME.into(),
+                ),
             ])),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
@@ -92,17 +114,34 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
             replicas: Some(1),
             selector: LabelSelector {
                 match_labels: Some(BTreeMap::from([
-                    ("app.kubernetes.io/instance".into(), "tor".into()),
-                    ("app.kubernetes.io/name".into(), "tor".into()),
+                    (
+                        "app.kubernetes.io/component".into(),
+                        APP_KUBERNETES_IO_COMPONENT.into(),
+                    ),
+                    ("app.kubernetes.io/instance".into(), object_name.into()),
+                    (
+                        "app.kubernetes.io/name".into(),
+                        APP_KUBERNETES_IO_NAME.into(),
+                    ),
                 ])),
                 ..Default::default()
             },
             template: PodTemplateSpec {
                 metadata: Some(ObjectMeta {
                     labels: Some(BTreeMap::from([
-                        ("app.kubernetes.io/instance".into(), "tor".into()),
-                        ("app.kubernetes.io/managed-by".into(), "tor-operator".into()),
-                        ("app.kubernetes.io/name".into(), "tor".into()),
+                        (
+                            "app.kubernetes.io/component".into(),
+                            APP_KUBERNETES_IO_COMPONENT.into(),
+                        ),
+                        ("app.kubernetes.io/instance".into(), object_name.into()),
+                        (
+                            "app.kubernetes.io/managed-by".into(),
+                            APP_KUBERNETES_IO_MANAGED_BY.into(),
+                        ),
+                        (
+                            "app.kubernetes.io/name".into(),
+                            APP_KUBERNETES_IO_NAME.into(),
+                        ),
                     ])),
                     ..Default::default()
                 }),

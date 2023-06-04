@@ -14,7 +14,7 @@ tor:
   image:
     repository: agabani/tor
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "0.4.7.13"
 
 imagePullSecrets: []
 nameOverride: ""

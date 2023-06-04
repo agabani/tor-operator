@@ -39,7 +39,7 @@ spec:
             - "--port"
             - "{{ .Values.service.port }}"
             - "--tor-image-pull-policy"
-            - "{{ .Values.tor.image.repository }}:{{ .Values.tor.image.pullPolicy }}"
+            - "{{ .Values.tor.image.pullPolicy }}"
             - "--tor-image-uri"
             - "{{ .Values.tor.image.repository }}:{{ .Values.tor.image.tag }}"
           ports:

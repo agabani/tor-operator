@@ -15,6 +15,8 @@ RUN git clone https://git.torproject.org/tor.git
 
 WORKDIR /tor
 
+RUN git checkout tor-0.4.7.13
+
 RUN ./autogen.sh && ./configure && make
 
 FROM ubuntu:22.04
