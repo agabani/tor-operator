@@ -19,21 +19,34 @@ cli-controller-run:
 cli-crd-generate:
   @cargo run -- crd generate --output ./helm/templates
 
-# docker build
-docker-build:
+# docker build tor
+docker-build-tor:
+  docker build \
+    --tag agabani/tor:{{GIT_COMMIT}} \
+    tor
+
+# docker buildx build tor
+docker-buildx-build-tor:
+  docker buildx build \
+    --platform linux/amd64,linux/arm64 \
+    --tag agabani/tor:{{GIT_COMMIT}} \
+    tor
+
+# docker build tor operator
+docker-build-tor-operator:
   docker build \
     --tag agabani/tor-operator:{{GIT_COMMIT}} \
     .
 
-# docker buildx build
-docker-buildx-build:
+# docker buildx build tor operator
+docker-buildx-build-tor-operator:
   docker buildx build \
     --platform linux/amd64,linux/arm64 \
     --tag agabani/tor-operator:{{GIT_COMMIT}} \
     .
 
 # docker build
-docker-run: docker-build
+docker-run: docker-build-tor-operator
   @docker run --rm agabani/tor-operator:{{GIT_COMMIT}}
 
 # kube clean
