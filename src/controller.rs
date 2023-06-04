@@ -17,6 +17,7 @@ use kube::{
     runtime::{controller::Action, watcher::Config, Controller},
     Api, Client, Resource,
 };
+use sha2::{Digest, Sha256};
 
 use crate::crd::OnionService;
 
@@ -109,6 +110,11 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
         ));
     }
     let torrc_content = torrc.join("\n");
+    let torrc_content_hash = {
+        let mut sha = Sha256::new();
+        sha.update(&torrc_content);
+        format!("sha256:{:x}", sha.finalize())
+    };
 
     let config_map = ConfigMap {
         metadata: ObjectMeta {
@@ -130,6 +136,10 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                     APP_KUBERNETES_IO_NAME.into(),
                 ),
             ])),
+            annotations: Some(BTreeMap::from([(
+                "tor.agabani.co.uk/torrc-hash".into(),
+                torrc_content_hash.to_string(),
+            )])),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
@@ -175,6 +185,10 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                     APP_KUBERNETES_IO_NAME.into(),
                 ),
             ])),
+            annotations: Some(BTreeMap::from([(
+                "tor.agabani.co.uk/torrc-hash".into(),
+                torrc_content_hash.to_string(),
+            )])),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
@@ -211,6 +225,10 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                             APP_KUBERNETES_IO_NAME.into(),
                         ),
                     ])),
+                    annotations: Some(BTreeMap::from([(
+                        "tor.agabani.co.uk/torrc-hash".into(),
+                        torrc_content_hash.to_string(),
+                    )])),
                     ..Default::default()
                 }),
                 spec: Some(PodSpec {
