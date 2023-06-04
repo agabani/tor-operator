@@ -4,9 +4,9 @@ use futures::{future, StreamExt};
 use k8s_openapi::{
     api::{
         apps::v1::{Deployment, DeploymentSpec},
-        core::v1::{Container, ContainerPort, HTTPGetAction, PodSpec, PodTemplateSpec, Probe},
+        core::v1::{Container, ExecAction, PodSpec, PodTemplateSpec, Probe},
     },
-    apimachinery::pkg::{apis::meta::v1::LabelSelector, util::intstr::IntOrString},
+    apimachinery::pkg::apis::meta::v1::LabelSelector,
 };
 use kube::{
     api::{Patch, PatchParams},
@@ -18,13 +18,17 @@ use kube::{
 use crate::crd::OnionService;
 
 #[allow(clippy::missing_panics_doc)]
-pub async fn run() {
+pub async fn run(tor_image_pull_policy: &str, tor_image_uri: &str) {
     let client = Client::try_default().await.unwrap();
 
     let onion_services = Api::<OnionService>::all(client.clone());
     let deployments = Api::<Deployment>::all(client.clone());
 
-    let context = Arc::new(Context { client });
+    let context = Arc::new(Context {
+        client,
+        tor_image_pull_policy: tor_image_pull_policy.into(),
+        tor_image_uri: tor_image_uri.into(),
+    });
 
     Controller::new(onion_services, Config::default())
         .owns(deployments, Config::default())
@@ -60,6 +64,8 @@ impl std::fmt::Display for Error {
  */
 struct Context {
     client: Client,
+    tor_image_pull_policy: String,
+    tor_image_uri: String,
 }
 
 /*
@@ -102,36 +108,32 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                 }),
                 spec: Some(PodSpec {
                     containers: vec![Container {
-                        image: Some("nginx:1.16.0".into()),
-                        image_pull_policy: Some("IfNotPresent".into()),
+                        image: Some(ctx.tor_image_uri.clone()),
+                        image_pull_policy: Some(ctx.tor_image_pull_policy.clone()),
                         liveness_probe: Some(Probe {
-                            failure_threshold: Some(3),
-                            http_get: Some(HTTPGetAction {
-                                path: Some("/".into()),
-                                port: IntOrString::String("http".into()),
-                                scheme: Some("HTTP".into()),
-                                ..Default::default()
+                            exec: Some(ExecAction {
+                                command: Some(vec![
+                                    "/bin/bash".to_string(),
+                                    "-c".to_string(),
+                                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
+                                ]),
                             }),
+                            failure_threshold: Some(3),
                             period_seconds: Some(10),
                             success_threshold: Some(1),
                             timeout_seconds: Some(1),
                             ..Default::default()
                         }),
-                        name: "nginx".into(),
-                        ports: Some(vec![ContainerPort {
-                            container_port: 80,
-                            name: Some("http".into()),
-                            protocol: Some("TCP".into()),
-                            ..Default::default()
-                        }]),
+                        name: "tor".into(),
                         readiness_probe: Some(Probe {
-                            failure_threshold: Some(3),
-                            http_get: Some(HTTPGetAction {
-                                path: Some("/".into()),
-                                port: IntOrString::String("http".into()),
-                                scheme: Some("HTTP".into()),
-                                ..Default::default()
+                            exec: Some(ExecAction {
+                                command: Some(vec![
+                                    "/bin/bash".to_string(),
+                                    "-c".to_string(),
+                                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
+                                ]),
                             }),
+                            failure_threshold: Some(3),
                             period_seconds: Some(10),
                             success_threshold: Some(1),
                             timeout_seconds: Some(1),

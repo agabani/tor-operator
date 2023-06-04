@@ -5,10 +5,16 @@
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: agabani/tor-operator
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
+
+tor:
+  image:
+    repository: agabani/tor
+    pullPolicy: IfNotPresent
+    tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""

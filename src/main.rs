@@ -28,7 +28,7 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
     let http_server = http_server::run(addr);
-    let controller = controller::run();
+    let controller = controller::run(&run.tor_image_pull_policy, &run.tor_image_uri);
 
     tokio::select! {
         _ = http_server => {},

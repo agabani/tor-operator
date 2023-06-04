@@ -31,7 +31,17 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          args: ["controller", "run", "--host", "0.0.0.0", "--port", "{{ .Values.service.port }}"]
+          args:
+            - "controller"
+            - "run"
+            - "--host"
+            - "0.0.0.0"
+            - "--port"
+            - "{{ .Values.service.port }}"
+            - "--tor-image-pull-policy"
+            - "{{ .Values.tor.image.repository }}:{{ .Values.tor.image.pullPolicy }}"
+            - "--tor-image-uri"
+            - "{{ .Values.tor.image.repository }}:{{ .Values.tor.image.tag }}"
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
