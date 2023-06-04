@@ -16,6 +16,7 @@
     "rustls",
     "schemars",
     "serde",
-    "torrc"
+    "torrc",
+    "virtport"
   ]
 }

@@ -5,8 +5,8 @@ use k8s_openapi::{
     api::{
         apps::v1::{Deployment, DeploymentSpec},
         core::v1::{
-            ConfigMapVolumeSource, Container, EmptyDirVolumeSource, ExecAction, KeyToPath, PodSpec,
-            PodTemplateSpec, Probe, SecretVolumeSource, Volume, VolumeMount,
+            ConfigMap, ConfigMapVolumeSource, Container, EmptyDirVolumeSource, ExecAction,
+            KeyToPath, PodSpec, PodTemplateSpec, Probe, SecretVolumeSource, Volume, VolumeMount,
         },
     },
     apimachinery::pkg::apis::meta::v1::LabelSelector,
@@ -30,6 +30,7 @@ pub async fn run(
     let client = Client::try_default().await.unwrap();
 
     let onion_services = Api::<OnionService>::all(client.clone());
+    let config_maps = Api::<ConfigMap>::all(client.clone());
     let deployments = Api::<Deployment>::all(client.clone());
 
     let context = Arc::new(Context {
@@ -41,6 +42,7 @@ pub async fn run(
     });
 
     Controller::new(onion_services, Config::default())
+        .owns(config_maps, Config::default())
         .owns(deployments, Config::default())
         .shutdown_on_signal()
         .run(reconciler, error_policy, context)
@@ -98,6 +100,60 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
         .name
         .as_ref()
         .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?;
+
+    let mut torrc = vec!["HiddenServiceDir /var/lib/tor/hidden_service".into()];
+    for port in &object.spec.hidden_service_ports {
+        torrc.push(format!(
+            "HiddenServicePort {} {}",
+            port.virtport, port.target
+        ));
+    }
+    let torrc_content = torrc.join("\n");
+
+    let config_map = ConfigMap {
+        metadata: ObjectMeta {
+            name: Some(format!(
+                "{APP_KUBERNETES_IO_NAME}-{APP_KUBERNETES_IO_COMPONENT}-{object_name}"
+            )),
+            labels: Some(BTreeMap::from([
+                (
+                    "app.kubernetes.io/component".into(),
+                    APP_KUBERNETES_IO_COMPONENT.into(),
+                ),
+                ("app.kubernetes.io/instance".into(), object_name.into()),
+                (
+                    "app.kubernetes.io/managed-by".into(),
+                    APP_KUBERNETES_IO_MANAGED_BY.into(),
+                ),
+                (
+                    "app.kubernetes.io/name".into(),
+                    APP_KUBERNETES_IO_NAME.into(),
+                ),
+            ])),
+            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            ..Default::default()
+        },
+        data: Some(BTreeMap::from([("torrc".into(), torrc_content)])),
+        ..Default::default()
+    };
+
+    let config_maps: Api<ConfigMap> = Api::namespaced(
+        ctx.client.clone(),
+        object.metadata.namespace.as_ref().unwrap(),
+    );
+
+    config_maps
+        .patch(
+            config_map
+                .metadata
+                .name
+                .as_ref()
+                .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?,
+            &PatchParams::apply("onionservices.tor.agabani.co.uk").force(),
+            &Patch::Apply(&config_map),
+        )
+        .await
+        .map_err(Error::Kube)?;
 
     let deployment = Deployment {
         metadata: ObjectMeta {
@@ -241,9 +297,14 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                                     mode: Some(0o400),
                                     path: "torrc".into(),
                                 }]),
-                                name: Some("torrc".into()),
+                                name: Some(config_map
+                                    .metadata
+                                    .name
+                                    .as_ref()
+                                    .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?
+                                    .clone()
+                                ),
                                 optional: Some(false),
-                                ..Default::default()
                             }),
                             ..Default::default()
                         },

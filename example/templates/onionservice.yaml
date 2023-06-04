@@ -5,4 +5,6 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  {}
+  hidden_service_ports:
+    - target: example:80
+      virtport: 80

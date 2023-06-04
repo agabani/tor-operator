@@ -26,6 +26,24 @@ spec:
         description: Auto-generated derived type for OnionServiceSpec via `CustomResource`
         properties:
           spec:
+            properties:
+              hidden_service_ports:
+                items:
+                  properties:
+                    target:
+                      description: The target any incoming traffic will be redirect to.
+                      type: string
+                    virtport:
+                      description: The virtual port that the Onion Service will be using.
+                      format: int32
+                      type: integer
+                  required:
+                  - target
+                  - virtport
+                  type: object
+                type: array
+            required:
+            - hidden_service_ports
             type: object
           status:
             nullable: true

@@ -11,7 +11,18 @@ use serde::{Deserialize, Serialize};
     status = "OnionServiceStatus",
     version = "v1"
 )]
-pub struct OnionServiceSpec {}
+pub struct OnionServiceSpec {
+    pub hidden_service_ports: Vec<OnionServiceSpecHiddenServicePort>,
+}
+
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionServiceSpecHiddenServicePort {
+    /// The target any incoming traffic will be redirect to.
+    pub target: String,
+
+    /// The virtual port that the Onion Service will be using.
+    pub virtport: i32,
+}
 
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct OnionServiceStatus {}
