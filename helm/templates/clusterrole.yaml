@@ -13,4 +13,7 @@ rules:
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionservices"]
     verbs: ["list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["create", "list", "patch", "watch"]
 {{- end }}

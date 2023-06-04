@@ -17,7 +17,7 @@ spec:
     plural: onionservices
     shortNames: []
     singular: onionservice
-  scope: Cluster
+  scope: Namespaced
   versions:
   - additionalPrinterColumns: []
     name: v1

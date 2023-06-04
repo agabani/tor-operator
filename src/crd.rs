@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 #[kube(
     group = "tor.agabani.co.uk",
     kind = "OnionService",
+    namespaced,
     status = "OnionServiceStatus",
     version = "v1"
 )]

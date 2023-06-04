@@ -5,9 +5,12 @@
   "cSpell.words": [
     "agabani",
     "apiextensions",
+    "apimachinery",
     "apiserver",
+    "intstr",
     "livez",
     "onionservice",
+    "onionservices",
     "openapi",
     "readyz",
     "rustls",
