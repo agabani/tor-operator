@@ -48,6 +48,12 @@ pub enum ControllerCommands {
 
 #[derive(Args, Debug)]
 pub struct ControllerRunArgs {
+    #[arg(long, default_value = "IfNotPresent")]
+    pub busybox_image_pull_policy: String,
+
+    #[arg(long, default_value = "busybox:latest")]
+    pub busybox_image_uri: String,
+
     #[arg(long, default_value = "127.0.0.1")]
     pub host: String,
 

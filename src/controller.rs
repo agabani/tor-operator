@@ -4,7 +4,10 @@ use futures::{future, StreamExt};
 use k8s_openapi::{
     api::{
         apps::v1::{Deployment, DeploymentSpec},
-        core::v1::{Container, ExecAction, PodSpec, PodTemplateSpec, Probe},
+        core::v1::{
+            ConfigMapVolumeSource, Container, EmptyDirVolumeSource, ExecAction, KeyToPath, PodSpec,
+            PodTemplateSpec, Probe, SecretVolumeSource, Volume, VolumeMount,
+        },
     },
     apimachinery::pkg::apis::meta::v1::LabelSelector,
 };
@@ -18,7 +21,12 @@ use kube::{
 use crate::crd::OnionService;
 
 #[allow(clippy::missing_panics_doc)]
-pub async fn run(tor_image_pull_policy: &str, tor_image_uri: &str) {
+pub async fn run(
+    busybox_image_pull_policy: &str,
+    busybox_image_uri: &str,
+    tor_image_pull_policy: &str,
+    tor_image_uri: &str,
+) {
     let client = Client::try_default().await.unwrap();
 
     let onion_services = Api::<OnionService>::all(client.clone());
@@ -26,6 +34,8 @@ pub async fn run(tor_image_pull_policy: &str, tor_image_uri: &str) {
 
     let context = Arc::new(Context {
         client,
+        busybox_image_pull_policy: busybox_image_pull_policy.into(),
+        busybox_image_uri: busybox_image_uri.into(),
         tor_image_pull_policy: tor_image_pull_policy.into(),
         tor_image_uri: tor_image_uri.into(),
     });
@@ -64,6 +74,8 @@ impl std::fmt::Display for Error {
  */
 struct Context {
     client: Client,
+    busybox_image_pull_policy: String,
+    busybox_image_uri: String,
     tor_image_pull_policy: String,
     tor_image_uri: String,
 }
@@ -178,8 +190,97 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                             timeout_seconds: Some(1),
                             ..Default::default()
                         }),
+                        volume_mounts: Some(vec![
+                            VolumeMount {
+                                mount_path: "/usr/local/etc/tor".into(),
+                                name: "usr-local-etc-tor".into(),
+                                read_only: Some(true),
+                                ..Default::default()
+                            },
+                            VolumeMount {
+                                mount_path: "/var/lib/tor".into(),
+                                name: "var-lib-tor".into(),
+                                read_only: Some(false),
+                                ..Default::default()
+                            },
+                        ]),
                         ..Default::default()
                     }],
+                    init_containers: Some(vec![Container {
+                        image: Some(ctx.busybox_image_uri.clone()),
+                        image_pull_policy: Some(ctx.busybox_image_pull_policy.clone()),
+                        name: "busybox".into(),
+                        command: Some(vec!["/bin/sh".into()]),
+                        args: Some(vec![
+                            "-c".into(),
+                            "mkdir -p /var/lib/tor/hidden_service && chmod 400 /var/lib/tor/hidden_service && cp /etc/secrets/* /var/lib/tor/hidden_service".into(),
+                        ]),
+                        volume_mounts: Some(vec![
+                            VolumeMount {
+                                mount_path: "/etc/secrets".into(),
+                                name: "etc-secrets".into(),
+                                read_only: Some(true),
+                                ..Default::default()
+                            },
+                            VolumeMount {
+                                mount_path: "/var/lib/tor".into(),
+                                name: "var-lib-tor".into(),
+                                read_only: Some(false),
+                                ..Default::default()
+                            },
+                        ]),
+                        ..Default::default()
+                    }]),
+                    volumes: Some(vec![
+                        Volume {
+                            name: "usr-local-etc-tor".into(),
+                            config_map: Some(ConfigMapVolumeSource {
+                                default_mode: Some(0o400),
+                                items: Some(vec![KeyToPath {
+                                    key: "torrc".into(),
+                                    mode: Some(0o400),
+                                    path: "torrc".into(),
+                                }]),
+                                name: Some("torrc".into()),
+                                optional: Some(false),
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        },
+                        Volume {
+                            name: "var-lib-tor".into(),
+                            empty_dir: Some(EmptyDirVolumeSource {
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        },
+                        Volume {
+                            name: "etc-secrets".into(),
+                            secret: Some(SecretVolumeSource {
+                                default_mode: Some(0o400),
+                                items: Some(vec![
+                                    KeyToPath {
+                                        key: "hostname".into(),
+                                        mode: Some(0o400),
+                                        path: "hostname".into(),
+                                    },
+                                    KeyToPath {
+                                        key: "hs_ed25519_public_key".into(),
+                                        mode: Some(0o400),
+                                        path: "hs_ed25519_public_key".into(),
+                                    },
+                                    KeyToPath {
+                                        key: "hs_ed25519_secret_key".into(),
+                                        mode: Some(0o400),
+                                        path: "hs_ed25519_secret_key".into(),
+                                    },
+                                ]),
+                                optional: Some(false),
+                                secret_name: Some("hidden-service".into()),
+                            }),
+                            ..Default::default()
+                        },
+                    ]),
                     ..Default::default()
                 }),
             },

@@ -15,6 +15,7 @@
     "readyz",
     "rustls",
     "schemars",
-    "serde"
+    "serde",
+    "torrc"
   ]
 }
