@@ -26,7 +26,7 @@ docker_build('agabani/tor-operator:dev', '.')
 namespace_create('tor-operator')
 
 k8s_yaml(helm(
-    './helm',
+    './charts/tor-operator',
     name='tor-operator',
     namespace = 'tor-operator',
     values='./Tiltfile.yaml',
