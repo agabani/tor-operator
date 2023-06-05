@@ -63,7 +63,7 @@ pub struct ControllerRunArgs {
     #[arg(long, default_value = "IfNotPresent")]
     pub tor_image_pull_policy: String,
 
-    #[arg(long, default_value = "agabani/tor:latest")]
+    #[arg(long, default_value = "ghcr.io/agabani/tor-operator:tor-0.4.7.13")]
     pub tor_image_uri: String,
 }
 
