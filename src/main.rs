@@ -27,22 +27,20 @@ async fn main() {
 async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
-    let busybox_image_pull_policy = &run.busybox_image_pull_policy;
-    let busybox_image_uri = &run.busybox_image_uri;
-    let tor_image_pull_policy = &run.tor_image_pull_policy;
-    let tor_image_uri = &run.tor_image_uri;
-
-    let http_server = http_server::run(addr);
-    let controller = controller::run(
-        busybox_image_pull_policy,
-        busybox_image_uri,
-        tor_image_pull_policy,
-        tor_image_uri,
-    );
+    let config = controller::Config {
+        busybox_image: controller::ImageConfig {
+            pull_policy: run.busybox_image_pull_policy.clone(),
+            uri: run.busybox_image_uri.clone(),
+        },
+        tor_image: controller::ImageConfig {
+            pull_policy: run.tor_image_pull_policy.clone(),
+            uri: run.tor_image_uri.clone(),
+        },
+    };
 
     tokio::select! {
-        _ = http_server => {},
-        _ = controller => {},
+        _ = http_server::run(addr) => {},
+        _ = controller::run(config) => {},
     }
 }
 
