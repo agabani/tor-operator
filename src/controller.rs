@@ -102,6 +102,8 @@ type Result<T> = std::result::Result<T, Error>;
  */
 struct Annotations(BTreeMap<String, String>);
 struct Labels(BTreeMap<String, String>);
+struct ObjectName<'a>(&'a str);
+struct ObjectNamespace<'a>(&'a str);
 struct Name(String);
 struct SelectorLabels(BTreeMap<String, String>);
 struct Torrc(String);
@@ -125,16 +127,17 @@ struct Context {
 async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Action> {
     tracing::info!("reconciling");
 
+    let object_name = get_object_name(&object)?;
     let object_namespace = get_object_namespace(&object)?;
 
     let torrc = generate_torrc(&object);
 
-    let name = generate_name(&object)?;
     let annotations = generate_annotations(&torrc);
-    let labels = generate_labels(&object)?;
-    let selector_labels = generate_selector_labels(&object)?;
+    let labels = generate_labels(&object_name);
+    let name = generate_name(&object_name);
+    let selector_labels = generate_selector_labels(&object_name);
 
-    let config_map: ConfigMap = Api::namespaced(ctx.client.clone(), object_namespace)
+    let config_map: ConfigMap = Api::namespaced(ctx.client.clone(), object_namespace.0)
         .patch(
             &name.0,
             &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY).force(),
@@ -149,7 +152,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
         .await
         .map_err(Error::Kube)?;
 
-    let _deployment: Deployment = Api::namespaced(ctx.client.clone(), object_namespace)
+    let _deployment: Deployment = Api::namespaced(ctx.client.clone(), object_namespace.0)
         .patch(
             &name.0,
             &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY).force(),
@@ -171,20 +174,26 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     Ok(Action::requeue(Duration::from_secs(3600)))
 }
 
-fn get_object_name(object: &OnionService) -> Result<&String> {
-    object
-        .metadata
-        .name
-        .as_ref()
-        .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))
+fn get_object_name(object: &OnionService) -> Result<ObjectName> {
+    Ok(ObjectName(
+        object
+            .metadata
+            .name
+            .as_ref()
+            .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?
+            .as_str(),
+    ))
 }
 
-fn get_object_namespace(object: &OnionService) -> Result<&String> {
-    object
-        .metadata
-        .namespace
-        .as_ref()
-        .ok_or_else(|| Error::MissingObjectKey(".metadata.namespace"))
+fn get_object_namespace(object: &OnionService) -> Result<ObjectNamespace> {
+    Ok(ObjectNamespace(
+        object
+            .metadata
+            .namespace
+            .as_ref()
+            .ok_or_else(|| Error::MissingObjectKey(".metadata.namespace"))?
+            .as_str(),
+    ))
 }
 
 fn generate_annotations(torrc: &Torrc) -> Annotations {
@@ -197,16 +206,13 @@ fn generate_annotations(torrc: &Torrc) -> Annotations {
     )]))
 }
 
-fn generate_labels(object: &OnionService) -> Result<Labels> {
-    Ok(Labels(BTreeMap::from([
+fn generate_labels(object_name: &ObjectName) -> Labels {
+    Labels(BTreeMap::from([
         (
             "app.kubernetes.io/component".into(),
             APP_KUBERNETES_IO_COMPONENT.into(),
         ),
-        (
-            "app.kubernetes.io/instance".into(),
-            get_object_name(object)?.into(),
-        ),
+        ("app.kubernetes.io/instance".into(), object_name.0.into()),
         (
             "app.kubernetes.io/managed-by".into(),
             APP_KUBERNETES_IO_MANAGED_BY.into(),
@@ -215,31 +221,28 @@ fn generate_labels(object: &OnionService) -> Result<Labels> {
             "app.kubernetes.io/name".into(),
             APP_KUBERNETES_IO_NAME.into(),
         ),
-    ])))
+    ]))
 }
 
-fn generate_name(object: &OnionService) -> Result<Name> {
-    let object_name = get_object_name(object)?;
-    Ok(Name(format!(
-        "{APP_KUBERNETES_IO_NAME}-{APP_KUBERNETES_IO_COMPONENT}-{object_name}"
-    )))
+fn generate_name(object_name: &ObjectName) -> Name {
+    Name(format!(
+        "{APP_KUBERNETES_IO_NAME}-{APP_KUBERNETES_IO_COMPONENT}-{}",
+        object_name.0
+    ))
 }
 
-fn generate_selector_labels(object: &OnionService) -> Result<SelectorLabels> {
-    Ok(SelectorLabels(BTreeMap::from([
+fn generate_selector_labels(object_name: &ObjectName) -> SelectorLabels {
+    SelectorLabels(BTreeMap::from([
         (
             "app.kubernetes.io/component".into(),
             APP_KUBERNETES_IO_COMPONENT.into(),
         ),
-        (
-            "app.kubernetes.io/instance".into(),
-            get_object_name(object)?.into(),
-        ),
+        ("app.kubernetes.io/instance".into(), object_name.0.into()),
         (
             "app.kubernetes.io/name".into(),
             APP_KUBERNETES_IO_NAME.into(),
         ),
-    ])))
+    ]))
 }
 
 fn generate_torrc(object: &OnionService) -> Torrc {
