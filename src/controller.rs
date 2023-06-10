@@ -5,8 +5,8 @@ use k8s_openapi::{
     api::{
         apps::v1::{Deployment, DeploymentSpec},
         core::v1::{
-            ConfigMap, ConfigMapVolumeSource, Container, EmptyDirVolumeSource, ExecAction,
-            KeyToPath, PodSpec, PodTemplateSpec, Probe, SecretVolumeSource, Volume, VolumeMount,
+            ConfigMap, ConfigMapVolumeSource, Container, ExecAction, KeyToPath, PodSpec,
+            PodTemplateSpec, Probe, SecretVolumeSource, Volume, VolumeMount,
         },
     },
     apimachinery::pkg::apis::meta::v1::LabelSelector,
@@ -27,7 +27,6 @@ use crate::crd::OnionService;
  * ============================================================================
  */
 pub struct Config {
-    pub busybox_image: ImageConfig,
     pub tor_image: ImageConfig,
 }
 
@@ -286,161 +285,142 @@ fn generate_owned_deployment(
     config_map: &ConfigMap,
 ) -> Result<Deployment> {
     Ok(Deployment {
-            metadata: ObjectMeta {
-                name: Some(name.0.clone()),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
-                owner_references: Some(vec![ object.controller_owner_ref(&()).unwrap()]),
+        metadata: ObjectMeta {
+            name: Some(name.0.clone()),
+            annotations: Some(annotations.0.clone()),
+            labels: Some(labels.0.clone()),
+            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            ..Default::default()
+        },
+        spec: Some(DeploymentSpec {
+            replicas: Some(1),
+            selector: LabelSelector {
+                match_labels: Some(selector_labels.0.clone()),
                 ..Default::default()
             },
-            spec: Some(DeploymentSpec {
-                replicas: Some(1),
-                selector: LabelSelector {
-                    match_labels: Some(selector_labels.0.clone()),
+            template: PodTemplateSpec {
+                metadata: Some(ObjectMeta {
+                    annotations: Some(annotations.0.clone()),
+                    labels: Some(labels.0.clone()),
                     ..Default::default()
-                },
-                template: PodTemplateSpec {
-                    metadata: Some(ObjectMeta {
-                        annotations: Some(annotations.0.clone()),
-                        labels: Some(labels.0.clone()),
-                        ..Default::default()
-                    }),
-                    spec: Some(PodSpec {
-                        containers: vec![Container {
-                            image: Some(config.tor_image.uri.clone()),
-                            image_pull_policy: Some(config.tor_image.pull_policy.clone()),
-                            liveness_probe: Some(Probe {
-                                exec: Some(ExecAction {
-                                    command: Some(vec![
-                                        "/bin/bash".to_string(),
-                                        "-c".to_string(),
-                                        "echo > /dev/tcp/127.0.0.1/9050".to_string(),
-                                    ]),
-                                }),
-                                failure_threshold: Some(3),
-                                period_seconds: Some(10),
-                                success_threshold: Some(1),
-                                timeout_seconds: Some(1),
-                                ..Default::default()
+                }),
+                spec: Some(PodSpec {
+                    containers: vec![Container {
+                        args: Some(vec![
+                            "-c".into(),
+                            vec![
+                                "mkdir -p /var/lib/tor/hidden_service",
+                                "chmod 400 /var/lib/tor/hidden_service",
+                                "cp /etc/secrets/* /var/lib/tor/hidden_service",
+                                "tor",
+                            ]
+                            .join(" && "),
+                        ]),
+                        command: Some(vec!["/bin/bash".into()]),
+                        image: Some(config.tor_image.uri.clone()),
+                        image_pull_policy: Some(config.tor_image.pull_policy.clone()),
+                        liveness_probe: Some(Probe {
+                            exec: Some(ExecAction {
+                                command: Some(vec![
+                                    "/bin/bash".to_string(),
+                                    "-c".to_string(),
+                                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
+                                ]),
                             }),
-                            name: "tor".into(),
-                            readiness_probe: Some(Probe {
-                                exec: Some(ExecAction {
-                                    command: Some(vec![
-                                        "/bin/bash".to_string(),
-                                        "-c".to_string(),
-                                        "echo > /dev/tcp/127.0.0.1/9050".to_string(),
-                                    ]),
-                                }),
-                                failure_threshold: Some(3),
-                                period_seconds: Some(10),
-                                success_threshold: Some(1),
-                                timeout_seconds: Some(1),
-                                ..Default::default()
+                            failure_threshold: Some(3),
+                            period_seconds: Some(10),
+                            success_threshold: Some(1),
+                            timeout_seconds: Some(1),
+                            ..Default::default()
+                        }),
+                        name: "tor".into(),
+                        readiness_probe: Some(Probe {
+                            exec: Some(ExecAction {
+                                command: Some(vec![
+                                    "/bin/bash".to_string(),
+                                    "-c".to_string(),
+                                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
+                                ]),
                             }),
-                            volume_mounts: Some(vec![
-                                VolumeMount {
-                                    mount_path: "/usr/local/etc/tor".into(),
-                                    name: "usr-local-etc-tor".into(),
-                                    read_only: Some(true),
-                                    ..Default::default()
-                                },
-                                VolumeMount {
-                                    mount_path: "/var/lib/tor".into(),
-                                    name: "var-lib-tor".into(),
-                                    read_only: Some(false),
-                                    ..Default::default()
-                                },
-                            ]),
+                            failure_threshold: Some(3),
+                            period_seconds: Some(10),
+                            success_threshold: Some(1),
+                            timeout_seconds: Some(1),
                             ..Default::default()
-                        }],
-                        init_containers: Some(vec![Container {
-                            image: Some(config.busybox_image.uri.clone()),
-                            image_pull_policy: Some(config.busybox_image.pull_policy.clone()),
-                            name: "busybox".into(),
-                            command: Some(vec!["/bin/sh".into()]),
-                            args: Some(vec![
-                                "-c".into(),
-                                "mkdir -p /var/lib/tor/hidden_service && chmod 400 /var/lib/tor/hidden_service && cp /etc/secrets/* /var/lib/tor/hidden_service".into(),
-                            ]),
-                            volume_mounts: Some(vec![
-                                VolumeMount {
-                                    mount_path: "/etc/secrets".into(),
-                                    name: "etc-secrets".into(),
-                                    read_only: Some(true),
-                                    ..Default::default()
-                                },
-                                VolumeMount {
-                                    mount_path: "/var/lib/tor".into(),
-                                    name: "var-lib-tor".into(),
-                                    read_only: Some(false),
-                                    ..Default::default()
-                                },
-                            ]),
-                            ..Default::default()
-                        }]),
-                        volumes: Some(vec![
-                            Volume {
-                                name: "usr-local-etc-tor".into(),
-                                config_map: Some(ConfigMapVolumeSource {
-                                    default_mode: Some(0o400),
-                                    items: Some(vec![KeyToPath {
-                                        key: "torrc".into(),
-                                        mode: Some(0o400),
-                                        path: "torrc".into(),
-                                    }]),
-                                    name: Some(config_map
-                                        .metadata
-                                        .name
-                                        .as_ref()
-                                        .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?
-                                        .clone()
-                                    ),
-                                    optional: Some(false),
-                                }),
-                                ..Default::default()
-                            },
-                            Volume {
-                                name: "var-lib-tor".into(),
-                                empty_dir: Some(EmptyDirVolumeSource {
-                                    ..Default::default()
-                                }),
-                                ..Default::default()
-                            },
-                            Volume {
+                        }),
+                        volume_mounts: Some(vec![
+                            VolumeMount {
+                                mount_path: "/etc/secrets".into(),
                                 name: "etc-secrets".into(),
-                                secret: Some(SecretVolumeSource {
-                                    default_mode: Some(0o400),
-                                    items: Some(vec![
-                                        KeyToPath {
-                                            key: "hostname".into(),
-                                            mode: Some(0o400),
-                                            path: "hostname".into(),
-                                        },
-                                        KeyToPath {
-                                            key: "hs_ed25519_public_key".into(),
-                                            mode: Some(0o400),
-                                            path: "hs_ed25519_public_key".into(),
-                                        },
-                                        KeyToPath {
-                                            key: "hs_ed25519_secret_key".into(),
-                                            mode: Some(0o400),
-                                            path: "hs_ed25519_secret_key".into(),
-                                        },
-                                    ]),
-                                    optional: Some(false),
-                                    secret_name: Some(object.spec.secret_name.clone()),
-                                }),
+                                read_only: Some(true),
+                                ..Default::default()
+                            },
+                            VolumeMount {
+                                mount_path: "/usr/local/etc/tor".into(),
+                                name: "usr-local-etc-tor".into(),
+                                read_only: Some(true),
                                 ..Default::default()
                             },
                         ]),
                         ..Default::default()
-                    }),
-                },
-                ..Default::default()
-            }),
+                    }],
+
+                    volumes: Some(vec![
+                        Volume {
+                            name: "etc-secrets".into(),
+                            secret: Some(SecretVolumeSource {
+                                default_mode: Some(0o400),
+                                items: Some(vec![
+                                    KeyToPath {
+                                        key: "hostname".into(),
+                                        mode: Some(0o400),
+                                        path: "hostname".into(),
+                                    },
+                                    KeyToPath {
+                                        key: "hs_ed25519_public_key".into(),
+                                        mode: Some(0o400),
+                                        path: "hs_ed25519_public_key".into(),
+                                    },
+                                    KeyToPath {
+                                        key: "hs_ed25519_secret_key".into(),
+                                        mode: Some(0o400),
+                                        path: "hs_ed25519_secret_key".into(),
+                                    },
+                                ]),
+                                optional: Some(false),
+                                secret_name: Some(object.spec.secret_name.clone()),
+                            }),
+                            ..Default::default()
+                        },
+                        Volume {
+                            name: "usr-local-etc-tor".into(),
+                            config_map: Some(ConfigMapVolumeSource {
+                                default_mode: Some(0o400),
+                                items: Some(vec![KeyToPath {
+                                    key: "torrc".into(),
+                                    mode: Some(0o400),
+                                    path: "torrc".into(),
+                                }]),
+                                name: Some(
+                                    config_map
+                                        .metadata
+                                        .name
+                                        .as_ref()
+                                        .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?
+                                        .clone(),
+                                ),
+                                optional: Some(false),
+                            }),
+                            ..Default::default()
+                        },
+                    ]),
+                    ..Default::default()
+                }),
+            },
             ..Default::default()
-        })
+        }),
+        ..Default::default()
+    })
 }
 
 /*

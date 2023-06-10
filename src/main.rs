@@ -28,10 +28,6 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
     let config = controller::Config {
-        busybox_image: controller::ImageConfig {
-            pull_policy: run.busybox_image_pull_policy.clone(),
-            uri: run.busybox_image_uri.clone(),
-        },
         tor_image: controller::ImageConfig {
             pull_policy: run.tor_image_pull_policy.clone(),
             uri: run.tor_image_uri.clone(),

@@ -41,12 +41,6 @@ spec:
             - "--port"
             - "{{ .Values.service.port }}"
 
-            - "--busybox-image-pull-policy"
-            - "{{ .Values.busybox.image.pullPolicy }}"
-
-            - "--busybox-image-uri"
-            - "{{ .Values.busybox.image.repository }}:{{ .Values.busybox.image.tag }}"
-
             - "--tor-image-pull-policy"
             - "{{ .Values.tor.image.pullPolicy }}"
 

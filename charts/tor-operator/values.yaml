@@ -16,12 +16,6 @@ tor:
     pullPolicy: IfNotPresent
     tag: "0.4.7.13"
 
-busybox:
-  image:
-    repository: busybox
-    pullPolicy: IfNotPresent
-    tag: "1.36.1"
-
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
