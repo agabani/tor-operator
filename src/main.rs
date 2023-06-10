@@ -63,26 +63,31 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
         )
     }
 
-    let crd = crd::generate_onion_service();
+    let crds = vec![
+        ("onionbalance", crd::generate_onionbalance()),
+        ("onionservice", crd::generate_onion_service()),
+    ];
 
-    let content = match generate.format {
-        CrdGenerateArgsFormat::Helm => helmify(serde_yaml::to_string(&crd).unwrap()),
-        CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd).unwrap(),
-        CrdGenerateArgsFormat::Yaml => serde_yaml::to_string(&crd).unwrap(),
-    };
-
-    if let Some(output) = &generate.output {
-        let path = match generate.format {
-            CrdGenerateArgsFormat::Helm => output.join("onionservice.yaml"),
-            CrdGenerateArgsFormat::Json => output.join("onionservice.json"),
-            CrdGenerateArgsFormat::Yaml => output.join("onionservice.yaml"),
+    for (name, crd) in crds {
+        let content = match generate.format {
+            CrdGenerateArgsFormat::Helm => helmify(serde_yaml::to_string(&crd).unwrap()),
+            CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd).unwrap(),
+            CrdGenerateArgsFormat::Yaml => serde_yaml::to_string(&crd).unwrap(),
         };
 
-        File::create(path)
-            .unwrap()
-            .write_all(content.as_bytes())
-            .unwrap();
-    } else {
-        print!("{content}");
+        if let Some(output) = &generate.output {
+            let path = match generate.format {
+                CrdGenerateArgsFormat::Helm => output.join(format!("{name}.yaml")),
+                CrdGenerateArgsFormat::Json => output.join(format!("{name}.json")),
+                CrdGenerateArgsFormat::Yaml => output.join(format!("{name}.yaml")),
+            };
+
+            File::create(path)
+                .unwrap()
+                .write_all(content.as_bytes())
+                .unwrap();
+        } else {
+            print!("{content}");
+        }
     }
 }

@@ -3,6 +3,34 @@ use kube::{CustomResource, CustomResourceExt};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+/*
+ * ============================================================================
+ * Onionbalance
+ * ============================================================================
+ */
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[kube(
+    group = "tor.agabani.co.uk",
+    kind = "Onionbalance",
+    namespaced,
+    status = "OnionbalanceStatus",
+    version = "v1"
+)]
+pub struct OnionbalanceSpec {}
+
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionbalanceStatus {}
+
+#[must_use]
+pub fn generate_onionbalance() -> CustomResourceDefinition {
+    Onionbalance::crd()
+}
+
+/*
+ * ============================================================================
+ * Onion Service
+ * ============================================================================
+ */
 #[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
 #[kube(
     group = "tor.agabani.co.uk",
