@@ -15,7 +15,7 @@ RUN git clone https://git.torproject.org/tor.git
 
 WORKDIR /tor
 
-RUN git checkout tor-0.4.7.13
+RUN git fetch && git checkout tor-0.4.7.13
 
 RUN ./autogen.sh && ./configure && make
 

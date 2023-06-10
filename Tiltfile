@@ -1,20 +1,38 @@
 load('ext://namespace', 'namespace_create')
 
 # =============================================================================
+# Onionbalance
+# =============================================================================
+local_resource(
+    'onionbalance: docker build',
+    cmd='docker build -t agabani/onionbalance:dev ./containers/onionbalance',
+    deps=['./containers/onionbalance/Dockerfile'],
+    labels=['onionbalance'],
+)
+
+local_resource(
+    'onionbalance: kind load',
+    cmd='kind load docker-image agabani/onionbalance:dev',
+    deps=['./containers/onionbalance/Dockerfile'],
+    resource_deps=['onionbalance: docker build'],
+    labels=['onionbalance'],
+)
+
+# =============================================================================
 # Tor
 # =============================================================================
 local_resource(
     'tor: docker build',
-    cmd='docker build -t agabani/tor:dev tor',
-    deps=['./tor/Dockerfile'],
+    cmd='docker build -t agabani/tor:dev ./containers/tor',
+    deps=['./containers/tor/Dockerfile'],
     labels=['tor'],
 )
 
 local_resource(
     'tor: kind load',
     cmd='kind load docker-image agabani/tor:dev',
-    deps=['./tor/Dockerfile'],
-    resource_deps =['tor: docker build'],
+    deps=['./containers/tor/Dockerfile'],
+    resource_deps=['tor: docker build'],
     labels=['tor'],
 )
 
