@@ -9,6 +9,7 @@
     "apiserver",
     "intstr",
     "livez",
+    "nindent",
     "onionbalance",
     "onionservice",
     "onionservices",

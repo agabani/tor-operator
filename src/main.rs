@@ -41,15 +41,39 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 }
 
 fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
+    fn helmify(content: String) -> String {
+        format!(
+            "{}\n{}{}\n",
+            "{{- if .Values.customResourceDefinition.create -}}",
+            content.replace(
+                "\nspec:",
+                &vec![
+                    "",
+                    "  labels:",
+                    "    {{- include \"tor-operator.labels\" . | nindent 4 }}",
+                    "  {{- with .Values.customResourceDefinition.annotations }}",
+                    "  annotations:",
+                    "    {{- toYaml . | nindent 4 }}",
+                    "  {{- end }}",
+                    "spec:",
+                ]
+                .join("\n"),
+            ),
+            "{{- end }}"
+        )
+    }
+
     let crd = crd::generate_onion_service();
 
     let content = match generate.format {
+        CrdGenerateArgsFormat::Helm => helmify(serde_yaml::to_string(&crd).unwrap()),
         CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd).unwrap(),
         CrdGenerateArgsFormat::Yaml => serde_yaml::to_string(&crd).unwrap(),
     };
 
     if let Some(output) = &generate.output {
         let path = match generate.format {
+            CrdGenerateArgsFormat::Helm => output.join("onionservice.yaml"),
             CrdGenerateArgsFormat::Json => output.join("onionservice.json"),
             CrdGenerateArgsFormat::Yaml => output.join("onionservice.yaml"),
         };

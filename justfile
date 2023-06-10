@@ -17,7 +17,7 @@ cli-controller-run:
 
 # cli crd generate
 cli-crd-generate:
-  @cargo run -- crd generate --output ./helm/templates
+  @cargo run -- crd generate --format helm --output ./charts/tor-operator/templates
 
 # docker build onionbalance
 docker-build-onionbalance:

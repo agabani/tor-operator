@@ -89,6 +89,7 @@ pub struct CrdGenerateArgs {
 
 #[derive(ValueEnum, Debug, Clone)]
 pub enum CrdGenerateArgsFormat {
+    Helm,
     Json,
     Yaml,
 }
