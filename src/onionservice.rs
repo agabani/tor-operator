@@ -9,17 +9,56 @@ use k8s_openapi::{
             PodTemplateSpec, Probe, SecretVolumeSource, Volume, VolumeMount,
         },
     },
+    apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
     apimachinery::pkg::apis::meta::v1::LabelSelector,
 };
 use kube::{
     api::{Patch, PatchParams},
     core::ObjectMeta,
     runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
-    Api, Client, Resource,
+    Api, Client, CustomResource, CustomResourceExt, Resource,
 };
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::crd::OnionService;
+use crate::{Error, Result};
+
+/*
+ * ============================================================================
+ * Custom Resource Definition
+ * ============================================================================
+ */
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[kube(
+    group = "tor.agabani.co.uk",
+    kind = "OnionService",
+    namespaced,
+    status = "OnionServiceStatus",
+    version = "v1"
+)]
+pub struct OnionServiceSpec {
+    pub hidden_service_ports: Vec<OnionServiceSpecHiddenServicePort>,
+
+    pub secret_name: String,
+}
+
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionServiceSpecHiddenServicePort {
+    /// The target any incoming traffic will be redirect to.
+    pub target: String,
+
+    /// The virtual port that the Onion Service will be using.
+    pub virtport: i32,
+}
+
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionServiceStatus {}
+
+#[must_use]
+pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
+    OnionService::crd()
+}
 
 /*
  * ============================================================================
@@ -41,7 +80,7 @@ pub struct ImageConfig {
  * ============================================================================
  */
 #[allow(clippy::missing_panics_doc)]
-pub async fn run(config: Config) {
+pub async fn run_controller(config: Config) {
     let client = Client::try_default().await.unwrap();
 
     let onion_services = Api::<OnionService>::all(client.clone());
@@ -67,32 +106,6 @@ pub async fn run(config: Config) {
 const APP_KUBERNETES_IO_COMPONENT: &str = "onion-service";
 const APP_KUBERNETES_IO_NAME: &str = "tor";
 const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
-
-/*
- * ============================================================================
- * Error
- * ============================================================================
- */
-#[derive(Debug)]
-enum Error {
-    Kube(kube::Error),
-    MissingObjectKey(&'static str),
-}
-
-impl std::error::Error for Error {}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
-    }
-}
-
-/*
- * ============================================================================
- * Result
- * ============================================================================
- */
-type Result<T> = std::result::Result<T, Error>;
 
 /*
  * ============================================================================

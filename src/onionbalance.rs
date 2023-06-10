@@ -4,12 +4,38 @@
 use std::{sync::Arc, time::Duration};
 
 use futures::StreamExt;
+use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition;
 use kube::{
     runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
-    Api, Client,
+    Api, Client, CustomResource, CustomResourceExt,
 };
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
-use crate::crd::Onionbalance;
+use crate::{Error, Result};
+
+/*
+ * ============================================================================
+ * Custom Resource Definition
+ * ============================================================================
+ */
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[kube(
+    group = "tor.agabani.co.uk",
+    kind = "Onionbalance",
+    namespaced,
+    status = "OnionbalanceStatus",
+    version = "v1"
+)]
+pub struct OnionbalanceSpec {}
+
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionbalanceStatus {}
+
+#[must_use]
+pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
+    Onionbalance::crd()
+}
 
 /*
  * ============================================================================
@@ -24,7 +50,7 @@ pub struct Config {}
  * ============================================================================
  */
 #[allow(clippy::missing_panics_doc)]
-pub async fn run(config: Config) {
+pub async fn run_controller(config: Config) {
     let client = Client::try_default().await.unwrap();
 
     let onion_services = Api::<Onionbalance>::all(client.clone());
@@ -37,32 +63,6 @@ pub async fn run(config: Config) {
         .for_each(|_| async {})
         .await;
 }
-
-/*
- * ============================================================================
- * Error
- * ============================================================================
- */
-#[derive(Debug)]
-enum Error {
-    Kube(kube::Error),
-    MissingObjectKey(&'static str),
-}
-
-impl std::error::Error for Error {}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
-    }
-}
-
-/*
- * ============================================================================
- * Result
- * ============================================================================
- */
-type Result<T> = std::result::Result<T, Error>;
 
 /*
  * ============================================================================

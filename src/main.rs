@@ -5,8 +5,7 @@ use tor_operator::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
         CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat,
     },
-    controllers::{onionbalance, onionservice},
-    crd, http_server,
+    http_server, onionbalance, onionservice,
 };
 
 #[tokio::main]
@@ -39,8 +38,8 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 
     tokio::select! {
         _ = http_server::run(addr) => {},
-        _ = onionbalance::run(onionbalance_config) => {},
-        _ = onionservice::run(onion_service_config) => {},
+        _ = onionbalance::run_controller(onionbalance_config) => {},
+        _ = onionservice::run_controller(onion_service_config) => {},
     }
 }
 
@@ -68,8 +67,14 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
     }
 
     let crds = vec![
-        ("onionbalance", crd::generate_onionbalance()),
-        ("onionservice", crd::generate_onion_service()),
+        (
+            "onionbalance",
+            onionbalance::generate_custom_resource_definition(),
+        ),
+        (
+            "onionservice",
+            onionservice::generate_custom_resource_definition(),
+        ),
     ];
 
     for (name, crd) in crds {
