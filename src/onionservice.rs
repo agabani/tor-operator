@@ -40,6 +40,8 @@ use crate::{Error, Result};
 pub struct OnionServiceSpec {
     pub hidden_service_ports: Vec<OnionServiceSpecHiddenServicePort>,
 
+    pub hidden_service_onionbalance_instance: Option<bool>,
+
     pub secret_name: String,
 }
 
@@ -259,6 +261,9 @@ fn generate_selector_labels(object_name: &ObjectName) -> SelectorLabels {
 
 fn generate_torrc(object: &OnionService) -> Torrc {
     let mut torrc = vec!["HiddenServiceDir /var/lib/tor/hidden_service".into()];
+    if object.spec.hidden_service_onionbalance_instance == Some(true) {
+        torrc.push("HiddenServiceOnionbalanceInstance 1".into())
+    }
     for port in &object.spec.hidden_service_ports {
         torrc.push(format!(
             "HiddenServicePort {} {}",
@@ -377,29 +382,57 @@ fn generate_owned_deployment(
                         ]),
                         ..Default::default()
                     }],
-
                     volumes: Some(vec![
                         Volume {
                             name: "etc-secrets".into(),
                             secret: Some(SecretVolumeSource {
                                 default_mode: Some(0o400),
-                                items: Some(vec![
-                                    KeyToPath {
-                                        key: "hostname".into(),
-                                        mode: Some(0o400),
-                                        path: "hostname".into(),
+                                items: Some(
+                                    if object.spec.hidden_service_onionbalance_instance
+                                        == Some(true)
+                                    {
+                                        vec![
+                                            KeyToPath {
+                                                key: "hostname".into(),
+                                                mode: Some(0o400),
+                                                path: "hostname".into(),
+                                            },
+                                            KeyToPath {
+                                                key: "hs_ed25519_public_key".into(),
+                                                mode: Some(0o400),
+                                                path: "hs_ed25519_public_key".into(),
+                                            },
+                                            KeyToPath {
+                                                key: "hs_ed25519_secret_key".into(),
+                                                mode: Some(0o400),
+                                                path: "hs_ed25519_secret_key".into(),
+                                            },
+                                            KeyToPath {
+                                                key: "ob_config".into(),
+                                                mode: Some(0o400),
+                                                path: "ob_config".into(),
+                                            },
+                                        ]
+                                    } else {
+                                        vec![
+                                            KeyToPath {
+                                                key: "hostname".into(),
+                                                mode: Some(0o400),
+                                                path: "hostname".into(),
+                                            },
+                                            KeyToPath {
+                                                key: "hs_ed25519_public_key".into(),
+                                                mode: Some(0o400),
+                                                path: "hs_ed25519_public_key".into(),
+                                            },
+                                            KeyToPath {
+                                                key: "hs_ed25519_secret_key".into(),
+                                                mode: Some(0o400),
+                                                path: "hs_ed25519_secret_key".into(),
+                                            },
+                                        ]
                                     },
-                                    KeyToPath {
-                                        key: "hs_ed25519_public_key".into(),
-                                        mode: Some(0o400),
-                                        path: "hs_ed25519_public_key".into(),
-                                    },
-                                    KeyToPath {
-                                        key: "hs_ed25519_secret_key".into(),
-                                        mode: Some(0o400),
-                                        path: "hs_ed25519_secret_key".into(),
-                                    },
-                                ]),
+                                ),
                                 optional: Some(false),
                                 secret_name: Some(object.spec.secret_name.clone()),
                             }),

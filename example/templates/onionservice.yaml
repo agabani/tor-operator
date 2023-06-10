@@ -8,4 +8,5 @@ spec:
   hidden_service_ports:
     - target: example:80
       virtport: 80
+  hidden_service_onionbalance_instance: true
   secret_name: tor-onion-service-{{ include "example.fullname" . }}
