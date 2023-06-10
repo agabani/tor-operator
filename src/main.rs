@@ -5,7 +5,8 @@ use tor_operator::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
         CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat,
     },
-    controller, crd, http_server,
+    controllers::{onionbalance, onionservice},
+    crd, http_server,
 };
 
 #[tokio::main]
@@ -27,8 +28,10 @@ async fn main() {
 async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
-    let config = controller::Config {
-        tor_image: controller::ImageConfig {
+    let onionbalance_config = onionbalance::Config {};
+
+    let onion_service_config = onionservice::Config {
+        tor_image: onionservice::ImageConfig {
             pull_policy: run.tor_image_pull_policy.clone(),
             uri: run.tor_image_uri.clone(),
         },
@@ -36,7 +39,8 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 
     tokio::select! {
         _ = http_server::run(addr) => {},
-        _ = controller::run(config) => {},
+        _ = onionbalance::run(onionbalance_config) => {},
+        _ = onionservice::run(onion_service_config) => {},
     }
 }
 
