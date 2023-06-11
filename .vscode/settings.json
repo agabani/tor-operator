@@ -15,6 +15,7 @@
     "onionservice",
     "onionservices",
     "openapi",
+    "pubkey",
     "readyz",
     "rustls",
     "schemars",

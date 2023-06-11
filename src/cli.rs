@@ -27,6 +27,9 @@ pub enum CliCommands {
 
     /// Custom Resource Definition
     Crd(CrdArgs),
+
+    /// Onion Address
+    OnionAddress(OnionAddressArgs),
 }
 
 /*
@@ -102,3 +105,23 @@ pub enum CrdGenerateArgsFormat {
     Json,
     Yaml,
 }
+
+/*
+ * ============================================================================
+ * Onion Address
+ * ============================================================================
+ */
+#[derive(Args, Debug)]
+pub struct OnionAddressArgs {
+    #[command(subcommand)]
+    pub command: OnionAddressCommands,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum OnionAddressCommands {
+    /// Generate
+    Generate(OnionAddressGenerateArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct OnionAddressGenerateArgs {}

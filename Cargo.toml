@@ -7,16 +7,20 @@ edition = "2021"
 
 [dependencies]
 axum = "0.6.18"
+base32 = "0.4.0"
 clap = { version = "4.3.1", features = ["derive"] }
+ed25519-dalek = { version = "2.0.0-rc.2", features = ["rand_core"] }
 futures = "0.3.28"
 hyper = { version = "0.14.26", features = ["full"] }
 k8s-openapi = { version = "0.18.0", features = ["v1_26"] }
 kube = { version = "0.82.2", features = ["client", "derive", "runtime", "rustls-tls"], default-features = false }
+rand = "0.8.5"
 schemars = "0.8.12"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
 serde_yaml = "0.9.21"
 sha2 = "0.10.6"
+sha3 = "0.10.8"
 tokio = { version = "1.28.2", features = ["full"] }
 tower = "0.4.13"
 tracing = "0.1.37"

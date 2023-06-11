@@ -19,6 +19,10 @@ cli-controller-run:
 cli-crd-generate:
   @cargo run -- crd generate --format helm --output ./charts/tor-operator/templates
 
+# cli onion address generate
+cli-onion-address-generate:
+  @cargo run -- onion-address generate
+
 # docker build onionbalance
 docker-build-onionbalance:
   docker build \

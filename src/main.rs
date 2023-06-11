@@ -3,9 +3,10 @@ use std::{fs::File, io::Write};
 use tor_operator::{
     cli::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
-        CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat,
+        CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat, OnionAddressArgs,
+        OnionAddressCommands, OnionAddressGenerateArgs,
     },
-    http_server, onionbalance, onionservice,
+    http_server, onion_address, onionbalance, onionservice,
 };
 
 #[tokio::main]
@@ -20,6 +21,11 @@ async fn main() {
         },
         CliCommands::Crd(crd) => match &crd.command {
             CrdCommands::Generate(generate) => crd_generate(cli, crd, generate),
+        },
+        CliCommands::OnionAddress(onion_address) => match &onion_address.command {
+            OnionAddressCommands::Generate(generate) => {
+                onion_address_generate(cli, onion_address, generate)
+            }
         },
     }
 }
@@ -108,4 +114,27 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
             print!("{content}");
         }
     }
+}
+
+fn onion_address_generate(
+    _cli: &CliArgs,
+    _crd: &OnionAddressArgs,
+    _generate: &OnionAddressGenerateArgs,
+) {
+    let onion_address = onion_address::generate();
+
+    File::create("hostname")
+        .unwrap()
+        .write_all(onion_address.hostname.as_bytes())
+        .unwrap();
+
+    File::create("hs_ed25519_public_key")
+        .unwrap()
+        .write_all(&onion_address.public)
+        .unwrap();
+
+    File::create("hs_ed25519_secret_key")
+        .unwrap()
+        .write_all(&onion_address.secret)
+        .unwrap();
 }
