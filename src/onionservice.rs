@@ -29,6 +29,7 @@ use crate::{Error, Result};
  * Custom Resource Definition
  * ============================================================================
  */
+#[allow(clippy::module_name_repetitions)]
 #[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
 #[kube(
     group = "tor.agabani.co.uk",
@@ -78,7 +79,7 @@ pub struct ImageConfig {
 
 /*
  * ============================================================================
- * Run
+ * Controller
  * ============================================================================
  */
 #[allow(clippy::missing_panics_doc)]
@@ -213,10 +214,10 @@ fn get_object_namespace(object: &OnionService) -> Result<ObjectNamespace> {
 fn generate_annotations(torrc: &Torrc) -> Annotations {
     let mut sha = Sha256::new();
     sha.update(&torrc.0);
-    let hash = format!("sha256:{:x}", sha.finalize());
+    let torrc_hash = format!("sha256:{:x}", sha.finalize());
     Annotations(BTreeMap::from([(
         "tor.agabani.co.uk/torrc-hash".into(),
-        hash,
+        torrc_hash,
     )]))
 }
 
@@ -262,7 +263,7 @@ fn generate_selector_labels(object_name: &ObjectName) -> SelectorLabels {
 fn generate_torrc(object: &OnionService) -> Torrc {
     let mut torrc = vec!["HiddenServiceDir /var/lib/tor/hidden_service".into()];
     if object.spec.hidden_service_onionbalance_instance == Some(true) {
-        torrc.push("HiddenServiceOnionbalanceInstance 1".into())
+        torrc.push("HiddenServiceOnionbalanceInstance 1".into());
     }
     for port in &object.spec.hidden_service_ports {
         torrc.push(format!(

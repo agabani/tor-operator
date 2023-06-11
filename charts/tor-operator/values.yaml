@@ -5,16 +5,22 @@
 replicaCount: 1
 
 image:
-  repository: agabani/tor-operator
+  repository: ghcr.io/agabani/tor-operator
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
+onionbalance:
+  image:
+    repository: ghcr.io/agabani/tor-operator
+    pullPolicy: IfNotPresent
+    tag: "onionbalance-0.2.2"
+
 tor:
   image:
-    repository: agabani/tor
+    repository: ghcr.io/agabani/tor-operator
     pullPolicy: IfNotPresent
-    tag: "0.4.7.13"
+    tag: "tor-0.4.7.13"
 
 imagePullSecrets: []
 nameOverride: ""

@@ -35,6 +35,12 @@ spec:
             - "controller"
             - "run"
 
+            - "--onionbalance-image-pull-policy"
+            - "{{ .Values.onionbalance.image.pullPolicy }}"
+
+            - "--onionbalance-image-uri"
+            - "{{ .Values.onionbalance.image.repository }}:{{ .Values.onionbalance.image.tag }}"
+
             - "--host"
             - "0.0.0.0"
 

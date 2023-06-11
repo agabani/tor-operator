@@ -5,4 +5,7 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  {}
+  secret_name: tor-onionbalance-{{ include "example.fullname" . }}
+  service_instance_addresses:
+    - {{ .Files.Get "secrets/tor-onion-service-example/hostname" }}
+

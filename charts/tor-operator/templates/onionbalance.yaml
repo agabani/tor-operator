@@ -26,6 +26,16 @@ spec:
         description: Auto-generated derived type for OnionbalanceSpec via `CustomResource`
         properties:
           spec:
+            properties:
+              secret_name:
+                type: string
+              service_instance_addresses:
+                items:
+                  type: string
+                type: array
+            required:
+            - secret_name
+            - service_instance_addresses
             type: object
           status:
             nullable: true

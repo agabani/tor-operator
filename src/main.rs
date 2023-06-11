@@ -27,7 +27,16 @@ async fn main() {
 async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
-    let onionbalance_config = onionbalance::Config {};
+    let onionbalance_config = onionbalance::Config {
+        onionbalance_image: onionbalance::ImageConfig {
+            pull_policy: run.onionbalance_image_pull_policy.clone(),
+            uri: run.onionbalance_image_uri.clone(),
+        },
+        tor_image: onionbalance::ImageConfig {
+            pull_policy: run.tor_image_pull_policy.clone(),
+            uri: run.tor_image_uri.clone(),
+        },
+    };
 
     let onion_service_config = onionservice::Config {
         tor_image: onionservice::ImageConfig {
