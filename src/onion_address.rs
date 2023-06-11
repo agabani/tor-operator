@@ -1,6 +1,5 @@
 use base32::encode;
-use ed25519_dalek::SigningKey;
-use rand::rngs::OsRng;
+use ed25519_compact::{KeyPair, Seed};
 use sha3::{Digest, Sha3_256};
 
 /// Generates Onion Address
@@ -25,15 +24,13 @@ use sha3::{Digest, Sha3_256};
 /// - CHECKSUM is truncated to two bytes before inserting it in `onion_address`
 #[must_use]
 pub fn generate() -> OnionAddress {
-    let mut csprng = OsRng;
-    let signing_key: SigningKey = SigningKey::generate(&mut csprng);
-
-    let public = signing_key.verifying_key().to_bytes();
-    let secret = signing_key.to_bytes();
+    let key_pair = KeyPair::from_seed(Seed::default());
+    let public = key_pair.pk;
+    let secret = key_pair.sk;
 
     let mut sha = Sha3_256::new();
     sha.update(".onion checksum");
-    sha.update(public);
+    sha.update(*public);
     sha.update([3]);
     let checksum = sha.finalize();
 
