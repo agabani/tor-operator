@@ -35,7 +35,7 @@ impl ExpandedSecretKey {
         PublicKey((&self.0).into())
     }
 
-    fn try_from_hidden_service_secret_key(value: &HiddenServiceSecretKey) -> Result<Self> {
+    pub fn try_from_hidden_service_secret_key(value: &HiddenServiceSecretKey) -> Result<Self> {
         match value.0 {
             HiddenServiceSecretKeyData::Ed25519V1Type0(data) => {
                 ed25519_dalek::ExpandedSecretKey::from_bytes(&data)
@@ -215,6 +215,7 @@ impl From<&ExpandedSecretKey> for HiddenServiceSecretKey {
  * Hostname
  * ============================================================================
  */
+#[derive(Eq, PartialEq)]
 pub struct Hostname(String);
 
 impl Hostname {
@@ -245,6 +246,11 @@ impl Hostname {
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
     }
+
+    #[must_use]
+    pub fn to_string(&self) -> String {
+        self.0.clone()
+    }
 }
 
 impl From<PublicKey> for Hostname {
@@ -258,6 +264,7 @@ impl From<PublicKey> for Hostname {
  * Public Key
  * ============================================================================
  */
+#[derive(Eq, PartialEq)]
 pub struct PublicKey(ed25519_dalek::PublicKey);
 
 impl PublicKey {
@@ -282,7 +289,7 @@ impl PublicKey {
     /// # Errors
     ///
     /// Returns error if malformed.
-    pub fn from_hidden_service_public_key(
+    pub fn try_from_hidden_service_public_key(
         hidden_service_public_key: &HiddenServicePublicKey,
     ) -> Result<Self> {
         match hidden_service_public_key.0 {
@@ -299,7 +306,7 @@ impl TryFrom<&HiddenServicePublicKey> for PublicKey {
     type Error = Error;
 
     fn try_from(value: &HiddenServicePublicKey) -> Result<Self, Self::Error> {
-        Self::from_hidden_service_public_key(value)
+        Self::try_from_hidden_service_public_key(value)
     }
 }
 

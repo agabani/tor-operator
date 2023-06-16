@@ -11,7 +11,7 @@ metadata:
   {{- end }}
 rules:
   - apiGroups: ["tor.agabani.co.uk"]
-    resources: ["onionbalances", "onionservices"]
+    resources: ["onionbalances", "onionkeys", "onionservices"]
     verbs: ["list", "watch"]
   - apiGroups: ["apps"]
     resources: ["deployments"]
@@ -19,4 +19,7 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["create", "list", "patch", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "list", "patch", "watch"]
 {{- end }}
