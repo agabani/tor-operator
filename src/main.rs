@@ -6,7 +6,7 @@ use tor_operator::{
         CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat, OnionAddressArgs,
         OnionAddressCommands, OnionAddressGenerateArgs,
     },
-    http_server, onion_address, onionbalance, onionservice,
+    crypto, http_server, onionbalance, onionservice,
 };
 
 #[tokio::main]
@@ -121,20 +121,26 @@ fn onion_address_generate(
     _crd: &OnionAddressArgs,
     _generate: &OnionAddressGenerateArgs,
 ) {
-    let onion_address = onion_address::generate();
+    let expanded_secret_key = crypto::ExpandedSecretKey::generate();
+    let public_key = expanded_secret_key.public_key();
+
+    let hostname = public_key.hostname();
+    let hidden_service_public_key = crypto::HiddenServicePublicKey::from_public_key(&public_key);
+    let hidden_service_secret_key =
+        crypto::HiddenServiceSecretKey::from_expanded_secret_key(&expanded_secret_key);
 
     File::create("hostname")
         .unwrap()
-        .write_all(onion_address.hostname.as_bytes())
+        .write_all(hostname.as_bytes())
         .unwrap();
 
     File::create("hs_ed25519_public_key")
         .unwrap()
-        .write_all(&onion_address.public)
+        .write_all(&hidden_service_public_key.to_bytes())
         .unwrap();
 
     File::create("hs_ed25519_secret_key")
         .unwrap()
-        .write_all(&onion_address.secret)
+        .write_all(&hidden_service_secret_key.to_bytes())
         .unwrap();
 }
