@@ -46,6 +46,7 @@ pub struct OnionServiceSpec {
     pub secret_name: String,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct OnionServiceSpecHiddenServicePort {
     /// The target any incoming traffic will be redirect to.
@@ -55,6 +56,7 @@ pub struct OnionServiceSpecHiddenServicePort {
     pub virtport: i32,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct OnionServiceStatus {}
 

@@ -35,6 +35,9 @@ impl ExpandedSecretKey {
         PublicKey((&self.0).into())
     }
 
+    /// # Errors
+    ///
+    /// Returns error if malformed.
     pub fn try_from_hidden_service_secret_key(value: &HiddenServiceSecretKey) -> Result<Self> {
         match value.0 {
             HiddenServiceSecretKeyData::Ed25519V1Type0(data) => {
@@ -246,16 +249,17 @@ impl Hostname {
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
     }
-
-    #[must_use]
-    pub fn to_string(&self) -> String {
-        self.0.clone()
-    }
 }
 
 impl From<PublicKey> for Hostname {
     fn from(public_key: PublicKey) -> Self {
         public_key.hostname()
+    }
+}
+
+impl std::fmt::Display for Hostname {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

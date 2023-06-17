@@ -37,6 +37,7 @@ pub struct OnionKeySpec {
     secret_name: String,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct OnionKeyStatus {}
 
@@ -198,6 +199,7 @@ fn generate_labels(object_name: &ObjectName) -> Labels {
     ]))
 }
 
+#[allow(clippy::too_many_lines)]
 fn generate_keys(
     secret: &Option<Secret>,
 ) -> (
@@ -205,9 +207,7 @@ fn generate_keys(
     crypto::PublicKey,
     crypto::Hostname,
 ) {
-    let secret = if let Some(secret) = secret {
-        secret
-    } else {
+    let Some(secret) = secret else {
         tracing::info!("secret not found");
 
         tracing::info!("generating secret key");
@@ -226,30 +226,28 @@ fn generate_keys(
         .data
         .as_ref()
         .and_then(|f| {
-            let value = f.get("hs_ed25519_secret_key".into());
+            let value = f.get("hs_ed25519_secret_key");
             if value.is_none() {
-                tracing::warn!("secret key not found")
+                tracing::warn!("secret key not found");
             }
             value
         })
         .and_then(|f| {
             let value = crypto::HiddenServiceSecretKey::try_from_bytes(&f.0);
             if let Err(error) = &value {
-                tracing::warn!(error =? error, "secret key malformed")
+                tracing::warn!(error =? error, "secret key malformed");
             }
             value.ok()
         })
         .and_then(|f| {
             let value = crypto::ExpandedSecretKey::try_from_hidden_service_secret_key(&f);
             if let Err(error) = &value {
-                tracing::warn!(error =? error, "secret key malformed")
+                tracing::warn!(error =? error, "secret key malformed");
             }
             value.ok()
         });
 
-    let secret_key = if let Some(secret_key) = secret_key {
-        secret_key
-    } else {
+    let Some(secret_key) =  secret_key else {
         tracing::info!("generating secret key");
         let secret_key = crypto::ExpandedSecretKey::generate();
 
@@ -266,23 +264,23 @@ fn generate_keys(
         .data
         .as_ref()
         .and_then(|f| {
-            let value = f.get("hs_ed25519_public_key".into());
+            let value = f.get("hs_ed25519_public_key");
             if value.is_none() {
-                tracing::warn!("public key not found")
+                tracing::warn!("public key not found");
             }
             value
         })
         .and_then(|f| {
             let value = crypto::HiddenServicePublicKey::try_from_bytes(&f.0);
             if let Err(error) = &value {
-                tracing::warn!(error =? error, "public key malformed")
+                tracing::warn!(error =? error, "public key malformed");
             }
             value.ok()
         })
         .and_then(|f| {
             let value = crypto::PublicKey::try_from_hidden_service_public_key(&f);
             if let Err(error) = &value {
-                tracing::warn!(error =? error, "public key malformed")
+                tracing::warn!(error =? error, "public key malformed");
             }
             value.ok()
         })
@@ -295,9 +293,7 @@ fn generate_keys(
             }
         });
 
-    let public_key = if let Some(public_key) = public_key {
-        public_key
-    } else {
+    let Some(public_key) =  public_key else {
         tracing::info!("generating public key");
         let public_key = secret_key.public_key();
 
@@ -311,16 +307,16 @@ fn generate_keys(
         .data
         .as_ref()
         .and_then(|f| {
-            let value = f.get("hostname".into());
+            let value = f.get("hostname");
             if value.is_none() {
-                tracing::warn!("hostname not found")
+                tracing::warn!("hostname not found");
             }
             value
         })
         .and_then(|f| {
             let value = crypto::Hostname::try_from_bytes(&f.0);
             if let Err(error) = &value {
-                tracing::warn!(error =? error, "hostname malformed")
+                tracing::warn!(error =? error, "hostname malformed");
             }
             value.ok()
         })
@@ -333,9 +329,7 @@ fn generate_keys(
             }
         });
 
-    let hostname = if let Some(hostname) = hostname {
-        hostname
-    } else {
+    let Some(hostname) =  hostname else {
         tracing::info!("generating hostname");
         let hostname = public_key.hostname();
 
