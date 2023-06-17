@@ -27,7 +27,7 @@ spec:
         properties:
           spec:
             properties:
-              hidden_service_onionbalance_instance:
+              hidden_service_onion_balance_instance:
                 nullable: true
                 type: boolean
               hidden_service_ports:

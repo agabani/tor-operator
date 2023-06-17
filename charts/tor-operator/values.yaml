@@ -10,11 +10,11 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
-onionbalance:
+onionBalance:
   image:
     repository: ghcr.io/agabani/tor-operator
     pullPolicy: IfNotPresent
-    tag: "onionbalance-0.2.2"
+    tag: "onion-balance-0.2.2"
 
 tor:
   image:

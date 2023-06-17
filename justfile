@@ -19,22 +19,22 @@ cli-controller-run:
 cli-crd-generate:
   @cargo run -- crd generate --format helm --output ./charts/tor-operator/templates
 
-# cli onion address generate
-cli-onion-address-generate:
-  @cargo run -- onion-address generate
+# cli onion key generate
+cli-onion-key-generate:
+  @cargo run -- onion-key generate
 
-# docker build onionbalance
-docker-build-onionbalance:
+# docker build onion balance
+docker-build-onion-balance:
   docker build \
-    --tag agabani/onionbalance:{{GIT_COMMIT}} \
-    ./containers/onionbalance
+    --tag agabani/onion-balance:{{GIT_COMMIT}} \
+    ./containers/onion-balance
 
-# docker buildx build tor
-docker-buildx-build-onionbalance:
+# docker buildx build onion balance
+docker-buildx-build-onion-balance:
   docker buildx build \
     --platform linux/amd64,linux/arm64 \
-    --tag agabani/onionbalance:{{GIT_COMMIT}} \
-    ./containers/onionbalance
+    --tag agabani/onion-balance:{{GIT_COMMIT}} \
+    ./containers/onion-balance
 
 # docker build tor
 docker-build-tor:
@@ -62,9 +62,9 @@ docker-buildx-build-tor-operator:
     --tag agabani/tor-operator:{{GIT_COMMIT}} \
     .
 
-# docker run onionbalance
-docker-run-onionbalance: docker-build-onionbalance
-  @docker run --rm agabani/onionbalance:{{GIT_COMMIT}}
+# docker run onion balance
+docker-run-onion-balance: docker-build-onion-balance
+  @docker run --rm agabani/onion-balance:{{GIT_COMMIT}}
 
 # docker run tor
 docker-run-tor: docker-build-tor

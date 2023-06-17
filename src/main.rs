@@ -3,10 +3,10 @@ use std::{fs::File, io::Write};
 use tor_operator::{
     cli::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
-        CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat, OnionAddressArgs,
-        OnionAddressCommands, OnionAddressGenerateArgs,
+        CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat, OnionKeyArgs,
+        OnionKeyCommands, OnionKeyGenerateArgs,
     },
-    crypto, http_server, onion_key, onionbalance, onionservice,
+    crypto, http_server, onion_balance, onion_key, onion_service,
 };
 
 #[tokio::main]
@@ -22,9 +22,9 @@ async fn main() {
         CliCommands::Crd(crd) => match &crd.command {
             CrdCommands::Generate(generate) => crd_generate(cli, crd, generate),
         },
-        CliCommands::OnionAddress(onion_address) => match &onion_address.command {
-            OnionAddressCommands::Generate(generate) => {
-                onion_address_generate(cli, onion_address, generate)
+        CliCommands::OnionKey(onion_address) => match &onion_address.command {
+            OnionKeyCommands::Generate(generate) => {
+                onion_key_generate(cli, onion_address, generate)
             }
         },
     }
@@ -33,12 +33,12 @@ async fn main() {
 async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
-    let onionbalance_config = onionbalance::Config {
-        onionbalance_image: onionbalance::ImageConfig {
-            pull_policy: run.onionbalance_image_pull_policy.clone(),
-            uri: run.onionbalance_image_uri.clone(),
+    let onion_balance_config = onion_balance::Config {
+        onion_balance_image: onion_balance::ImageConfig {
+            pull_policy: run.onion_balance_image_pull_policy.clone(),
+            uri: run.onion_balance_image_uri.clone(),
         },
-        tor_image: onionbalance::ImageConfig {
+        tor_image: onion_balance::ImageConfig {
             pull_policy: run.tor_image_pull_policy.clone(),
             uri: run.tor_image_uri.clone(),
         },
@@ -46,8 +46,8 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 
     let onion_key_config = onion_key::Config {};
 
-    let onion_service_config = onionservice::Config {
-        tor_image: onionservice::ImageConfig {
+    let onion_service_config = onion_service::Config {
+        tor_image: onion_service::ImageConfig {
             pull_policy: run.tor_image_pull_policy.clone(),
             uri: run.tor_image_uri.clone(),
         },
@@ -55,9 +55,9 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 
     tokio::select! {
         _ = http_server::run(addr) => {},
-        _ = onionbalance::run_controller(onionbalance_config) => {},
+        _ = onion_balance::run_controller(onion_balance_config) => {},
         _ = onion_key::run_controller(onion_key_config) => {},
-        _ = onionservice::run_controller(onion_service_config) => {},
+        _ = onion_service::run_controller(onion_service_config) => {},
     }
 }
 
@@ -87,7 +87,7 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
     let crds = vec![
         (
             "onionbalance",
-            onionbalance::generate_custom_resource_definition(),
+            onion_balance::generate_custom_resource_definition(),
         ),
         (
             //
@@ -96,7 +96,7 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
         ),
         (
             "onionservice",
-            onionservice::generate_custom_resource_definition(),
+            onion_service::generate_custom_resource_definition(),
         ),
     ];
 
@@ -124,11 +124,7 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
     }
 }
 
-fn onion_address_generate(
-    _cli: &CliArgs,
-    _crd: &OnionAddressArgs,
-    _generate: &OnionAddressGenerateArgs,
-) {
+fn onion_key_generate(_cli: &CliArgs, _onion_key: &OnionKeyArgs, _generate: &OnionKeyGenerateArgs) {
     let expanded_secret_key = crypto::ExpandedSecretKey::generate();
     let public_key = expanded_secret_key.public_key();
 

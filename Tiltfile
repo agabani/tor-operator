@@ -1,21 +1,21 @@
 load('ext://namespace', 'namespace_create')
 
 # =============================================================================
-# Onionbalance
+# Onion Balance
 # =============================================================================
 local_resource(
-    'onionbalance: docker build',
-    cmd='docker build -t agabani/onionbalance:dev ./containers/onionbalance',
-    deps=['./containers/onionbalance/Dockerfile'],
-    labels=['onionbalance'],
+    'onion balance: docker build',
+    cmd='docker build -t agabani/onion-balance:dev ./containers/onion-balance',
+    deps=['./containers/onion-balance/Dockerfile'],
+    labels=['onion-balance'],
 )
 
 local_resource(
-    'onionbalance: kind load',
-    cmd='kind load docker-image agabani/onionbalance:dev',
-    deps=['./containers/onionbalance/Dockerfile'],
-    resource_deps=['onionbalance: docker build'],
-    labels=['onionbalance'],
+    'onion balance: kind load',
+    cmd='kind load docker-image agabani/onion-balance:dev',
+    deps=['./containers/onion-balance/Dockerfile'],
+    resource_deps=['onion balance: docker build'],
+    labels=['onion-balance'],
 )
 
 # =============================================================================

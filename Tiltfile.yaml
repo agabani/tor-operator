@@ -2,9 +2,9 @@ image:
   repository: agabani/tor-operator
   tag: dev
 
-onionbalance:
+onionBalance:
   image:
-    repository: agabani/onionbalance
+    repository: agabani/onion-balance
     tag: dev
 
 tor:

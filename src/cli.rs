@@ -28,8 +28,8 @@ pub enum CliCommands {
     /// Custom Resource Definition
     Crd(CrdArgs),
 
-    /// Onion Address
-    OnionAddress(OnionAddressArgs),
+    /// Onion Key
+    OnionKey(OnionKeyArgs),
 }
 
 /*
@@ -52,13 +52,13 @@ pub enum ControllerCommands {
 #[derive(Args, Debug)]
 pub struct ControllerRunArgs {
     #[arg(long, default_value = "IfNotPresent")]
-    pub onionbalance_image_pull_policy: String,
+    pub onion_balance_image_pull_policy: String,
 
     #[arg(
         long,
-        default_value = "ghcr.io/agabani/tor-operator:onionbalance-0.2.2"
+        default_value = "ghcr.io/agabani/tor-operator:onion-balance-0.2.2"
     )]
-    pub onionbalance_image_uri: String,
+    pub onion_balance_image_uri: String,
 
     #[arg(long, default_value = "127.0.0.1")]
     pub host: String,
@@ -112,16 +112,16 @@ pub enum CrdGenerateArgsFormat {
  * ============================================================================
  */
 #[derive(Args, Debug)]
-pub struct OnionAddressArgs {
+pub struct OnionKeyArgs {
     #[command(subcommand)]
-    pub command: OnionAddressCommands,
+    pub command: OnionKeyCommands,
 }
 
 #[derive(Subcommand, Debug)]
-pub enum OnionAddressCommands {
+pub enum OnionKeyCommands {
     /// Generate
-    Generate(OnionAddressGenerateArgs),
+    Generate(OnionKeyGenerateArgs),
 }
 
 #[derive(Args, Debug)]
-pub struct OnionAddressGenerateArgs {}
+pub struct OnionKeyGenerateArgs {}

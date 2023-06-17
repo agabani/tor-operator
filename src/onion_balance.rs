@@ -33,34 +33,24 @@ use crate::{Error, Result};
 #[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
 #[kube(
     group = "tor.agabani.co.uk",
-    kind = "OnionService",
+    kind = "OnionBalance",
     namespaced,
-    status = "OnionServiceStatus",
+    status = "OnionBalanceStatus",
     version = "v1"
 )]
-pub struct OnionServiceSpec {
-    pub hidden_service_ports: Vec<OnionServiceSpecHiddenServicePort>,
-
-    pub hidden_service_onionbalance_instance: Option<bool>,
-
+pub struct OnionBalanceSpec {
     pub secret_name: String,
+
+    pub service_instance_addresses: Vec<String>,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
-pub struct OnionServiceSpecHiddenServicePort {
-    /// The target any incoming traffic will be redirect to.
-    pub target: String,
-
-    /// The virtual port that the Onion Service will be using.
-    pub virtport: i32,
-}
-
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
-pub struct OnionServiceStatus {}
+pub struct OnionBalanceStatus {}
 
 #[must_use]
 pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
-    OnionService::crd()
+    OnionBalance::crd()
 }
 
 /*
@@ -69,6 +59,7 @@ pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
  * ============================================================================
  */
 pub struct Config {
+    pub onion_balance_image: ImageConfig,
     pub tor_image: ImageConfig,
 }
 
@@ -86,15 +77,11 @@ pub struct ImageConfig {
 pub async fn run_controller(config: Config) {
     let client = Client::try_default().await.unwrap();
 
-    let onion_services = Api::<OnionService>::all(client.clone());
-    let config_maps = Api::<ConfigMap>::all(client.clone());
-    let deployments = Api::<Deployment>::all(client.clone());
+    let onion_services = Api::<OnionBalance>::all(client.clone());
 
     let context = Arc::new(Context { client, config });
 
     Controller::new(onion_services, WatcherConfig::default())
-        .owns(config_maps, WatcherConfig::default())
-        .owns(deployments, WatcherConfig::default())
         .shutdown_on_signal()
         .run(reconciler, error_policy, context)
         .for_each(|_| async {})
@@ -106,7 +93,7 @@ pub async fn run_controller(config: Config) {
  * Constants
  * ============================================================================
  */
-const APP_KUBERNETES_IO_COMPONENT: &str = "onion-service";
+const APP_KUBERNETES_IO_COMPONENT: &str = "onion-balance";
 const APP_KUBERNETES_IO_NAME: &str = "tor";
 const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
 
@@ -116,6 +103,7 @@ const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
  * ============================================================================
  */
 struct Annotations(BTreeMap<String, String>);
+struct ConfigYaml(String);
 struct Labels(BTreeMap<String, String>);
 struct ObjectName<'a>(&'a str);
 struct ObjectNamespace<'a>(&'a str);
@@ -139,15 +127,16 @@ struct Context {
  * ============================================================================
  */
 #[tracing::instrument(skip(object, ctx))]
-async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Action> {
+async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Action> {
     tracing::info!("reconciling");
 
     let object_name = get_object_name(&object)?;
     let object_namespace = get_object_namespace(&object)?;
 
     let torrc = generate_torrc(&object);
+    let config_yaml = generate_config_yaml(&object);
 
-    let annotations = generate_annotations(&torrc);
+    let annotations = generate_annotations(&torrc, &config_yaml);
     let labels = generate_labels(&object_name);
     let name = generate_name(&object_name);
     let selector_labels = generate_selector_labels(&object_name);
@@ -162,6 +151,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                 &annotations,
                 &labels,
                 &torrc,
+                &config_yaml,
             )),
         )
         .await
@@ -189,7 +179,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     Ok(Action::requeue(Duration::from_secs(3600)))
 }
 
-fn get_object_name(object: &OnionService) -> Result<ObjectName> {
+fn get_object_name(object: &OnionBalance) -> Result<ObjectName> {
     Ok(ObjectName(
         object
             .metadata
@@ -200,7 +190,7 @@ fn get_object_name(object: &OnionService) -> Result<ObjectName> {
     ))
 }
 
-fn get_object_namespace(object: &OnionService) -> Result<ObjectNamespace> {
+fn get_object_namespace(object: &OnionBalance) -> Result<ObjectNamespace> {
     Ok(ObjectNamespace(
         object
             .metadata
@@ -211,14 +201,17 @@ fn get_object_namespace(object: &OnionService) -> Result<ObjectNamespace> {
     ))
 }
 
-fn generate_annotations(torrc: &Torrc) -> Annotations {
+fn generate_annotations(torrc: &Torrc, config_yaml: &ConfigYaml) -> Annotations {
     let mut sha = Sha256::new();
     sha.update(&torrc.0);
     let torrc_hash = format!("sha256:{:x}", sha.finalize());
-    Annotations(BTreeMap::from([(
-        "tor.agabani.co.uk/torrc-hash".into(),
-        torrc_hash,
-    )]))
+    let mut sha = Sha256::new();
+    sha.update(&config_yaml.0);
+    let config_hash: String = format!("sha256:{:x}", sha.finalize());
+    Annotations(BTreeMap::from([
+        ("tor.agabani.co.uk/torrc-hash".into(), torrc_hash),
+        ("tor.agabani.co.uk/config-hash".into(), config_hash),
+    ]))
 }
 
 fn generate_labels(object_name: &ObjectName) -> Labels {
@@ -260,26 +253,36 @@ fn generate_selector_labels(object_name: &ObjectName) -> SelectorLabels {
     ]))
 }
 
-fn generate_torrc(object: &OnionService) -> Torrc {
-    let mut torrc = vec!["HiddenServiceDir /var/lib/tor/hidden_service".into()];
-    if object.spec.hidden_service_onionbalance_instance == Some(true) {
-        torrc.push("HiddenServiceOnionbalanceInstance 1".into());
-    }
-    for port in &object.spec.hidden_service_ports {
-        torrc.push(format!(
-            "HiddenServicePort {} {}",
-            port.virtport, port.target
-        ));
-    }
+#[allow(unused_variables)]
+fn generate_torrc(object: &OnionBalance) -> Torrc {
+    let torrc: Vec<&str> = vec!["SocksPort 0", "ControlPort 127.0.0.1:6666"];
     Torrc(torrc.join("\n"))
 }
 
+fn generate_config_yaml(object: &OnionBalance) -> ConfigYaml {
+    let config_yaml = vec![
+        "services:".into(),
+        "- instances:".into(),
+        object
+            .spec
+            .service_instance_addresses
+            .iter()
+            .enumerate()
+            .map(|(id, address)| format!("  - address: {address}\n    name: node{id}"))
+            .collect::<Vec<_>>()
+            .join("\n"),
+        "  key: /var/lib/tor/hidden_service/hs_ed25519_secret_key".into(),
+    ];
+    ConfigYaml(config_yaml.join("\n"))
+}
+
 fn generate_owned_config_map(
-    object: &OnionService,
+    object: &OnionBalance,
     name: &Name,
     annotations: &Annotations,
     labels: &Labels,
     torrc: &Torrc,
+    config_yaml: &ConfigYaml,
 ) -> ConfigMap {
     ConfigMap {
         metadata: ObjectMeta {
@@ -289,13 +292,16 @@ fn generate_owned_config_map(
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
-        data: Some(BTreeMap::from([("torrc".into(), torrc.0.clone())])),
+        data: Some(BTreeMap::from([
+            ("torrc".into(), torrc.0.clone()),
+            ("config.yaml".into(), config_yaml.0.clone()),
+        ])),
         ..Default::default()
     }
 }
 
 fn generate_owned_deployment(
-    object: &OnionService,
+    object: &OnionBalance,
     config: &Config,
     name: &Name,
     annotations: &Annotations,
@@ -324,118 +330,143 @@ fn generate_owned_deployment(
                     ..Default::default()
                 }),
                 spec: Some(PodSpec {
-                    containers: vec![Container {
-                        args: Some(vec![
-                            "-c".into(),
-                            vec![
-                                "mkdir -p /var/lib/tor/hidden_service",
-                                "chmod 400 /var/lib/tor/hidden_service",
-                                "cp /etc/secrets/* /var/lib/tor/hidden_service",
-                                "tor",
-                            ]
-                            .join(" && "),
-                        ]),
-                        command: Some(vec!["/bin/bash".into()]),
-                        image: Some(config.tor_image.uri.clone()),
-                        image_pull_policy: Some(config.tor_image.pull_policy.clone()),
-                        liveness_probe: Some(Probe {
-                            exec: Some(ExecAction {
-                                command: Some(vec![
-                                    "/bin/bash".to_string(),
-                                    "-c".to_string(),
-                                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
-                                ]),
-                            }),
-                            failure_threshold: Some(3),
-                            period_seconds: Some(10),
-                            success_threshold: Some(1),
-                            timeout_seconds: Some(1),
+                    containers: vec![
+                        Container {
+                            args: Some(vec![
+                                "-c".into(),
+                                vec![
+                                    "mkdir -p /var/lib/tor/hidden_service",
+                                    "chmod 400 /var/lib/tor/hidden_service",
+                                    "cp /etc/secrets/* /var/lib/tor/hidden_service",
+                                    "onionbalance -v info -c /usr/local/etc/onionbalance/config.yaml -p 6666",
+                                ]
+                                .join(" && "),
+                            ]),
+                            command: Some(vec!["/bin/bash".into()]),
+                            image: Some(config.onion_balance_image.uri.clone()),
+                            image_pull_policy: Some(config.onion_balance_image.pull_policy.clone()),
+                            name: "onionbalance".into(),
+                            volume_mounts: Some(vec![
+                                VolumeMount {
+                                    mount_path: "/etc/secrets".into(),
+                                    name: "etc-secrets".into(),
+                                    read_only: Some(true),
+                                    ..Default::default()
+                                },
+                                VolumeMount {
+                                    mount_path: "/usr/local/etc/onionbalance".into(),
+                                    name: "usr-local-etc-onionbalance".into(),
+                                    read_only: Some(true),
+                                    ..Default::default()
+                                },
+                            ]),
                             ..Default::default()
-                        }),
-                        name: "tor".into(),
-                        readiness_probe: Some(Probe {
-                            exec: Some(ExecAction {
-                                command: Some(vec![
-                                    "/bin/bash".to_string(),
-                                    "-c".to_string(),
-                                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
-                                ]),
+                        },
+                        Container {
+                            args: Some(vec![
+                                "-c".into(),
+                                vec![
+                                    "mkdir -p /var/lib/tor/hidden_service",
+                                    "chmod 400 /var/lib/tor/hidden_service",
+                                    "cp /etc/secrets/* /var/lib/tor/hidden_service",
+                                    "tor",
+                                ]
+                                .join(" && "),
+                            ]),
+                            command: Some(vec!["/bin/bash".into()]),
+                            image: Some(config.tor_image.uri.clone()),
+                            image_pull_policy: Some(config.tor_image.pull_policy.clone()),
+                            liveness_probe: Some(Probe {
+                                exec: Some(ExecAction {
+                                    command: Some(vec![
+                                        "/bin/bash".to_string(),
+                                        "-c".to_string(),
+                                        "echo > /dev/tcp/127.0.0.1/6666".to_string(),
+                                    ]),
+                                }),
+                                failure_threshold: Some(3),
+                                period_seconds: Some(10),
+                                success_threshold: Some(1),
+                                timeout_seconds: Some(1),
+                                ..Default::default()
                             }),
-                            failure_threshold: Some(3),
-                            period_seconds: Some(10),
-                            success_threshold: Some(1),
-                            timeout_seconds: Some(1),
+                            name: "tor".into(),
+                            readiness_probe: Some(Probe {
+                                exec: Some(ExecAction {
+                                    command: Some(vec![
+                                        "/bin/bash".to_string(),
+                                        "-c".to_string(),
+                                        "echo > /dev/tcp/127.0.0.1/6666".to_string(),
+                                    ]),
+                                }),
+                                failure_threshold: Some(3),
+                                period_seconds: Some(10),
+                                success_threshold: Some(1),
+                                timeout_seconds: Some(1),
+                                ..Default::default()
+                            }),
+                            volume_mounts: Some(vec![
+                                VolumeMount {
+                                    mount_path: "/etc/secrets".into(),
+                                    name: "etc-secrets".into(),
+                                    read_only: Some(true),
+                                    ..Default::default()
+                                },
+                                VolumeMount {
+                                    mount_path: "/usr/local/etc/tor".into(),
+                                    name: "usr-local-etc-tor".into(),
+                                    read_only: Some(true),
+                                    ..Default::default()
+                                },
+                            ]),
                             ..Default::default()
-                        }),
-                        volume_mounts: Some(vec![
-                            VolumeMount {
-                                mount_path: "/etc/secrets".into(),
-                                name: "etc-secrets".into(),
-                                read_only: Some(true),
-                                ..Default::default()
-                            },
-                            VolumeMount {
-                                mount_path: "/usr/local/etc/tor".into(),
-                                name: "usr-local-etc-tor".into(),
-                                read_only: Some(true),
-                                ..Default::default()
-                            },
-                        ]),
-                        ..Default::default()
-                    }],
+                        },
+                    ],
                     volumes: Some(vec![
                         Volume {
                             name: "etc-secrets".into(),
                             secret: Some(SecretVolumeSource {
                                 default_mode: Some(0o400),
-                                items: Some(
-                                    if object.spec.hidden_service_onionbalance_instance
-                                        == Some(true)
-                                    {
-                                        vec![
-                                            KeyToPath {
-                                                key: "hostname".into(),
-                                                mode: Some(0o400),
-                                                path: "hostname".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "hs_ed25519_public_key".into(),
-                                                mode: Some(0o400),
-                                                path: "hs_ed25519_public_key".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "hs_ed25519_secret_key".into(),
-                                                mode: Some(0o400),
-                                                path: "hs_ed25519_secret_key".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "ob_config".into(),
-                                                mode: Some(0o400),
-                                                path: "ob_config".into(),
-                                            },
-                                        ]
-                                    } else {
-                                        vec![
-                                            KeyToPath {
-                                                key: "hostname".into(),
-                                                mode: Some(0o400),
-                                                path: "hostname".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "hs_ed25519_public_key".into(),
-                                                mode: Some(0o400),
-                                                path: "hs_ed25519_public_key".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "hs_ed25519_secret_key".into(),
-                                                mode: Some(0o400),
-                                                path: "hs_ed25519_secret_key".into(),
-                                            },
-                                        ]
+                                items: Some(vec![
+                                    KeyToPath {
+                                        key: "hostname".into(),
+                                        mode: Some(0o400),
+                                        path: "hostname".into(),
                                     },
-                                ),
+                                    KeyToPath {
+                                        key: "hs_ed25519_public_key".into(),
+                                        mode: Some(0o400),
+                                        path: "hs_ed25519_public_key".into(),
+                                    },
+                                    KeyToPath {
+                                        key: "hs_ed25519_secret_key".into(),
+                                        mode: Some(0o400),
+                                        path: "hs_ed25519_secret_key".into(),
+                                    },
+                                ]),
                                 optional: Some(false),
                                 secret_name: Some(object.spec.secret_name.clone()),
+                            }),
+                            ..Default::default()
+                        },
+                        Volume {
+                            name: "usr-local-etc-onionbalance".into(),
+                            config_map: Some(ConfigMapVolumeSource {
+                                default_mode: Some(0o400),
+                                items: Some(vec![KeyToPath {
+                                    key: "config.yaml".into(),
+                                    mode: Some(0o400),
+                                    path: "config.yaml".into(),
+                                }]),
+                                name: Some(
+                                    config_map
+                                        .metadata
+                                        .name
+                                        .as_ref()
+                                        .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?
+                                        .clone(),
+                                ),
+                                optional: Some(false),
                             }),
                             ..Default::default()
                         },
@@ -477,7 +508,7 @@ fn generate_owned_deployment(
  */
 #[allow(clippy::needless_pass_by_value, unused_variables)]
 #[tracing::instrument(skip(object, ctx))]
-fn error_policy(object: Arc<OnionService>, error: &Error, ctx: Arc<Context>) -> Action {
+fn error_policy(object: Arc<OnionBalance>, error: &Error, ctx: Arc<Context>) -> Action {
     tracing::error!("failed to reconcile");
     Action::requeue(Duration::from_secs(5))
 }

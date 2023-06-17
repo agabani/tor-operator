@@ -13,7 +13,7 @@ spec:
   group: tor.agabani.co.uk
   names:
     categories: []
-    kind: Onionbalance
+    kind: OnionBalance
     plural: onionbalances
     shortNames: []
     singular: onionbalance
@@ -23,7 +23,7 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: Auto-generated derived type for OnionbalanceSpec via `CustomResource`
+        description: Auto-generated derived type for OnionBalanceSpec via `CustomResource`
         properties:
           spec:
             properties:
@@ -42,7 +42,7 @@ spec:
             type: object
         required:
         - spec
-        title: Onionbalance
+        title: OnionBalance
         type: object
     served: true
     storage: true

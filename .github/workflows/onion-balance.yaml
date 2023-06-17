@@ -1,4 +1,4 @@
-name: "Onionbalance"
+name: "Onion Balance"
 
 on:
   workflow_dispatch:
@@ -28,7 +28,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=onionbalance-0.2.2
+            type=raw,value=onion-balance-0.2.2
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -43,11 +43,11 @@ jobs:
         id: build
         uses: docker/build-push-action@v4
         with:
-          context: ./containers/onionbalance
+          context: ./containers/onion-balance
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:onionbalance-buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:onionbalance-buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:onion-balance-buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:onion-balance-buildcache,mode=max
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
       - name: Export digest
         run: |
@@ -83,7 +83,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=onionbalance-0.2.2
+            type=raw,value=onion-balance-0.2.2
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:

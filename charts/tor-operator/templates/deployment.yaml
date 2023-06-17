@@ -35,11 +35,11 @@ spec:
             - "controller"
             - "run"
 
-            - "--onionbalance-image-pull-policy"
-            - "{{ .Values.onionbalance.image.pullPolicy }}"
+            - "--onion-balance-image-pull-policy"
+            - "{{ .Values.onionBalance.image.pullPolicy }}"
 
-            - "--onionbalance-image-uri"
-            - "{{ .Values.onionbalance.image.repository }}:{{ .Values.onionbalance.image.tag }}"
+            - "--onion-balance-image-uri"
+            - "{{ .Values.onionBalance.image.repository }}:{{ .Values.onionBalance.image.tag }}"
 
             - "--host"
             - "0.0.0.0"
