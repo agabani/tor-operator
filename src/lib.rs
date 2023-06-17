@@ -3,6 +3,7 @@
 pub mod cli;
 pub mod crypto;
 pub mod http_server;
+pub mod onion_key;
 pub mod onionbalance;
 pub mod onionservice;
 
