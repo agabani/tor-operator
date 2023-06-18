@@ -27,13 +27,34 @@ spec:
         properties:
           spec:
             properties:
+              auto_generate:
+                description: |-
+                  Auto generate a random onion key. [default: false]
+
+                  Set to false if you want to use existing onion key from `secret_name`. Set to true if you want to populate `secret_name` with a randomly generated onion key.
+                nullable: true
+                type: boolean
               secret_name:
+                description: |-
+                  Secret to use as the backing store.
+
+                  Secret data must have keys `hostname`, `hs_ed25519_public_key` and `hs_ed25519_secret_key`.
                 type: string
             required:
             - secret_name
             type: object
           status:
             nullable: true
+            properties:
+              hostname:
+                description: Onion key hostname.
+                nullable: true
+                type: string
+              validation:
+                description: Human readable description of onion key validation.
+                type: string
+            required:
+            - validation
             type: object
         required:
         - spec

@@ -6,13 +6,22 @@ pub enum Error {
     SignatureError(ed25519_dalek::SignatureError),
 }
 
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::ParseError(e) => write!(f, "parse error: {e}"),
+            Error::SignatureError(e) => write!(f, "signature error: {e}"),
+        }
+    }
+}
+
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 const ED25519_V1_PUBLIC_TYPE_0_KEY: &[u8] = b"== ed25519v1-public: type0 ==\0\0\0";
 const ED25519_V1_PUBLIC_TYPE_0_LENGTH: usize = 32;
 const ED25519_V1_SECRET_TYPE_0_KEY: &[u8] = b"== ed25519v1-secret: type0 ==\0\0\0";
 const ED25519_V1_SECRET_TYPE_0_LENGTH: usize = 64;
-const HOSTNAME_LENGTH: usize = 62;
+const ONION_DOMAIN_LENGTH: usize = 56;
 const VERSION_LENGTH: usize = 32;
 
 /*
@@ -87,7 +96,7 @@ impl HiddenServicePublicKey {
             ED25519_V1_PUBLIC_TYPE_0_KEY => {
                 if public.len() != ED25519_V1_PUBLIC_TYPE_0_LENGTH {
                     return Err(Error::ParseError(format!(
-                        "expected {} byte secret, found {} bytes",
+                        "expected {} byte public key, found {} bytes",
                         ED25519_V1_PUBLIC_TYPE_0_LENGTH,
                         public.len()
                     )));
@@ -165,7 +174,7 @@ impl HiddenServiceSecretKey {
             ED25519_V1_SECRET_TYPE_0_KEY => {
                 if secret.len() != ED25519_V1_SECRET_TYPE_0_LENGTH {
                     return Err(Error::ParseError(format!(
-                        "expected {} byte secret, found {} bytes",
+                        "expected {} byte secret key, found {} bytes",
                         ED25519_V1_SECRET_TYPE_0_LENGTH,
                         secret.len()
                     )));
@@ -226,19 +235,22 @@ impl Hostname {
     ///
     /// Returns error if malformed.
     pub fn try_from_bytes(bytes: &[u8]) -> Result<Self> {
-        if bytes.len() < HOSTNAME_LENGTH {
-            return Err(Error::ParseError(format!(
-                "expected {} byte hostname, found {} bytes",
-                ED25519_V1_SECRET_TYPE_0_LENGTH,
-                bytes.len()
-            )));
-        }
-        let (hostname, _) = bytes.split_at(HOSTNAME_LENGTH);
-        let hostname = String::from_utf8_lossy(hostname);
+        let hostname = String::from_utf8_lossy(bytes);
+        let hostname = hostname.trim();
 
         match hostname.split_once('.') {
-            Some((_, tld)) => match tld {
-                "onion" => Ok(Self(hostname.into())),
+            Some((domain, tld)) => match tld {
+                "onion" => {
+                    if domain.len() == ONION_DOMAIN_LENGTH {
+                        Ok(Self(hostname.into()))
+                    } else {
+                        Err(Error::ParseError(format!(
+                            "expected {} byte domain, found {} bytes",
+                            ONION_DOMAIN_LENGTH,
+                            domain.len()
+                        )))
+                    }
+                }
                 _ => Err(Error::ParseError(format!("unsupported TLD: {tld}"))),
             },
             None => Err(Error::ParseError("missing TLD".to_string())),

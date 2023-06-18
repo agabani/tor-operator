@@ -1,0 +1,9 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionKey
+metadata:
+  name: {{ include "example.fullname" . }}-auto-generated
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  auto_generate: true
+  secret_name: onion-key-{{ include "example.fullname" . }}-auto-generated
