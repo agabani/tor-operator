@@ -82,6 +82,14 @@ kube-clean:
 kube-run:
   @tilt up
 
+# kube dashboard port-forward
+kube-dashboard-port-forward:
+  @kubectl -n kubernetes-dashboard port-forward services/kubernetes-dashboard 8443:443
+
+# kube dashboard token
+kube-dashboard-token:
+  @kubectl -n kubernetes-dashboard create token admin-user
+
 # lint
 lint:
   @cargo clippy

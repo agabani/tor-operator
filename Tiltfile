@@ -1,6 +1,13 @@
 load('ext://namespace', 'namespace_create')
 
 # =============================================================================
+# Kubernetes Dashboard
+# =============================================================================
+k8s_yaml('.kubernetes/clusterrolebinding.yaml')
+k8s_yaml('.kubernetes/kubernetes-dashboard.yaml')
+k8s_yaml('.kubernetes/serviceaccount.yaml')
+
+# =============================================================================
 # Onion Balance
 # =============================================================================
 local_resource(
