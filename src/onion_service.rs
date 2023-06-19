@@ -55,7 +55,7 @@ pub struct OnionServiceSpecOnionBalance {
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct OnionServiceSpecOnionBalanceOnionKey {
-    pub name: String,
+    pub hostname: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -173,22 +173,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
         .await
         .map_err(Error::Kube)?;
 
-    let ob_config = if let Some(onion_balance) = &object.spec.onion_balance {
-        let onion_key = onion_keys
-            .get(&onion_balance.onion_key.name)
-            .await
-            .map_err(Error::Kube)?;
-        let ob_config = generate_ob_config(&onion_key);
-
-        if ob_config.is_none() {
-            return Ok(Action::requeue(Duration::from_secs(5)));
-        }
-
-        ob_config
-    } else {
-        None
-    };
-
+    let ob_config = generate_ob_config(&object);
     let torrc = generate_torrc(&object);
 
     let annotations = generate_annotations(&torrc);
@@ -306,12 +291,12 @@ fn generate_selector_labels(object_name: &ObjectName) -> SelectorLabels {
     ]))
 }
 
-fn generate_ob_config(object: &OnionKey) -> Option<OBConfig> {
+fn generate_ob_config(object: &OnionService) -> Option<OBConfig> {
     object
-        .status
+        .spec
+        .onion_balance
         .as_ref()
-        .and_then(|f| f.hostname.as_ref())
-        .map(|f| OBConfig(format!("MasterOnionAddress {f}")))
+        .map(|f| OBConfig(format!("MasterOnionAddress {}", f.onion_key.hostname)))
 }
 
 fn generate_torrc(object: &OnionService) -> Torrc {

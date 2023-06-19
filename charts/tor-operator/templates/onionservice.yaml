@@ -32,10 +32,10 @@ spec:
                 properties:
                   onion_key:
                     properties:
-                      name:
+                      hostname:
                         type: string
                     required:
-                    - name
+                    - hostname
                     type: object
                 required:
                 - onion_key
