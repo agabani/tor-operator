@@ -7,7 +7,7 @@ metadata:
 spec:
   onion_balance:
     onion_key:
-      name: "...."
+      name: tor-ingress-{{ include "example.fullname" . }}
   onion_service:
     onion_key:
       name_prefix: tor-ingress-{{ include "example.fullname" . }}
