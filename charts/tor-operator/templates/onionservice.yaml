@@ -27,10 +27,27 @@ spec:
         properties:
           spec:
             properties:
-              hidden_service_onion_balance_instance:
+              onion_balance:
                 nullable: true
-                type: boolean
-              hidden_service_ports:
+                properties:
+                  onion_key:
+                    properties:
+                      name:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                required:
+                - onion_key
+                type: object
+              onion_key:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              ports:
                 items:
                   properties:
                     target:
@@ -45,11 +62,9 @@ spec:
                   - virtport
                   type: object
                 type: array
-              secret_name:
-                type: string
             required:
-            - hidden_service_ports
-            - secret_name
+            - onion_key
+            - ports
             type: object
           status:
             nullable: true

@@ -22,7 +22,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::{Error, Result};
+use crate::{onion_key::OnionKey, Error, Result};
 
 /*
  * ============================================================================
@@ -39,11 +39,29 @@ use crate::{Error, Result};
     version = "v1"
 )]
 pub struct OnionServiceSpec {
-    pub hidden_service_ports: Vec<OnionServiceSpecHiddenServicePort>,
+    pub onion_balance: Option<OnionServiceSpecOnionBalance>,
 
-    pub hidden_service_onion_balance_instance: Option<bool>,
+    pub onion_key: OnionServiceSpecOnionKey,
 
-    pub secret_name: String,
+    pub ports: Vec<OnionServiceSpecHiddenServicePort>,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionServiceSpecOnionBalance {
+    pub onion_key: OnionServiceSpecOnionBalanceOnionKey,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionServiceSpecOnionBalanceOnionKey {
+    pub name: String,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionServiceSpecOnionKey {
+    pub name: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -118,6 +136,7 @@ const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
  * ============================================================================
  */
 struct Annotations(BTreeMap<String, String>);
+struct OBConfig(String);
 struct Labels(BTreeMap<String, String>);
 struct ObjectName<'a>(&'a str);
 struct ObjectNamespace<'a>(&'a str);
@@ -147,6 +166,29 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     let object_name = get_object_name(&object)?;
     let object_namespace = get_object_namespace(&object)?;
 
+    let onion_keys = Api::namespaced(ctx.client.clone(), object_namespace.0);
+
+    let onion_key = onion_keys
+        .get(&object.spec.onion_key.name)
+        .await
+        .map_err(Error::Kube)?;
+
+    let ob_config = if let Some(onion_balance) = &object.spec.onion_balance {
+        let onion_key = onion_keys
+            .get(&onion_balance.onion_key.name)
+            .await
+            .map_err(Error::Kube)?;
+        let ob_config = generate_ob_config(&onion_key);
+
+        if ob_config.is_none() {
+            return Ok(Action::requeue(Duration::from_secs(5)));
+        }
+
+        ob_config
+    } else {
+        None
+    };
+
     let torrc = generate_torrc(&object);
 
     let annotations = generate_annotations(&torrc);
@@ -163,6 +205,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                 &name,
                 &annotations,
                 &labels,
+                &ob_config,
                 &torrc,
             )),
         )
@@ -180,6 +223,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
                 &annotations,
                 &labels,
                 &selector_labels,
+                &onion_key,
                 &config_map,
             )?),
         )
@@ -262,12 +306,20 @@ fn generate_selector_labels(object_name: &ObjectName) -> SelectorLabels {
     ]))
 }
 
+fn generate_ob_config(object: &OnionKey) -> Option<OBConfig> {
+    object
+        .status
+        .as_ref()
+        .and_then(|f| f.hostname.as_ref())
+        .map(|f| OBConfig(format!("MasterOnionAddress {f}")))
+}
+
 fn generate_torrc(object: &OnionService) -> Torrc {
     let mut torrc = vec!["HiddenServiceDir /var/lib/tor/hidden_service".into()];
-    if object.spec.hidden_service_onion_balance_instance == Some(true) {
+    if object.spec.onion_balance.is_some() {
         torrc.push("HiddenServiceOnionbalanceInstance 1".into());
     }
-    for port in &object.spec.hidden_service_ports {
+    for port in &object.spec.ports {
         torrc.push(format!(
             "HiddenServicePort {} {}",
             port.virtport, port.target
@@ -281,8 +333,13 @@ fn generate_owned_config_map(
     name: &Name,
     annotations: &Annotations,
     labels: &Labels,
+    ob_config: &Option<OBConfig>,
     torrc: &Torrc,
 ) -> ConfigMap {
+    let mut x = BTreeMap::from([("torrc".into(), torrc.0.clone())]);
+    if let Some(ob_config) = ob_config {
+        x.insert("ob_config".into(), ob_config.0.clone());
+    }
     ConfigMap {
         metadata: ObjectMeta {
             name: Some(name.0.clone()),
@@ -291,7 +348,7 @@ fn generate_owned_config_map(
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
-        data: Some(BTreeMap::from([("torrc".into(), torrc.0.clone())])),
+        data: Some(x),
         ..Default::default()
     }
 }
@@ -303,6 +360,7 @@ fn generate_owned_deployment(
     annotations: &Annotations,
     labels: &Labels,
     selector_labels: &SelectorLabels,
+    onion_key: &OnionKey,
     config_map: &ConfigMap,
 ) -> Result<Deployment> {
     Ok(Deployment {
@@ -329,12 +387,22 @@ fn generate_owned_deployment(
                     containers: vec![Container {
                         args: Some(vec![
                             "-c".into(),
-                            vec![
-                                "mkdir -p /var/lib/tor/hidden_service",
-                                "chmod 400 /var/lib/tor/hidden_service",
-                                "cp /etc/secrets/* /var/lib/tor/hidden_service",
-                                "tor",
-                            ]
+                            {
+                                let mut commands = vec![
+                                    "mkdir -p /var/lib/tor/hidden_service",
+                                    "chmod 400 /var/lib/tor/hidden_service",
+                                    "cp /etc/secrets/* /var/lib/tor/hidden_service",
+                                ];
+
+                                if object.spec.onion_balance.is_some() {
+                                    commands.push("cp /etc/configs/ob_config /var/lib/tor/hidden_service/ob_config");
+                                }
+
+                                commands.push("mkdir -p /usr/local/etc/tor");
+                                commands.push("cp /etc/configs/torrc /usr/local/etc/tor/torrc");
+                                commands.push("tor");
+                                commands
+                            }
                             .join(" && "),
                         ]),
                         command: Some(vec!["/bin/bash".into()]),
@@ -377,8 +445,8 @@ fn generate_owned_deployment(
                                 ..Default::default()
                             },
                             VolumeMount {
-                                mount_path: "/usr/local/etc/tor".into(),
-                                name: "usr-local-etc-tor".into(),
+                                mount_path: "/etc/configs".into(),
+                                name: "etc-configs".into(),
                                 read_only: Some(true),
                                 ..Default::default()
                             },
@@ -390,66 +458,49 @@ fn generate_owned_deployment(
                             name: "etc-secrets".into(),
                             secret: Some(SecretVolumeSource {
                                 default_mode: Some(0o400),
-                                items: Some(
-                                    if object.spec.hidden_service_onion_balance_instance
-                                        == Some(true)
-                                    {
-                                        vec![
-                                            KeyToPath {
-                                                key: "hostname".into(),
-                                                mode: Some(0o400),
-                                                path: "hostname".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "hs_ed25519_public_key".into(),
-                                                mode: Some(0o400),
-                                                path: "hs_ed25519_public_key".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "hs_ed25519_secret_key".into(),
-                                                mode: Some(0o400),
-                                                path: "hs_ed25519_secret_key".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "ob_config".into(),
-                                                mode: Some(0o400),
-                                                path: "ob_config".into(),
-                                            },
-                                        ]
-                                    } else {
-                                        vec![
-                                            KeyToPath {
-                                                key: "hostname".into(),
-                                                mode: Some(0o400),
-                                                path: "hostname".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "hs_ed25519_public_key".into(),
-                                                mode: Some(0o400),
-                                                path: "hs_ed25519_public_key".into(),
-                                            },
-                                            KeyToPath {
-                                                key: "hs_ed25519_secret_key".into(),
-                                                mode: Some(0o400),
-                                                path: "hs_ed25519_secret_key".into(),
-                                            },
-                                        ]
+                                items: Some(vec![
+                                    KeyToPath {
+                                        key: "hostname".into(),
+                                        mode: Some(0o400),
+                                        path: "hostname".into(),
                                     },
-                                ),
+                                    KeyToPath {
+                                        key: "hs_ed25519_public_key".into(),
+                                        mode: Some(0o400),
+                                        path: "hs_ed25519_public_key".into(),
+                                    },
+                                    KeyToPath {
+                                        key: "hs_ed25519_secret_key".into(),
+                                        mode: Some(0o400),
+                                        path: "hs_ed25519_secret_key".into(),
+                                    },
+                                ]),
                                 optional: Some(false),
-                                secret_name: Some(object.spec.secret_name.clone()),
+                                secret_name: Some(onion_key.spec.secret.name.clone()),
                             }),
                             ..Default::default()
                         },
                         Volume {
-                            name: "usr-local-etc-tor".into(),
+                            name: "etc-configs".into(),
                             config_map: Some(ConfigMapVolumeSource {
                                 default_mode: Some(0o400),
-                                items: Some(vec![KeyToPath {
-                                    key: "torrc".into(),
-                                    mode: Some(0o400),
-                                    path: "torrc".into(),
-                                }]),
+                                items: Some({
+                                    let mut items = vec![
+                                        KeyToPath {
+                                            key: "torrc".into(),
+                                            mode: Some(0o400),
+                                            path: "torrc".into(),
+                                        },
+                                    ];
+                                    if object.spec.onion_balance.is_some() {
+                                        items.push( KeyToPath {
+                                            key: "ob_config".into(),
+                                            mode: Some(0o400),
+                                            path: "ob_config".into(),
+                                        });
+                                    }
+                                   items
+                                }),
                                 name: Some(
                                     config_map
                                         .metadata

@@ -1,0 +1,15 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionService
+metadata:
+  name: {{ include "example.fullname" . }}-onion-balance
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  onion_balance:
+    onion_key:
+      name: onion-service-{{ include "example.fullname" . }}-onion-balance-onion-balance
+  onion_key:
+    name: onion-service-{{ include "example.fullname" . }}-onion-balance-onion-service
+  ports:
+    - target: example:80
+      virtport: 80
