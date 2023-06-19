@@ -3,6 +3,16 @@ entries:
   tor-operator:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2023-06-19T21:38:11.898290033Z"
+    description: A Helm chart for Kubernetes
+    digest: 988934c0ffb30103406eaff6668a2c3ede4a909c9a68e2f7f70f2246f9ad7b09
+    name: tor-operator
+    type: application
+    urls:
+    - https://github.com/agabani/tor-operator/releases/download/tor-operator-0.9.0/tor-operator-0.9.0.tgz
+    version: 0.9.0
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2023-06-19T20:49:05.812092053Z"
     description: A Helm chart for Kubernetes
     digest: b909f77039371709dd7959fd859f4a16fe8850bb77f056ac1f8404b0f555831f
@@ -101,4 +111,4 @@ entries:
     urls:
     - https://github.com/agabani/tor-operator/releases/download/tor-operator-0.1.0/tor-operator-0.1.0.tgz
     version: 0.1.0
-generated: "2023-06-19T20:49:05.812253453Z"
+generated: "2023-06-19T21:38:11.898328334Z"
