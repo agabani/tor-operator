@@ -44,7 +44,14 @@ pub struct OnionKeySpec {
     /// Secret to use as the backing store.
     ///
     /// Secret data must have keys `hostname`, `hs_ed25519_public_key` and `hs_ed25519_secret_key`.
-    pub secret_name: String,
+    pub secret: OnionKeySpecSecret,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionKeySpecSecret {
+    /// Name.
+    pub name: String,
 }
 
 impl OnionKeySpec {
@@ -142,13 +149,13 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
     let object_name = get_object_name(&object)?;
     let object_namespace = get_object_namespace(&object)?;
 
-    let annotations = generate_annotations(&object);
-    let labels = generate_labels(&object_name);
+    let annotations = generate_annotations();
+    let labels = generate_labels(&object, &object_name);
 
     let secrets = Api::<Secret>::namespaced(ctx.client.clone(), object_namespace.0);
 
     let secret = secrets
-        .get_opt(&object.spec.secret_name)
+        .get_opt(&object.spec.secret.name)
         .await
         .map_err(Error::Kube)?;
 
@@ -157,7 +164,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
     if let Some(secret) = secret {
         secrets
             .patch(
-                &object.spec.secret_name,
+                &object.spec.secret.name,
                 &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY).force(),
                 &Patch::Apply(&secret),
             )
@@ -222,17 +229,11 @@ fn get_object_namespace(object: &OnionKey) -> Result<ObjectNamespace> {
     ))
 }
 
-fn generate_annotations(object: &OnionKey) -> Annotations {
-    Annotations(BTreeMap::from([(
-        "tor.agabani.co.uk/owned-by".into(),
-        format!(
-            "onionkeys.tor.agabani.co.uk-{}",
-            object.metadata.uid.as_ref().unwrap()
-        ),
-    )]))
+fn generate_annotations() -> Annotations {
+    Annotations(BTreeMap::from([]))
 }
 
-fn generate_labels(object_name: &ObjectName) -> Labels {
+fn generate_labels(object: &OnionKey, object_name: &ObjectName) -> Labels {
     Labels(BTreeMap::from([
         (
             "app.kubernetes.io/component".into(),
@@ -246,6 +247,10 @@ fn generate_labels(object_name: &ObjectName) -> Labels {
         (
             "app.kubernetes.io/name".into(),
             APP_KUBERNETES_IO_NAME.into(),
+        ),
+        (
+            "tor.agabani.co.uk/owned-by".into(),
+            object.metadata.uid.clone().unwrap(),
         ),
     ]))
 }
@@ -483,7 +488,7 @@ fn generate_owned_secret(
 ) -> Secret {
     Secret {
         metadata: ObjectMeta {
-            name: Some(object.spec.secret_name.clone()),
+            name: Some(object.spec.secret.name.clone()),
             annotations: Some(annotations.0.clone()),
             labels: Some(labels.0.clone()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),

@@ -6,7 +6,7 @@ use tor_operator::{
         CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat, OnionKeyArgs,
         OnionKeyCommands, OnionKeyGenerateArgs,
     },
-    crypto, http_server, onion_balance, onion_key, onion_service,
+    crypto, http_server, onion_balance, onion_key, onion_service, tor_ingress,
 };
 
 #[tokio::main]
@@ -53,11 +53,14 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
         },
     };
 
+    let tor_ingress_config = tor_ingress::Config {};
+
     tokio::select! {
         _ = http_server::run(addr) => {},
         _ = onion_balance::run_controller(onion_balance_config) => {},
         _ = onion_key::run_controller(onion_key_config) => {},
         _ = onion_service::run_controller(onion_service_config) => {},
+        _ = tor_ingress::run_controller(tor_ingress_config) => {},
     }
 }
 
@@ -97,6 +100,10 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
         (
             "onionservice",
             onion_service::generate_custom_resource_definition(),
+        ),
+        (
+            "toringress",
+            tor_ingress::generate_custom_resource_definition(),
         ),
     ];
 

@@ -5,4 +5,5 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  secret_name: onion-key-{{ include "example.fullname" . }}
+  secret:
+    name: onion-key-{{ include "example.fullname" . }}

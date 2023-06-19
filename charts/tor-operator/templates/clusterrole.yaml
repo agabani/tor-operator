@@ -10,19 +10,35 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 rules:
+  # used by Onion Balance
   - apiGroups: ["tor.agabani.co.uk"]
-    resources: ["onionbalances", "onionkeys", "onionservices"]
+    resources: ["onionbalances"]
+    verbs: ["list", "watch"]
+  # used by Onion Keys
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "list", "patch", "watch"]
+  - apiGroups: ["tor.agabani.co.uk"]
+    resources: ["onionkeys"]
     verbs: ["list", "watch"]
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionkeys/status"]
     verbs: ["patch"]
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["create", "list", "patch", "watch"]
+  # used by Onion Service
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["create", "list", "patch", "watch"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["create", "get", "list", "patch", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["create", "list", "patch", "watch"]
+  - apiGroups: ["tor.agabani.co.uk"]
+    resources: ["onionservices"]
+    verbs: ["list", "watch"]
+  # used by Tor Ingress
+  - apiGroups: ["tor.agabani.co.uk"]
+    resources: ["onionkeys"]
+    verbs: ["create", "delete", "get", "patch"]
+  - apiGroups: ["tor.agabani.co.uk"]
+    resources: ["toringresses"]
+    verbs: ["list", "watch"]
 {{- end }}
