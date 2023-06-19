@@ -6,4 +6,5 @@ metadata:
     {{- include "example.labels" . | nindent 4 }}
 spec:
   auto_generate: true
-  secret_name: onion-key-{{ include "example.fullname" . }}-auto-generated
+  secret:
+    name: onion-key-{{ include "example.fullname" . }}-auto-generated

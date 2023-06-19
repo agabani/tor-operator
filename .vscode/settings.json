@@ -11,6 +11,7 @@
     "csprng",
     "dalek",
     "hasher",
+    "hostnames",
     "intstr",
     "livez",
     "nindent",
@@ -25,6 +26,7 @@
     "rustls",
     "schemars",
     "serde",
+    "toringress",
     "torrc",
     "virtport"
   ]

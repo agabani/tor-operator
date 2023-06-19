@@ -6,6 +6,7 @@ pub mod http_server;
 pub mod onion_balance;
 pub mod onion_key;
 pub mod onion_service;
+pub mod tor_ingress;
 mod utils;
 
 /*

@@ -34,14 +34,20 @@ spec:
                   Set to false if you want to use existing onion key from `secret_name`. Set to true if you want to populate `secret_name` with a randomly generated onion key.
                 nullable: true
                 type: boolean
-              secret_name:
+              secret:
                 description: |-
                   Secret to use as the backing store.
 
                   Secret data must have keys `hostname`, `hs_ed25519_public_key` and `hs_ed25519_secret_key`.
-                type: string
+                properties:
+                  name:
+                    description: Name.
+                    type: string
+                required:
+                - name
+                type: object
             required:
-            - secret_name
+            - secret
             type: object
           status:
             nullable: true
