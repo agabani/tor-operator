@@ -27,15 +27,30 @@ spec:
         properties:
           spec:
             properties:
-              secret_name:
-                type: string
-              service_instance_addresses:
+              onion_key:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              onion_services:
                 items:
-                  type: string
+                  properties:
+                    onion_key:
+                      properties:
+                        hostname:
+                          type: string
+                      required:
+                      - hostname
+                      type: object
+                  required:
+                  - onion_key
+                  type: object
                 type: array
             required:
-            - secret_name
-            - service_instance_addresses
+            - onion_key
+            - onion_services
             type: object
           status:
             nullable: true
