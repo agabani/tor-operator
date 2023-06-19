@@ -17,7 +17,7 @@ rules:
   # used by Onion Keys
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["create", "get", "list", "patch", "watch"]
+    verbs: ["create", "delete", "get", "list", "patch", "watch"]
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionkeys"]
     verbs: ["list", "watch"]

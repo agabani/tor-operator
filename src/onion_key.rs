@@ -6,7 +6,7 @@ use k8s_openapi::{
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition, ByteString,
 };
 use kube::{
-    api::{Patch, PatchParams},
+    api::{DeleteParams, ListParams, Patch, PatchParams},
     core::ObjectMeta,
     runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
     Api, Client, CustomResource, CustomResourceExt, Resource, ResourceExt,
@@ -197,6 +197,24 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
             )
             .await
             .map_err(Error::Kube)?;
+    }
+
+    let owned_secrets = secrets
+        .list(&ListParams::default().labels(&format!(
+            "tor.agabani.co.uk/owned-by={}",
+            object.metadata.uid.as_ref().unwrap()
+        )))
+        .await
+        .map_err(Error::Kube)?;
+
+    for owned_secret in owned_secrets {
+        let name = owned_secret.metadata.name.unwrap();
+        if name != object.spec.secret.name {
+            secrets
+                .delete(&name, &DeleteParams::default())
+                .await
+                .map_err(Error::Kube)?;
+        }
     }
 
     tracing::info!("reconciled");
