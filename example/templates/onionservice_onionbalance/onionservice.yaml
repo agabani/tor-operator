@@ -9,7 +9,7 @@ spec:
     onion_key:
       hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
   onion_key:
-    name: onion-service-{{ include "example.fullname" . }}-onion-balance-onion-service
+    name: onion-service-{{ include "example.fullname" . }}-onion-balance
   ports:
     - target: example:80
       virtport: 80

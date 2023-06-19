@@ -39,9 +39,24 @@ use crate::{Error, Result};
     version = "v1"
 )]
 pub struct OnionBalanceSpec {
-    pub secret_name: String,
+    pub onion_key: OnionBalanceSpecOnionKey,
 
-    pub service_instance_addresses: Vec<String>,
+    pub onion_services: Vec<OnionBalanceSpecOnionService>,
+}
+
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionBalanceSpecOnionKey {
+    pub name: String,
+}
+
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionBalanceSpecOnionService {
+    pub onion_key: OnionBalanceSpecOnionServiceOnionKey,
+}
+
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+pub struct OnionBalanceSpecOnionServiceOnionKey {
+    pub hostname: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -265,10 +280,14 @@ fn generate_config_yaml(object: &OnionBalance) -> ConfigYaml {
         "- instances:".into(),
         object
             .spec
-            .service_instance_addresses
+            .onion_services
             .iter()
-            .enumerate()
-            .map(|(id, address)| format!("  - address: {address}\n    name: node{id}"))
+            .map(|onion_service| {
+                format!(
+                    "  - address: {}\n    name: {}",
+                    onion_service.onion_key.hostname, onion_service.onion_key.hostname
+                )
+            })
             .collect::<Vec<_>>()
             .join("\n"),
         "  key: /var/lib/tor/hidden_service/hs_ed25519_secret_key".into(),
@@ -445,7 +464,7 @@ fn generate_owned_deployment(
                                     },
                                 ]),
                                 optional: Some(false),
-                                secret_name: Some(object.spec.secret_name.clone()),
+                                secret_name: Some(object.spec.onion_key.name.clone()),
                             }),
                             ..Default::default()
                         },
