@@ -55,6 +55,8 @@ pub struct TorIngressSpecOnionBalanceOnionKey {
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct TorIngressSpecOnionService {
+    pub name_prefix: String,
+
     pub onion_key: TorIngressSpecOnionServiceOnionKey,
 
     pub ports: Vec<TorIngressSpecOnionServicePort>,
@@ -142,7 +144,6 @@ const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
  * ============================================================================
  */
 struct Annotations(BTreeMap<String, String>);
-struct Hostname(String);
 struct Labels(BTreeMap<String, String>);
 struct ObjectName<'a>(&'a str);
 struct ObjectNamespace<'a>(&'a str);
@@ -175,25 +176,84 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
     let annotations = generate_annotations();
     let labels = generate_labels(&object, &object_name);
 
-    let results =
-        reconcile_onion_keys(&object, &ctx, &object_namespace, &annotations, &labels).await?;
+    // onion balance onion key
+    let onion_balance_onion_key =
+        reconcile_onion_balance_onion_key(&object, &ctx, &object_namespace).await?;
 
-    let hostnames = results.iter().map(|(_, f)| &f.0).collect::<Vec<_>>();
+    let Some(onion_balance_onion_key) = onion_balance_onion_key else {
+        // TODO: status: waiting for onion balance onion key hostname.
+        return  Ok(Action::requeue(Duration::from_secs(5)));
+    };
 
-    tracing::info!(hostnames =? hostnames, "hostnames");
+    // onion service onion keys
+    let onion_service_onion_keys =
+        reconcile_onion_service_onion_keys(&object, &ctx, &object_namespace, &annotations, &labels)
+            .await?;
+
+    let Some(onion_service_onion_keys) = onion_service_onion_keys else {
+        // TODO: status: waiting for onion service onion key hostnames.
+        return  Ok(Action::requeue(Duration::from_secs(5)));
+    };
+
+    // onion services
+    reconcile_onion_services(
+        &object,
+        &ctx,
+        &object_namespace,
+        &annotations,
+        &labels,
+        &onion_balance_onion_key,
+        &onion_service_onion_keys,
+    )
+    .await?;
+
+    // onion balance
+    reconcile_onion_balance(
+        &object,
+        &ctx,
+        &object_namespace,
+        &annotations,
+        &labels,
+        &onion_balance_onion_key,
+        &onion_service_onion_keys,
+    )
+    .await?;
 
     tracing::info!("reconciled");
 
     Ok(Action::requeue(Duration::from_secs(3600)))
 }
 
-async fn reconcile_onion_keys(
+async fn reconcile_onion_balance_onion_key(
+    object: &TorIngress,
+    ctx: &Context,
+    object_namespace: &ObjectNamespace<'_>,
+) -> Result<Option<OnionKey>> {
+    let onion_keys = Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0);
+
+    let onion_key = onion_keys
+        .get(&object.spec.onion_balance.onion_key.name)
+        .await
+        .map_err(Error::Kube)?;
+
+    if onion_key
+        .status
+        .as_ref()
+        .map_or(false, |f| f.hostname.is_some())
+    {
+        Ok(Some(onion_key))
+    } else {
+        Ok(None)
+    }
+}
+
+async fn reconcile_onion_service_onion_keys(
     object: &TorIngress,
     ctx: &Context,
     object_namespace: &ObjectNamespace<'_>,
     annotations: &Annotations,
     labels: &Labels,
-) -> Result<Vec<(i32, Hostname)>> {
+) -> Result<Option<HashMap<i32, OnionKey>>> {
     let onion_keys = Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0);
 
     let manifest = (0..object.spec.onion_service.replicas)
@@ -205,6 +265,7 @@ async fn reconcile_onion_keys(
         })
         .collect::<HashMap<_, _>>();
 
+    // creation
     for (onion_key_name, (_, onion_key_secret_name)) in &manifest {
         let onion_key = onion_keys
             .get_opt(&onion_key_name.0)
@@ -232,26 +293,35 @@ async fn reconcile_onion_keys(
         }
     }
 
-    let mut hostnames = Vec::new();
-
+    // get all keys
     let owned_onion_keys = onion_keys
         .list(&ListParams::default().labels(&format!(
             "tor.agabani.co.uk/owned-by={}",
             object.metadata.uid.as_ref().unwrap()
         )))
         .await
-        .map_err(Error::Kube)?;
+        .map_err(Error::Kube)?
+        .into_iter()
+        .map(|f| (OnionKeyName(f.metadata.name.clone().unwrap()), f))
+        .collect::<HashMap<_, _>>();
 
-    for onion_key in owned_onion_keys {
-        let onion_key_name = OnionKeyName(onion_key.metadata.name.clone().unwrap());
+    // check if ready
+    let ready = manifest.iter().all(|(f, _)| {
+        owned_onion_keys
+            .get(f)
+            .and_then(|f| f.status.as_ref())
+            .map_or(false, |f| f.hostname.is_some())
+    });
 
-        if let Some((i, _)) = manifest.get(&onion_key_name) {
-            let hostname = onion_key.status.and_then(|f| f.hostname).map(Hostname);
+    if !ready {
+        return Ok(None);
+    }
 
-            if let Some(hostname) = hostname {
-                hostnames.push((*i, hostname));
-            }
-        } else {
+    // clean up
+    for (onion_key_name, _) in owned_onion_keys {
+        let keep = manifest.get(&onion_key_name).is_some();
+
+        if !keep {
             onion_keys
                 .delete(&onion_key_name.0, &DeleteParams::default())
                 .await
@@ -259,7 +329,31 @@ async fn reconcile_onion_keys(
         }
     }
 
-    Ok(hostnames)
+    Ok(None)
+}
+
+async fn reconcile_onion_services(
+    object: &TorIngress,
+    ctx: &Context,
+    object_namespace: &ObjectNamespace<'_>,
+    annotations: &Annotations,
+    labels: &Labels,
+    onion_balance_onion_key: &OnionKey,
+    onion_service_onion_keys: &HashMap<i32, OnionKey>,
+) -> Result<()> {
+    Ok(())
+}
+
+async fn reconcile_onion_balance(
+    object: &TorIngress,
+    ctx: &Context,
+    object_namespace: &ObjectNamespace<'_>,
+    annotations: &Annotations,
+    labels: &Labels,
+    onion_balance_onion_key: &OnionKey,
+    onion_service_onion_keys: &HashMap<i32, OnionKey>,
+) -> Result<()> {
+    Ok(())
 }
 
 fn get_object_name(object: &TorIngress) -> Result<ObjectName> {
@@ -324,7 +418,7 @@ fn generate_onion_key_secret_name(object: &TorIngress, instance: i32) -> OnionKe
     ))
 }
 
-// only returns an onion key if a change needs to be made...
+/// only returns an onion key if a change needs to be made...
 fn generate_onion_key(
     object: &TorIngress,
     onion_key: &Option<OnionKey>,

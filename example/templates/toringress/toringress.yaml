@@ -9,6 +9,7 @@ spec:
     onion_key:
       name: tor-ingress-{{ include "example.fullname" . }}
   onion_service:
+    name_prefix: tor-ingress-{{ include "example.fullname" . }}
     onion_key:
       name_prefix: tor-ingress-{{ include "example.fullname" . }}
       secret:
