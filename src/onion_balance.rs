@@ -30,7 +30,7 @@ use crate::{Error, Result};
  * ============================================================================
  */
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[kube(
     group = "tor.agabani.co.uk",
     kind = "OnionBalance",
@@ -44,17 +44,17 @@ pub struct OnionBalanceSpec {
     pub onion_services: Vec<OnionBalanceSpecOnionService>,
 }
 
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecOnionKey {
     pub name: String,
 }
 
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecOnionService {
     pub onion_key: OnionBalanceSpecOnionServiceOnionKey,
 }
 
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecOnionServiceOnionKey {
     pub hostname: String,
 }
@@ -270,7 +270,7 @@ fn generate_selector_labels(object_name: &ObjectName) -> SelectorLabels {
 
 #[allow(unused_variables)]
 fn generate_torrc(object: &OnionBalance) -> Torrc {
-    let torrc: Vec<&str> = vec!["SocksPort 0", "ControlPort 127.0.0.1:6666"];
+    let torrc: Vec<&str> = vec!["SocksPort 9050", "ControlPort 127.0.0.1:6666"];
     Torrc(torrc.join("\n"))
 }
 
@@ -400,7 +400,7 @@ fn generate_owned_deployment(
                                     command: Some(vec![
                                         "/bin/bash".to_string(),
                                         "-c".to_string(),
-                                        "echo > /dev/tcp/127.0.0.1/6666".to_string(),
+                                        "echo > /dev/tcp/127.0.0.1/9050".to_string(),
                                     ]),
                                 }),
                                 failure_threshold: Some(3),
@@ -415,7 +415,7 @@ fn generate_owned_deployment(
                                     command: Some(vec![
                                         "/bin/bash".to_string(),
                                         "-c".to_string(),
-                                        "echo > /dev/tcp/127.0.0.1/6666".to_string(),
+                                        "echo > /dev/tcp/127.0.0.1/9050".to_string(),
                                     ]),
                                 }),
                                 failure_threshold: Some(3),
