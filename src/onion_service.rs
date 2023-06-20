@@ -30,7 +30,7 @@ use crate::{onion_key::OnionKey, Error, Result};
  * ============================================================================
  */
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[kube(
     group = "tor.agabani.co.uk",
     kind = "OnionService",
@@ -47,25 +47,25 @@ pub struct OnionServiceSpec {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecOnionBalance {
     pub onion_key: OnionServiceSpecOnionBalanceOnionKey,
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecOnionBalanceOnionKey {
     pub hostname: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecOnionKey {
     pub name: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecHiddenServicePort {
     /// The target any incoming traffic will be redirect to.
     pub target: String,

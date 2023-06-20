@@ -16,7 +16,13 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    onion_balance::OnionBalance,
     onion_key::{OnionKey, OnionKeySpec, OnionKeySpecSecret},
+    onion_service::{
+        OnionService, OnionServiceSpec, OnionServiceSpecHiddenServicePort,
+        OnionServiceSpecOnionBalance, OnionServiceSpecOnionBalanceOnionKey,
+        OnionServiceSpecOnionKey,
+    },
     Error, Result,
 };
 
@@ -113,7 +119,9 @@ pub struct Config {}
 pub async fn run_controller(config: Config) {
     let client = Client::try_default().await.unwrap();
 
+    let onion_balances = Api::<OnionBalance>::all(client.clone());
     let onion_keys = Api::<OnionKey>::all(client.clone());
+    let onion_services = Api::<OnionService>::all(client.clone());
     let tor_ingresses = Api::<TorIngress>::all(client.clone());
 
     let context = Arc::new(Context {
@@ -122,7 +130,9 @@ pub async fn run_controller(config: Config) {
     });
 
     Controller::new(tor_ingresses, WatcherConfig::default())
+        .owns(onion_balances, WatcherConfig::default())
         .owns(onion_keys, WatcherConfig::default())
+        .owns(onion_services, WatcherConfig::default())
         .shutdown_on_signal()
         .run(reconciler, error_policy, context)
         .for_each(|_| async {})
@@ -150,6 +160,8 @@ struct ObjectNamespace<'a>(&'a str);
 #[derive(PartialEq, Eq, Hash)]
 struct OnionKeyName(String);
 struct OnionKeySecretName(String);
+#[derive(PartialEq, Eq, Hash)]
+struct OnionServiceName(String);
 
 /*
  * ============================================================================
@@ -182,6 +194,7 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 
     let Some(onion_balance_onion_key) = onion_balance_onion_key else {
         // TODO: status: waiting for onion balance onion key hostname.
+        tracing::info!("status: waiting for onion balance onion key hostname.");
         return  Ok(Action::requeue(Duration::from_secs(5)));
     };
 
@@ -192,6 +205,7 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 
     let Some(onion_service_onion_keys) = onion_service_onion_keys else {
         // TODO: status: waiting for onion service onion key hostnames.
+        tracing::info!("status: waiting for onion service onion key hostnames.");
         return  Ok(Action::requeue(Duration::from_secs(5)));
     };
 
@@ -294,7 +308,7 @@ async fn reconcile_onion_service_onion_keys(
     }
 
     // get all keys
-    let owned_onion_keys = onion_keys
+    let mut owned_onion_keys = onion_keys
         .list(&ListParams::default().labels(&format!(
             "tor.agabani.co.uk/owned-by={}",
             object.metadata.uid.as_ref().unwrap()
@@ -318,7 +332,7 @@ async fn reconcile_onion_service_onion_keys(
     }
 
     // clean up
-    for (onion_key_name, _) in owned_onion_keys {
+    for (onion_key_name, _) in &owned_onion_keys {
         let keep = manifest.get(&onion_key_name).is_some();
 
         if !keep {
@@ -329,7 +343,19 @@ async fn reconcile_onion_service_onion_keys(
         }
     }
 
-    Ok(None)
+    let mut result = HashMap::new();
+
+    for (onion_key_name, (f, _)) in manifest {
+        let onion_key = owned_onion_keys.remove(&onion_key_name).unwrap();
+        result.insert(f, onion_key);
+    }
+
+    // let y = manifest
+    //     .iter()
+    //     .map(|(name, (f, _))| (f, owned_onion_keys.get(name)))
+    //     .collect::<HashMap<i32, OnionKey>>();
+
+    Ok(Some(result))
 }
 
 async fn reconcile_onion_services(
@@ -341,6 +367,66 @@ async fn reconcile_onion_services(
     onion_balance_onion_key: &OnionKey,
     onion_service_onion_keys: &HashMap<i32, OnionKey>,
 ) -> Result<()> {
+    let onion_services = Api::<OnionService>::namespaced(ctx.client.clone(), object_namespace.0);
+
+    let manifest = onion_service_onion_keys
+        .iter()
+        .map(|(f, key)| (generate_onion_service_name(object, *f), key))
+        .collect::<HashMap<_, _>>();
+
+    // creation
+    for (onion_service_name, &onion_service_onion_key) in &manifest {
+        let onion_service = onion_services
+            .get_opt(&onion_service_name.0)
+            .await
+            .map_err(Error::Kube)?;
+
+        let onion_service = generate_onion_service(
+            object,
+            &onion_service,
+            annotations,
+            labels,
+            onion_service_name,
+            onion_service_onion_key,
+            onion_balance_onion_key,
+        );
+
+        if let Some(onion_service) = onion_service {
+            onion_services
+                .patch(
+                    &onion_service_name.0,
+                    &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY),
+                    &Patch::Apply(onion_service),
+                )
+                .await
+                .map_err(Error::Kube)?;
+        }
+    }
+
+    // get all services
+    let owned_onion_services = onion_services
+        .list(&ListParams::default().labels(&format!(
+            "tor.agabani.co.uk/owned-by={}",
+            object.metadata.uid.as_ref().unwrap()
+        )))
+        .await
+        .map_err(Error::Kube)?
+        .into_iter()
+        .map(|f| (OnionServiceName(f.metadata.name.clone().unwrap()), f))
+        .collect::<HashMap<_, _>>();
+
+    // clean up
+    for (onion_service_name, _) in &owned_onion_services {
+        let keep = manifest.get(&onion_service_name).is_some();
+
+        if !keep {
+            onion_services
+                .delete(&onion_service_name.0, &DeleteParams::default())
+                .await
+                .map_err(Error::Kube)?;
+        }
+    }
+
     Ok(())
 }
 
@@ -418,6 +504,13 @@ fn generate_onion_key_secret_name(object: &TorIngress, instance: i32) -> OnionKe
     ))
 }
 
+fn generate_onion_service_name(object: &TorIngress, instance: i32) -> OnionServiceName {
+    OnionServiceName(format!(
+        "{}-{}",
+        object.spec.onion_service.name_prefix, instance
+    ))
+}
+
 /// only returns an onion key if a change needs to be made...
 fn generate_onion_key(
     object: &TorIngress,
@@ -427,26 +520,30 @@ fn generate_onion_key(
     onion_key_name: &OnionKeyName,
     onion_key_secret_name: &OnionKeySecretName,
 ) -> Option<OnionKey> {
+    let spec = OnionKeySpec {
+        auto_generate: Some(true),
+        secret: OnionKeySpecSecret {
+            name: onion_key_secret_name.0.clone(),
+        },
+    };
+
     let Some(onion_key) = onion_key else {
         return Some(generate_owned_onion_key(
             object,
             annotations,
             labels,
             onion_key_name,
-            onion_key_secret_name
+            spec
         ));
     };
 
-    if !onion_key.spec.auto_generate()
-        || onion_key.metadata.name.as_ref().unwrap() != &onion_key_name.0
-        || onion_key.spec.secret.name != onion_key_secret_name.0
-    {
+    if onion_key.spec != spec {
         return Some(generate_owned_onion_key(
             object,
             annotations,
             labels,
             onion_key_name,
-            onion_key_secret_name,
+            spec,
         ));
     }
 
@@ -458,7 +555,7 @@ fn generate_owned_onion_key(
     annotations: &Annotations,
     labels: &Labels,
     onion_key_name: &OnionKeyName,
-    onion_key_secret_name: &OnionKeySecretName,
+    spec: OnionKeySpec,
 ) -> OnionKey {
     OnionKey {
         metadata: ObjectMeta {
@@ -468,12 +565,85 @@ fn generate_owned_onion_key(
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
-        spec: OnionKeySpec {
-            auto_generate: Some(true),
-            secret: OnionKeySpecSecret {
-                name: onion_key_secret_name.0.clone(),
+        spec,
+        status: None,
+    }
+}
+
+/// only returns an onion service if a change needs to be made...
+fn generate_onion_service(
+    object: &TorIngress,
+    onion_service: &Option<OnionService>,
+    annotations: &Annotations,
+    labels: &Labels,
+    onion_service_name: &OnionServiceName,
+    onion_service_onion_key: &OnionKey,
+    onion_balance_onion_key: &OnionKey,
+) -> Option<OnionService> {
+    let spec = OnionServiceSpec {
+        onion_balance: Some(OnionServiceSpecOnionBalance {
+            onion_key: OnionServiceSpecOnionBalanceOnionKey {
+                hostname: onion_balance_onion_key
+                    .status
+                    .as_ref()
+                    .map(|f| f.hostname.clone().unwrap())
+                    .unwrap(),
             },
+        }),
+        onion_key: OnionServiceSpecOnionKey {
+            name: onion_service_onion_key.metadata.name.clone().unwrap(),
         },
+        ports: object
+            .spec
+            .onion_service
+            .ports
+            .iter()
+            .map(|f| OnionServiceSpecHiddenServicePort {
+                target: f.target.clone(),
+                virtport: f.virtport,
+            })
+            .collect(),
+    };
+
+    let Some(onion_service) = onion_service else {
+        return Some(generate_owned_onion_service(
+            object,
+            annotations,
+            labels,
+            onion_service_name,
+            spec
+        ));
+    };
+
+    if onion_service.spec != spec {
+        return Some(generate_owned_onion_service(
+            object,
+            annotations,
+            labels,
+            onion_service_name,
+            spec,
+        ));
+    }
+
+    None
+}
+
+fn generate_owned_onion_service(
+    object: &TorIngress,
+    annotations: &Annotations,
+    labels: &Labels,
+    onion_service_name: &OnionServiceName,
+    spec: OnionServiceSpec,
+) -> OnionService {
+    OnionService {
+        metadata: ObjectMeta {
+            name: Some(onion_service_name.0.clone()),
+            annotations: Some(annotations.0.clone()),
+            labels: Some(labels.0.clone()),
+            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            ..Default::default()
+        },
+        spec: spec,
         status: None,
     }
 }

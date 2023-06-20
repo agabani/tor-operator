@@ -26,7 +26,7 @@ use crate::{
  * ============================================================================
  */
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[kube(
     group = "tor.agabani.co.uk",
     kind = "OnionKey",
@@ -48,7 +48,7 @@ pub struct OnionKeySpec {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionKeySpecSecret {
     /// Name.
     pub name: String,
