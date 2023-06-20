@@ -30,7 +30,7 @@ use crate::{Error, Result};
  * ============================================================================
  */
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[kube(
     group = "tor.agabani.co.uk",
     kind = "OnionBalance",
@@ -44,17 +44,17 @@ pub struct OnionBalanceSpec {
     pub onion_services: Vec<OnionBalanceSpecOnionService>,
 }
 
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecOnionKey {
     pub name: String,
 }
 
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecOnionService {
     pub onion_key: OnionBalanceSpecOnionServiceOnionKey,
 }
 
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecOnionServiceOnionKey {
     pub hostname: String,
 }

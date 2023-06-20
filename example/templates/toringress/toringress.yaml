@@ -6,6 +6,7 @@ metadata:
     {{- include "example.labels" . | nindent 4 }}
 spec:
   onion_balance:
+    name: tor-ingress-{{ include "example.fullname" . }}
     onion_key:
       name: tor-ingress-{{ include "example.fullname" . }}
   onion_service:

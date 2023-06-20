@@ -16,7 +16,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    onion_balance::OnionBalance,
+    onion_balance::{
+        OnionBalance, OnionBalanceSpec, OnionBalanceSpecOnionKey, OnionBalanceSpecOnionService,
+        OnionBalanceSpecOnionServiceOnionKey,
+    },
     onion_key::{OnionKey, OnionKeySpec, OnionKeySpecSecret},
     onion_service::{
         OnionService, OnionServiceSpec, OnionServiceSpecHiddenServicePort,
@@ -49,6 +52,8 @@ pub struct TorIngressSpec {
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct TorIngressSpecOnionBalance {
+    pub name: String,
+
     pub onion_key: TorIngressSpecOnionBalanceOnionKey,
 }
 
@@ -439,6 +444,33 @@ async fn reconcile_onion_balance(
     onion_balance_onion_key: &OnionKey,
     onion_service_onion_keys: &HashMap<i32, OnionKey>,
 ) -> Result<()> {
+    let onion_balances = Api::<OnionBalance>::namespaced(ctx.client.clone(), object_namespace.0);
+
+    let onion_balance = onion_balances
+        .get_opt(&object.spec.onion_balance.name)
+        .await
+        .map_err(Error::Kube)?;
+
+    let onion_balance = generate_onion_balance(
+        object,
+        &onion_balance,
+        annotations,
+        labels,
+        onion_balance_onion_key,
+        onion_service_onion_keys,
+    );
+
+    if let Some(onion_balance) = onion_balance {
+        onion_balances
+            .patch(
+                &onion_balance.metadata.name.as_ref().unwrap(),
+                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY),
+                &Patch::Apply(&onion_balance),
+            )
+            .await
+            .map_err(Error::Kube)?;
+    }
+
     Ok(())
 }
 
@@ -638,6 +670,72 @@ fn generate_owned_onion_service(
     OnionService {
         metadata: ObjectMeta {
             name: Some(onion_service_name.0.clone()),
+            annotations: Some(annotations.0.clone()),
+            labels: Some(labels.0.clone()),
+            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            ..Default::default()
+        },
+        spec: spec,
+        status: None,
+    }
+}
+
+fn generate_onion_balance(
+    object: &TorIngress,
+    onion_balance: &Option<OnionBalance>,
+    annotations: &Annotations,
+    labels: &Labels,
+    onion_balance_onion_key: &OnionKey,
+    onion_service_onion_keys: &HashMap<i32, OnionKey>,
+) -> Option<OnionBalance> {
+    let spec = OnionBalanceSpec {
+        onion_key: OnionBalanceSpecOnionKey {
+            name: object.spec.onion_balance.onion_key.name.clone(),
+        },
+        onion_services: (0..onion_service_onion_keys.len())
+            .map(|f| OnionBalanceSpecOnionService {
+                onion_key: OnionBalanceSpecOnionServiceOnionKey {
+                    hostname: onion_service_onion_keys
+                        .get(&(f as i32))
+                        .and_then(|f| f.status.as_ref())
+                        .and_then(|f| f.hostname.as_ref())
+                        .unwrap()
+                        .clone(),
+                },
+            })
+            .collect(),
+    };
+
+    let Some(onion_balance) = onion_balance else {
+        return Some(generate_owned_onion_balance(
+            object,
+            annotations,
+            labels,
+            spec
+        ));
+    };
+
+    if onion_balance.spec != spec {
+        return Some(generate_owned_onion_balance(
+            object,
+            annotations,
+            labels,
+            spec,
+        ));
+    }
+
+    None
+}
+
+fn generate_owned_onion_balance(
+    object: &TorIngress,
+    annotations: &Annotations,
+    labels: &Labels,
+    spec: OnionBalanceSpec,
+) -> OnionBalance {
+    OnionBalance {
+        metadata: ObjectMeta {
+            name: Some(object.spec.onion_balance.name.clone()),
             annotations: Some(annotations.0.clone()),
             labels: Some(labels.0.clone()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),

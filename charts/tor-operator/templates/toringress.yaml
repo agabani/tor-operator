@@ -29,6 +29,8 @@ spec:
             properties:
               onion_balance:
                 properties:
+                  name:
+                    type: string
                   onion_key:
                     properties:
                       name:
@@ -37,6 +39,7 @@ spec:
                     - name
                     type: object
                 required:
+                - name
                 - onion_key
                 type: object
               onion_service:
