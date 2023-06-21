@@ -57,13 +57,6 @@ pub struct OnionKeySpecSecret {
     pub name: String,
 }
 
-impl OnionKeySpec {
-    #[must_use]
-    pub fn auto_generate(&self) -> bool {
-        self.auto_generate.unwrap_or(false)
-    }
-}
-
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct OnionKeyStatus {
@@ -74,18 +67,29 @@ pub struct OnionKeyStatus {
     pub validation: String,
 }
 
-#[must_use]
-pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
-    OnionKey::crd()
-}
-
 impl OnionKey {
+    #[must_use]
+    pub fn auto_generate(&self) -> bool {
+        self.spec.auto_generate.unwrap_or(false)
+    }
+
+    #[must_use]
     pub fn hostname(&self) -> Option<&str> {
         self.status
             .as_ref()
             .and_then(|status| status.hostname.as_ref())
-            .map(|hostname| hostname.as_str())
+            .map(String::as_str)
     }
+
+    #[must_use]
+    pub fn secret_name(&self) -> &str {
+        &self.spec.secret.name
+    }
+}
+
+#[must_use]
+pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
+    OnionKey::crd()
 }
 
 /*
@@ -155,7 +159,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
     let secrets = Api::<Secret>::namespaced(ctx.client.clone(), object_namespace.0);
 
     let secret = secrets
-        .get_opt(&object.spec.secret.name)
+        .get_opt(object.secret_name())
         .await
         .map_err(Error::Kube)?;
 
@@ -164,7 +168,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
     if let Some(secret) = secret {
         secrets
             .patch(
-                &object.spec.secret.name,
+                object.secret_name(),
                 &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force(),
                 &Patch::Apply(&secret),
             )
@@ -209,7 +213,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
 
     for owned_secret in owned_secrets {
         let name = owned_secret.metadata.name.unwrap();
-        if name != object.spec.secret.name {
+        if name != object.secret_name() {
             secrets
                 .delete(&name, &DeleteParams::default())
                 .await
@@ -311,7 +315,7 @@ fn generate_secret(
     annotations: &Annotations,
     labels: &Labels,
 ) -> (GenerateSecretResult, Option<Secret>) {
-    let auto_generate = object.spec.auto_generate();
+    let auto_generate = object.auto_generate();
 
     let Some(secret) = secret else {
         if !auto_generate {
@@ -506,7 +510,7 @@ fn generate_owned_secret(
 ) -> Secret {
     Secret {
         metadata: ObjectMeta {
-            name: Some(object.spec.secret.name.clone()),
+            name: Some(object.secret_name().to_string()),
             annotations: Some(annotations.0.clone()),
             labels: Some(labels.0.clone()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),

@@ -52,7 +52,11 @@ const APP_KUBERNETES_IO_MANAGED_BY_VALUE: &str = "tor-operator";
 const APP_KUBERNETES_IO_NAME_KEY: &str = "app.kubernetes.io/name";
 const APP_KUBERNETES_IO_NAME_VALUE: &str = "tor";
 
+const TOR_AGABANI_CO_UK_CONFIG_HASH_KEY: &str = "tor.agabani.co.uk/config-hash";
+
 const TOR_AGABANI_CO_UK_OWNED_BY_KEY: &str = "tor.agabani.co.uk/owned-by";
+
+const TOR_AGABANI_CO_UK_TORRC_HASH_KEY: &str = "tor.agabani.co.uk/torrc-hash";
 
 /*
  * ============================================================================

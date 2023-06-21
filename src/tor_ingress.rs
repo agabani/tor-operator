@@ -139,6 +139,86 @@ pub struct TorIngressSpecOnionServicePort {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct TorIngressStatus {}
 
+impl TorIngress {
+    #[must_use]
+    pub fn onion_balance_config_map_name(&self) -> &str {
+        &self.spec.onion_balance.config_map.name
+    }
+
+    #[must_use]
+    pub fn onion_balance_deployment_name(&self) -> &str {
+        &self.spec.onion_balance.deployment.name
+    }
+
+    #[must_use]
+    pub fn onion_balance_name(&self) -> &str {
+        &self.spec.onion_balance.name
+    }
+
+    #[must_use]
+    pub fn onion_balance_onion_key_name(&self) -> &str {
+        &self.spec.onion_balance.onion_key.name
+    }
+
+    #[must_use]
+    pub fn onion_service_config_map_name_prefix(&self) -> &str {
+        &self.spec.onion_service.config_map.name_prefix
+    }
+
+    #[must_use]
+    pub fn onion_service_config_map_name(&self, instance: i32) -> String {
+        format!("{}-{instance}", self.onion_service_config_map_name_prefix())
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_name_prefix(&self) -> &str {
+        &self.spec.onion_service.deployment.name_prefix
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_name(&self, instance: i32) -> String {
+        format!("{}-{instance}", self.onion_service_deployment_name_prefix())
+    }
+
+    #[must_use]
+    pub fn onion_service_name_prefix(&self) -> &str {
+        &self.spec.onion_service.name_prefix
+    }
+
+    #[must_use]
+    pub fn onion_service_name(&self, instance: i32) -> String {
+        format!("{}-{instance}", self.onion_service_name_prefix())
+    }
+
+    #[must_use]
+    pub fn onion_service_onion_key_name_prefix(&self) -> &str {
+        &self.spec.onion_service.onion_key.name_prefix
+    }
+
+    #[must_use]
+    pub fn onion_service_onion_key_name(&self, instance: i32) -> String {
+        format!("{}-{instance}", self.onion_service_onion_key_name_prefix())
+    }
+
+    #[must_use]
+    pub fn onion_service_onion_key_secret_name_prefix(&self) -> &str {
+        &self.spec.onion_service.onion_key.secret.name_prefix
+    }
+
+    #[must_use]
+    pub fn onion_service_onion_key_secret_name(&self, instance: i32) -> String {
+        format!(
+            "{}-{instance}",
+            self.onion_service_onion_key_secret_name_prefix()
+        )
+    }
+
+    #[must_use]
+    pub fn onion_service_replicas(&self) -> i32 {
+        self.spec.onion_service.replicas
+    }
+}
+
 #[must_use]
 pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
     TorIngress::crd()
@@ -268,7 +348,7 @@ async fn reconcile_onion_balance_onion_key(
     let onion_keys = Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0);
 
     let onion_key = onion_keys
-        .get(&object.spec.onion_balance.onion_key.name)
+        .get(object.onion_balance_onion_key_name())
         .await
         .map_err(Error::Kube)?;
 
@@ -289,12 +369,9 @@ async fn reconcile_onion_service_onion_keys(
     let onion_keys = Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0);
 
     // creation
-    for instance in 0..object.spec.onion_service.replicas {
+    for instance in 0..object.onion_service_replicas() {
         let onion_key = onion_keys
-            .get_opt(&format!(
-                "{}-{instance}",
-                object.spec.onion_service.onion_key.name_prefix
-            ))
+            .get_opt(&object.onion_service_onion_key_name(instance))
             .await
             .map_err(Error::Kube)?;
 
@@ -304,7 +381,7 @@ async fn reconcile_onion_service_onion_keys(
         if let Some(onion_key) = onion_key {
             onion_keys
                 .patch(
-                    &onion_key
+                    onion_key
                         .metadata
                         .name
                         .as_ref()
@@ -332,17 +409,9 @@ async fn reconcile_onion_service_onion_keys(
         })
         .collect::<HashMap<_, _>>();
 
-    let manifest = HashMap::<String, i32>::from_iter((0..object.spec.onion_service.replicas).map(
-        |instance| {
-            (
-                format!(
-                    "{}-{instance}",
-                    object.spec.onion_service.onion_key.name_prefix
-                ),
-                instance,
-            )
-        },
-    ));
+    let manifest = (0..object.onion_service_replicas())
+        .map(|instance| (object.onion_service_onion_key_name(instance), instance))
+        .collect::<HashMap<_, _>>();
 
     // ready
     let ready = manifest.iter().all(|(onion_key_name, _)| {
@@ -357,7 +426,7 @@ async fn reconcile_onion_service_onion_keys(
     }
 
     // deletion
-    for (onion_key_name, _) in &owned_onion_keys {
+    for onion_key_name in owned_onion_keys.keys() {
         let keep = manifest.get(onion_key_name).is_some();
 
         if !keep {
@@ -390,12 +459,9 @@ async fn reconcile_onion_services(
     let onion_services = Api::<OnionService>::namespaced(ctx.client.clone(), object_namespace.0);
 
     // creation
-    for instance in 0..object.spec.onion_service.replicas {
+    for instance in 0..object.onion_service_replicas() {
         let onion_service = onion_services
-            .get_opt(&format!(
-                "{}-{instance}",
-                object.spec.onion_service.name_prefix
-            ))
+            .get_opt(&object.onion_service_name(instance))
             .await
             .map_err(Error::Kube)?;
 
@@ -411,7 +477,7 @@ async fn reconcile_onion_services(
         if let Some(onion_service) = onion_service {
             onion_services
                 .patch(
-                    &onion_service
+                    onion_service
                         .metadata
                         .name
                         .as_ref()
@@ -433,10 +499,9 @@ async fn reconcile_onion_services(
         .await
         .map_err(Error::Kube)?;
 
-    let manifest: HashSet<String> = HashSet::from_iter(
-        (0..object.spec.onion_service.replicas)
-            .map(|instance| format!("{}-{instance}", object.spec.onion_service.name_prefix)),
-    );
+    let manifest: HashSet<String> = (0..object.onion_service_replicas())
+        .map(|instance| object.onion_service_name(instance))
+        .collect();
 
     for onion_service in &owned_onion_services {
         let onion_service_name = onion_service
@@ -447,7 +512,7 @@ async fn reconcile_onion_services(
 
         if !manifest.contains(onion_service_name) {
             onion_services
-                .delete(&onion_service_name, &DeleteParams::default())
+                .delete(onion_service_name, &DeleteParams::default())
                 .await
                 .map_err(Error::Kube)?;
         }
@@ -468,7 +533,7 @@ async fn reconcile_onion_balance(
 
     // creation
     let onion_balance = onion_balances
-        .get_opt(&object.spec.onion_balance.name)
+        .get_opt(object.onion_balance_name())
         .await
         .map_err(Error::Kube)?;
 
@@ -483,7 +548,7 @@ async fn reconcile_onion_balance(
     if let Some(onion_balance) = onion_balance {
         onion_balances
             .patch(
-                &onion_balance.metadata.name.as_ref().unwrap(),
+                onion_balance.metadata.name.as_ref().unwrap(),
                 &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
                 &Patch::Apply(&onion_balance),
             )
@@ -507,9 +572,9 @@ async fn reconcile_onion_balance(
             .as_ref()
             .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?;
 
-        if onion_balances_name != &object.spec.onion_balance.name {
+        if onion_balances_name != object.onion_balance_name() {
             onion_balances
-                .delete(&onion_balances_name, &DeleteParams::default())
+                .delete(onion_balances_name, &DeleteParams::default())
                 .await
                 .map_err(Error::Kube)?;
         }
@@ -574,22 +639,41 @@ fn generate_onion_balance(
     labels: &Labels,
     onion_service_onion_keys: &HashMap<i32, OnionKey>,
 ) -> Option<OnionBalance> {
+    fn generate(
+        object: &TorIngress,
+        spec: OnionBalanceSpec,
+        annotations: &Annotations,
+        labels: &Labels,
+    ) -> OnionBalance {
+        OnionBalance {
+            metadata: ObjectMeta {
+                name: Some(object.onion_balance_name().to_string()),
+                annotations: Some(annotations.0.clone()),
+                labels: Some(labels.0.clone()),
+                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+                ..Default::default()
+            },
+            spec,
+            status: None,
+        }
+    }
+
     let spec = OnionBalanceSpec {
         config_map: OnionBalanceSpecConfigMap {
-            name: object.spec.onion_balance.config_map.name.clone(),
+            name: object.onion_balance_config_map_name().to_string(),
         },
         deployment: OnionBalanceSpecDeployment {
-            name: object.spec.onion_balance.deployment.name.clone(),
+            name: object.onion_balance_deployment_name().to_string(),
         },
         onion_key: OnionBalanceSpecOnionKey {
-            name: object.spec.onion_balance.onion_key.name.clone(),
+            name: object.onion_balance_onion_key_name().to_string(),
         },
         onion_services: (0..onion_service_onion_keys.len())
             .map(|instance| OnionBalanceSpecOnionService {
                 onion_key: OnionBalanceSpecOnionServiceOnionKey {
                     hostname: onion_service_onion_keys
-                        .get(&(instance as i32))
-                        .and_then(|onion_key| onion_key.hostname())
+                        .get(&i32::try_from(instance).unwrap())
+                        .and_then(OnionKey::hostname)
                         .unwrap()
                         .to_string(),
                 },
@@ -598,31 +682,11 @@ fn generate_onion_balance(
     };
 
     let Some(onion_balance) = onion_balance else {
-        return Some(OnionBalance {
-            metadata: ObjectMeta {
-                name: Some(object.spec.onion_balance.name.clone()),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
-                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
-                ..Default::default()
-            },
-            spec: spec,
-            status: None,
-        });
+        return Some(generate(object, spec, annotations, labels));
     };
 
     if onion_balance.spec != spec {
-        return Some(OnionBalance {
-            metadata: ObjectMeta {
-                name: Some(object.spec.onion_balance.name.clone()),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
-                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
-                ..Default::default()
-            },
-            spec: spec,
-            status: None,
-        });
+        return Some(generate(object, spec, annotations, labels));
     }
 
     None
@@ -636,45 +700,39 @@ fn generate_onion_service_onion_key(
     labels: &Labels,
     instance: i32,
 ) -> Option<OnionKey> {
+    fn generate(
+        object: &TorIngress,
+        spec: OnionKeySpec,
+        annotations: &Annotations,
+        labels: &Labels,
+        instance: i32,
+    ) -> OnionKey {
+        OnionKey {
+            metadata: ObjectMeta {
+                name: Some(object.onion_service_onion_key_name(instance)),
+                annotations: Some(annotations.0.clone()),
+                labels: Some(labels.0.clone()),
+                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+                ..Default::default()
+            },
+            spec,
+            status: None,
+        }
+    }
+
     let spec = OnionKeySpec {
         auto_generate: Some(true),
         secret: OnionKeySpecSecret {
-            name: format!(
-                "{}-{instance}",
-                object.spec.onion_service.onion_key.secret.name_prefix
-            ),
+            name: object.onion_service_onion_key_secret_name(instance),
         },
     };
 
     let Some(onion_key) = onion_key else {
-        return Some(OnionKey {
-            metadata: ObjectMeta {
-                name: Some(format!("{}-{instance}", object.spec.onion_service.onion_key.name_prefix)),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
-                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
-                ..Default::default()
-            },
-            spec,
-            status: None,
-        });
+        return Some(generate(object, spec, annotations, labels, instance));
     };
 
     if onion_key.spec != spec {
-        return Some(OnionKey {
-            metadata: ObjectMeta {
-                name: Some(format!(
-                    "{}-{instance}",
-                    object.spec.onion_service.onion_key.name_prefix
-                )),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
-                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
-                ..Default::default()
-            },
-            spec,
-            status: None,
-        });
+        return Some(generate(object, spec, annotations, labels, instance));
     }
 
     None
@@ -689,18 +747,32 @@ fn generate_onion_service(
     onion_balance_onion_key: &OnionKey,
     instance: i32,
 ) -> Option<OnionService> {
+    fn generate(
+        object: &TorIngress,
+        spec: OnionServiceSpec,
+        annotations: &Annotations,
+        labels: &Labels,
+        instance: i32,
+    ) -> OnionService {
+        OnionService {
+            metadata: ObjectMeta {
+                name: Some(object.onion_service_name(instance)),
+                annotations: Some(annotations.0.clone()),
+                labels: Some(labels.0.clone()),
+                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+                ..Default::default()
+            },
+            spec,
+            status: None,
+        }
+    }
+
     let spec = OnionServiceSpec {
         config_map: OnionServiceSpecConfigMap {
-            name: format!(
-                "{}-{instance}",
-                object.spec.onion_service.config_map.name_prefix
-            ),
+            name: object.onion_service_config_map_name(instance),
         },
         deployment: OnionServiceSpecDeployment {
-            name: format!(
-                "{}-{instance}",
-                object.spec.onion_service.deployment.name_prefix
-            ),
+            name: object.onion_service_deployment_name(instance),
         },
         onion_balance: Some(OnionServiceSpecOnionBalance {
             onion_key: OnionServiceSpecOnionBalanceOnionKey {
@@ -708,10 +780,7 @@ fn generate_onion_service(
             },
         }),
         onion_key: OnionServiceSpecOnionKey {
-            name: format!(
-                "{}-{instance}",
-                object.spec.onion_service.onion_key.name_prefix
-            ),
+            name: object.onion_service_onion_key_name(instance),
         },
         ports: object
             .spec
@@ -726,34 +795,11 @@ fn generate_onion_service(
     };
 
     let Some(onion_service) = onion_service else {
-        return Some( OnionService {
-            metadata: ObjectMeta {
-                name: Some(format!("{}-{instance}", object.spec.onion_service.name_prefix)),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
-                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
-                ..Default::default()
-            },
-            spec: spec,
-            status: None,
-        });
+        return Some(generate(object, spec, annotations, labels, instance));
     };
 
     if onion_service.spec != spec {
-        return Some(OnionService {
-            metadata: ObjectMeta {
-                name: Some(format!(
-                    "{}-{instance}",
-                    object.spec.onion_service.name_prefix
-                )),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
-                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
-                ..Default::default()
-            },
-            spec: spec,
-            status: None,
-        });
+        return Some(generate(object, spec, annotations, labels, instance));
     }
 
     None
