@@ -1,5 +1,7 @@
 #![warn(clippy::pedantic)]
 
+use std::collections::BTreeMap;
+
 pub mod cli;
 pub mod crypto;
 pub mod http_server;
@@ -34,3 +36,17 @@ impl std::fmt::Display for Error {
  * ============================================================================
  */
 pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+/*
+ * ============================================================================
+ * Kubernetes Types
+ * ============================================================================
+ */
+struct Annotations(BTreeMap<String, String>);
+struct ConfigYaml(String);
+struct Labels(BTreeMap<String, String>);
+struct OBConfig(String);
+struct ObjectName<'a>(&'a str);
+struct ObjectNamespace<'a>(&'a str);
+struct SelectorLabels(BTreeMap<String, String>);
+struct Torrc(String);

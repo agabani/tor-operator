@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     crypto::{self, Hostname},
     utils::btree_maps_are_equal,
-    Error, Result,
+    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result,
 };
 
 /*
@@ -116,16 +116,6 @@ pub async fn run_controller(config: Config) {
 const APP_KUBERNETES_IO_COMPONENT: &str = "onion-key";
 const APP_KUBERNETES_IO_NAME: &str = "tor";
 const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
-
-/*
- * ============================================================================
- * Types
- * ============================================================================
- */
-struct Annotations(BTreeMap<String, String>);
-struct Labels(BTreeMap<String, String>);
-struct ObjectName<'a>(&'a str);
-struct ObjectNamespace<'a>(&'a str);
 
 /*
  * ============================================================================

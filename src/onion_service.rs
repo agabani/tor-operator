@@ -22,7 +22,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::{onion_key::OnionKey, Error, Result};
+use crate::{
+    onion_key::OnionKey, Annotations, Error, Labels, OBConfig, ObjectName, ObjectNamespace, Result,
+    SelectorLabels, Torrc,
+};
 
 /*
  * ============================================================================
@@ -135,14 +138,7 @@ const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
  * Types
  * ============================================================================
  */
-struct Annotations(BTreeMap<String, String>);
-struct OBConfig(String);
-struct Labels(BTreeMap<String, String>);
-struct ObjectName<'a>(&'a str);
-struct ObjectNamespace<'a>(&'a str);
 struct Name(String);
-struct SelectorLabels(BTreeMap<String, String>);
-struct Torrc(String);
 
 /*
  * ============================================================================
