@@ -5,6 +5,10 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
+  config_map:
+    name: onion-service-{{ include "example.fullname" . }}
+  deployment:
+    name: onion-service-{{ include "example.fullname" . }}
   onion_key:
     name: onion-service-{{ include "example.fullname" . }}
   ports:

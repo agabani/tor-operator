@@ -29,6 +29,20 @@ spec:
             properties:
               onion_balance:
                 properties:
+                  config_map:
+                    properties:
+                      name:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  deployment:
+                    properties:
+                      name:
+                        type: string
+                    required:
+                    - name
+                    type: object
                   name:
                     type: string
                   onion_key:
@@ -39,11 +53,27 @@ spec:
                     - name
                     type: object
                 required:
+                - config_map
+                - deployment
                 - name
                 - onion_key
                 type: object
               onion_service:
                 properties:
+                  config_map:
+                    properties:
+                      name_prefix:
+                        type: string
+                    required:
+                    - name_prefix
+                    type: object
+                  deployment:
+                    properties:
+                      name_prefix:
+                        type: string
+                    required:
+                    - name_prefix
+                    type: object
                   name_prefix:
                     type: string
                   onion_key:
@@ -80,6 +110,8 @@ spec:
                     format: int32
                     type: integer
                 required:
+                - config_map
+                - deployment
                 - name_prefix
                 - onion_key
                 - ports

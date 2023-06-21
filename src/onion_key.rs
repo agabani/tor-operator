@@ -77,6 +77,15 @@ pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
     OnionKey::crd()
 }
 
+impl OnionKey {
+    pub fn hostname(&self) -> Option<&str> {
+        self.status
+            .as_ref()
+            .and_then(|status| status.hostname.as_ref())
+            .map(|hostname| hostname.as_str())
+    }
+}
+
 /*
  * ============================================================================
  * Config
