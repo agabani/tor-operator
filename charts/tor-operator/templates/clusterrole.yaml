@@ -11,6 +11,12 @@ metadata:
   {{- end }}
 rules:
   # used by Onion Balance
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "list", "patch", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["create", "list", "patch", "watch"]
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionbalances"]
     verbs: ["list", "watch"]
