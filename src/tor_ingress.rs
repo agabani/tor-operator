@@ -27,8 +27,10 @@ use crate::{
         OnionServiceSpecHiddenServicePort, OnionServiceSpecOnionBalance,
         OnionServiceSpecOnionBalanceOnionKey, OnionServiceSpecOnionKey,
     },
-    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result, APP_KUBERNETES_IO_MANAGED_BY,
-    APP_KUBERNETES_IO_NAME,
+    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result,
+    APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
+    APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
+    APP_KUBERNETES_IO_NAME_KEY, APP_KUBERNETES_IO_NAME_VALUE, TOR_AGABANI_CO_UK_OWNED_BY_KEY,
 };
 
 /*
@@ -183,7 +185,7 @@ pub async fn run_controller(config: Config) {
  * Constants
  * ============================================================================
  */
-const APP_KUBERNETES_IO_COMPONENT: &str = "tor-ingress";
+const APP_KUBERNETES_IO_COMPONENT_VALUE: &str = "tor-ingress";
 
 /*
  * ============================================================================
@@ -270,11 +272,7 @@ async fn reconcile_onion_balance_onion_key(
         .await
         .map_err(Error::Kube)?;
 
-    if onion_key
-        .status
-        .as_ref()
-        .map_or(false, |f| f.hostname.is_some())
-    {
+    if onion_key.hostname().is_some() {
         Ok(Some(onion_key))
     } else {
         Ok(None)
@@ -311,7 +309,7 @@ async fn reconcile_onion_service_onion_keys(
                         .name
                         .as_ref()
                         .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?,
-                    &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY),
+                    &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
                     &Patch::Apply(&onion_key),
                 )
                 .await
@@ -322,7 +320,7 @@ async fn reconcile_onion_service_onion_keys(
     // ready and deletion
     let mut owned_onion_keys = onion_keys
         .list(&ListParams::default().labels(&format!(
-            "tor.agabani.co.uk/owned-by={}",
+            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
             object.metadata.uid.as_ref().unwrap()
         )))
         .await
@@ -351,10 +349,7 @@ async fn reconcile_onion_service_onion_keys(
         let Some(onion_key) = owned_onion_keys.get(onion_key_name) else {
             return false;
         };
-        let Some(status) = &onion_key.status else {
-            return false;
-        };
-        status.hostname.is_some()
+        onion_key.hostname().is_some()
     });
 
     if !ready {
@@ -421,7 +416,7 @@ async fn reconcile_onion_services(
                         .name
                         .as_ref()
                         .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?,
-                    &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY),
+                    &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
                     &Patch::Apply(&onion_service),
                 )
                 .await
@@ -432,7 +427,7 @@ async fn reconcile_onion_services(
     // deletion
     let owned_onion_services = onion_services
         .list(&ListParams::default().labels(&format!(
-            "tor.agabani.co.uk/owned-by={}",
+            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
             object.metadata.uid.as_ref().unwrap()
         )))
         .await
@@ -489,7 +484,7 @@ async fn reconcile_onion_balance(
         onion_balances
             .patch(
                 &onion_balance.metadata.name.as_ref().unwrap(),
-                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY),
+                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
                 &Patch::Apply(&onion_balance),
             )
             .await
@@ -499,7 +494,7 @@ async fn reconcile_onion_balance(
     // deletion
     let owned_onion_balances = onion_balances
         .list(&ListParams::default().labels(&format!(
-            "tor.agabani.co.uk/owned-by={}",
+            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
             object.metadata.uid.as_ref().unwrap()
         )))
         .await
@@ -552,20 +547,20 @@ fn generate_annotations() -> Annotations {
 fn generate_labels(object: &TorIngress, object_name: &ObjectName) -> Labels {
     Labels(BTreeMap::from([
         (
-            "app.kubernetes.io/component".into(),
-            APP_KUBERNETES_IO_COMPONENT.into(),
+            APP_KUBERNETES_IO_COMPONENT_KEY.into(),
+            APP_KUBERNETES_IO_COMPONENT_VALUE.into(),
         ),
-        ("app.kubernetes.io/instance".into(), object_name.0.into()),
+        (APP_KUBERNETES_IO_INSTANCE_KEY.into(), object_name.0.into()),
         (
-            "app.kubernetes.io/managed-by".into(),
-            APP_KUBERNETES_IO_MANAGED_BY.into(),
-        ),
-        (
-            "app.kubernetes.io/name".into(),
-            APP_KUBERNETES_IO_NAME.into(),
+            APP_KUBERNETES_IO_MANAGED_BY_KEY.into(),
+            APP_KUBERNETES_IO_MANAGED_BY_VALUE.into(),
         ),
         (
-            "tor.agabani.co.uk/owned-by".into(),
+            APP_KUBERNETES_IO_NAME_KEY.into(),
+            APP_KUBERNETES_IO_NAME_VALUE.into(),
+        ),
+        (
+            TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
             object.metadata.uid.clone().unwrap(),
         ),
     ]))
@@ -594,10 +589,9 @@ fn generate_onion_balance(
                 onion_key: OnionBalanceSpecOnionServiceOnionKey {
                     hostname: onion_service_onion_keys
                         .get(&(instance as i32))
-                        .and_then(|onion_key| onion_key.status.as_ref())
-                        .and_then(|onion_key_status| onion_key_status.hostname.as_ref())
+                        .and_then(|onion_key| onion_key.hostname())
                         .unwrap()
-                        .clone(),
+                        .to_string(),
                 },
             })
             .collect(),
@@ -710,11 +704,7 @@ fn generate_onion_service(
         },
         onion_balance: Some(OnionServiceSpecOnionBalance {
             onion_key: OnionServiceSpecOnionBalanceOnionKey {
-                hostname: onion_balance_onion_key
-                    .status
-                    .as_ref()
-                    .map(|f| f.hostname.clone().unwrap())
-                    .unwrap(),
+                hostname: onion_balance_onion_key.hostname().unwrap().to_string(),
             },
         }),
         onion_key: OnionServiceSpecOnionKey {

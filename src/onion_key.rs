@@ -17,8 +17,10 @@ use serde::{Deserialize, Serialize};
 use crate::{
     crypto::{self, Hostname},
     utils::btree_maps_are_equal,
-    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result, APP_KUBERNETES_IO_MANAGED_BY,
-    APP_KUBERNETES_IO_NAME,
+    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result,
+    APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
+    APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
+    APP_KUBERNETES_IO_NAME_KEY, APP_KUBERNETES_IO_NAME_VALUE, TOR_AGABANI_CO_UK_OWNED_BY_KEY,
 };
 
 /*
@@ -123,7 +125,7 @@ pub async fn run_controller(config: Config) {
  * Constants
  * ============================================================================
  */
-const APP_KUBERNETES_IO_COMPONENT: &str = "onion-key";
+const APP_KUBERNETES_IO_COMPONENT_VALUE: &str = "onion-key";
 
 /*
  * ============================================================================
@@ -163,7 +165,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
         secrets
             .patch(
                 &object.spec.secret.name,
-                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY).force(),
+                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force(),
                 &Patch::Apply(&secret),
             )
             .await
@@ -185,7 +187,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
         Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0)
             .patch_status(
                 object_name.0,
-                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY),
+                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
                 &Patch::Merge(serde_json::json!({
                     "status": OnionKeyStatus {
                         hostname,
@@ -199,7 +201,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
 
     let owned_secrets = secrets
         .list(&ListParams::default().labels(&format!(
-            "tor.agabani.co.uk/owned-by={}",
+            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
             object.metadata.uid.as_ref().unwrap()
         )))
         .await
@@ -252,20 +254,20 @@ fn generate_annotations() -> Annotations {
 fn generate_labels(object: &OnionKey, object_name: &ObjectName) -> Labels {
     Labels(BTreeMap::from([
         (
-            "app.kubernetes.io/component".into(),
-            APP_KUBERNETES_IO_COMPONENT.into(),
+            APP_KUBERNETES_IO_COMPONENT_KEY.into(),
+            APP_KUBERNETES_IO_COMPONENT_VALUE.into(),
         ),
-        ("app.kubernetes.io/instance".into(), object_name.0.into()),
+        (APP_KUBERNETES_IO_INSTANCE_KEY.into(), object_name.0.into()),
         (
-            "app.kubernetes.io/managed-by".into(),
-            APP_KUBERNETES_IO_MANAGED_BY.into(),
-        ),
-        (
-            "app.kubernetes.io/name".into(),
-            APP_KUBERNETES_IO_NAME.into(),
+            APP_KUBERNETES_IO_MANAGED_BY_KEY.into(),
+            APP_KUBERNETES_IO_MANAGED_BY_VALUE.into(),
         ),
         (
-            "tor.agabani.co.uk/owned-by".into(),
+            APP_KUBERNETES_IO_NAME_KEY.into(),
+            APP_KUBERNETES_IO_NAME_VALUE.into(),
+        ),
+        (
+            TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
             object.metadata.uid.clone().unwrap(),
         ),
     ]))

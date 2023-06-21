@@ -24,7 +24,9 @@ use sha2::{Digest, Sha256};
 
 use crate::{
     onion_key::OnionKey, Annotations, Error, Labels, OBConfig, ObjectName, ObjectNamespace, Result,
-    SelectorLabels, Torrc, APP_KUBERNETES_IO_MANAGED_BY, APP_KUBERNETES_IO_NAME,
+    SelectorLabels, Torrc, APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
+    APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
+    APP_KUBERNETES_IO_NAME_KEY, APP_KUBERNETES_IO_NAME_VALUE, TOR_AGABANI_CO_UK_OWNED_BY_KEY,
 };
 
 /*
@@ -145,7 +147,7 @@ pub async fn run_controller(config: Config) {
  * Constants
  * ============================================================================
  */
-const APP_KUBERNETES_IO_COMPONENT: &str = "onion-service";
+const APP_KUBERNETES_IO_COMPONENT_VALUE: &str = "onion-service";
 
 /*
  * ============================================================================
@@ -250,7 +252,7 @@ async fn reconcile_config_map(
                 .name
                 .as_ref()
                 .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?,
-            &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY).force(),
+            &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force(),
             &Patch::Apply(&config_map),
         )
         .await
@@ -259,7 +261,7 @@ async fn reconcile_config_map(
     // deletion
     let owned_config_maps = config_maps
         .list(&ListParams::default().labels(&format!(
-            "tor.agabani.co.uk/owned-by={}",
+            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
             object.metadata.uid.as_ref().unwrap()
         )))
         .await
@@ -310,7 +312,7 @@ async fn reconcile_deployment(
                 .name
                 .as_ref()
                 .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?,
-            &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY).force(),
+            &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force(),
             &Patch::Apply(&deployment),
         )
         .await
@@ -319,7 +321,7 @@ async fn reconcile_deployment(
     // deletion
     let owned_deployments = deployments
         .list(&ListParams::default().labels(&format!(
-            "tor.agabani.co.uk/owned-by={}",
+            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
             object.metadata.uid.as_ref().unwrap()
         )))
         .await
@@ -378,20 +380,20 @@ fn generate_annotations(torrc: &Torrc) -> Annotations {
 fn generate_labels(object: &OnionService, object_name: &ObjectName) -> Labels {
     Labels(BTreeMap::from([
         (
-            "app.kubernetes.io/component".into(),
-            APP_KUBERNETES_IO_COMPONENT.into(),
+            APP_KUBERNETES_IO_COMPONENT_KEY.into(),
+            APP_KUBERNETES_IO_COMPONENT_VALUE.into(),
         ),
-        ("app.kubernetes.io/instance".into(), object_name.0.into()),
+        (APP_KUBERNETES_IO_INSTANCE_KEY.into(), object_name.0.into()),
         (
-            "app.kubernetes.io/managed-by".into(),
-            APP_KUBERNETES_IO_MANAGED_BY.into(),
-        ),
-        (
-            "app.kubernetes.io/name".into(),
-            APP_KUBERNETES_IO_NAME.into(),
+            APP_KUBERNETES_IO_MANAGED_BY_KEY.into(),
+            APP_KUBERNETES_IO_MANAGED_BY_VALUE.into(),
         ),
         (
-            "tor.agabani.co.uk/owned-by".into(),
+            APP_KUBERNETES_IO_NAME_KEY.into(),
+            APP_KUBERNETES_IO_NAME_VALUE.into(),
+        ),
+        (
+            TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
             object.metadata.uid.clone().unwrap(),
         ),
     ]))
@@ -400,13 +402,13 @@ fn generate_labels(object: &OnionService, object_name: &ObjectName) -> Labels {
 fn generate_selector_labels(object_name: &ObjectName) -> SelectorLabels {
     SelectorLabels(BTreeMap::from([
         (
-            "app.kubernetes.io/component".into(),
-            APP_KUBERNETES_IO_COMPONENT.into(),
+            APP_KUBERNETES_IO_COMPONENT_KEY.into(),
+            APP_KUBERNETES_IO_COMPONENT_VALUE.into(),
         ),
-        ("app.kubernetes.io/instance".into(), object_name.0.into()),
+        (APP_KUBERNETES_IO_INSTANCE_KEY.into(), object_name.0.into()),
         (
-            "app.kubernetes.io/name".into(),
-            APP_KUBERNETES_IO_NAME.into(),
+            APP_KUBERNETES_IO_NAME_KEY.into(),
+            APP_KUBERNETES_IO_NAME_VALUE.into(),
         ),
     ]))
 }

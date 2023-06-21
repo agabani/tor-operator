@@ -42,8 +42,17 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
  * Kubernetes Constants
  * ============================================================================
  */
-const APP_KUBERNETES_IO_NAME: &str = "tor";
-const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
+const APP_KUBERNETES_IO_COMPONENT_KEY: &str = "app.kubernetes.io/component";
+
+const APP_KUBERNETES_IO_INSTANCE_KEY: &str = "app.kubernetes.io/instance";
+
+const APP_KUBERNETES_IO_MANAGED_BY_KEY: &str = "app.kubernetes.io/managed-by";
+const APP_KUBERNETES_IO_MANAGED_BY_VALUE: &str = "tor-operator";
+
+const APP_KUBERNETES_IO_NAME_KEY: &str = "app.kubernetes.io/name";
+const APP_KUBERNETES_IO_NAME_VALUE: &str = "tor";
+
+const TOR_AGABANI_CO_UK_OWNED_BY_KEY: &str = "tor.agabani.co.uk/owned-by";
 
 /*
  * ============================================================================
