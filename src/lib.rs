@@ -1,5 +1,7 @@
 #![warn(clippy::pedantic)]
 
+use std::collections::BTreeMap;
+
 pub mod cli;
 pub mod crypto;
 pub mod http_server;
@@ -34,3 +36,38 @@ impl std::fmt::Display for Error {
  * ============================================================================
  */
 pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+/*
+ * ============================================================================
+ * Kubernetes Constants
+ * ============================================================================
+ */
+const APP_KUBERNETES_IO_COMPONENT_KEY: &str = "app.kubernetes.io/component";
+
+const APP_KUBERNETES_IO_INSTANCE_KEY: &str = "app.kubernetes.io/instance";
+
+const APP_KUBERNETES_IO_MANAGED_BY_KEY: &str = "app.kubernetes.io/managed-by";
+const APP_KUBERNETES_IO_MANAGED_BY_VALUE: &str = "tor-operator";
+
+const APP_KUBERNETES_IO_NAME_KEY: &str = "app.kubernetes.io/name";
+const APP_KUBERNETES_IO_NAME_VALUE: &str = "tor";
+
+const TOR_AGABANI_CO_UK_CONFIG_HASH_KEY: &str = "tor.agabani.co.uk/config-hash";
+
+const TOR_AGABANI_CO_UK_OWNED_BY_KEY: &str = "tor.agabani.co.uk/owned-by";
+
+const TOR_AGABANI_CO_UK_TORRC_HASH_KEY: &str = "tor.agabani.co.uk/torrc-hash";
+
+/*
+ * ============================================================================
+ * Kubernetes Types
+ * ============================================================================
+ */
+struct Annotations(BTreeMap<String, String>);
+struct ConfigYaml(String);
+struct Labels(BTreeMap<String, String>);
+struct OBConfig(String);
+struct ObjectName<'a>(&'a str);
+struct ObjectNamespace<'a>(&'a str);
+struct SelectorLabels(BTreeMap<String, String>);
+struct Torrc(String);

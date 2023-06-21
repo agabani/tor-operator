@@ -17,7 +17,10 @@ use serde::{Deserialize, Serialize};
 use crate::{
     crypto::{self, Hostname},
     utils::btree_maps_are_equal,
-    Error, Result,
+    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result,
+    APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
+    APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
+    APP_KUBERNETES_IO_NAME_KEY, APP_KUBERNETES_IO_NAME_VALUE, TOR_AGABANI_CO_UK_OWNED_BY_KEY,
 };
 
 /*
@@ -54,13 +57,6 @@ pub struct OnionKeySpecSecret {
     pub name: String,
 }
 
-impl OnionKeySpec {
-    #[must_use]
-    pub fn auto_generate(&self) -> bool {
-        self.auto_generate.unwrap_or(false)
-    }
-}
-
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct OnionKeyStatus {
@@ -69,6 +65,26 @@ pub struct OnionKeyStatus {
 
     /// Human readable description of onion key validation.
     pub validation: String,
+}
+
+impl OnionKey {
+    #[must_use]
+    pub fn auto_generate(&self) -> bool {
+        self.spec.auto_generate.unwrap_or(false)
+    }
+
+    #[must_use]
+    pub fn hostname(&self) -> Option<&str> {
+        self.status
+            .as_ref()
+            .and_then(|status| status.hostname.as_ref())
+            .map(String::as_str)
+    }
+
+    #[must_use]
+    pub fn secret_name(&self) -> &str {
+        &self.spec.secret.name
+    }
 }
 
 #[must_use]
@@ -113,19 +129,7 @@ pub async fn run_controller(config: Config) {
  * Constants
  * ============================================================================
  */
-const APP_KUBERNETES_IO_COMPONENT: &str = "onion-key";
-const APP_KUBERNETES_IO_NAME: &str = "tor";
-const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
-
-/*
- * ============================================================================
- * Types
- * ============================================================================
- */
-struct Annotations(BTreeMap<String, String>);
-struct Labels(BTreeMap<String, String>);
-struct ObjectName<'a>(&'a str);
-struct ObjectNamespace<'a>(&'a str);
+const APP_KUBERNETES_IO_COMPONENT_VALUE: &str = "onion-key";
 
 /*
  * ============================================================================
@@ -155,7 +159,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
     let secrets = Api::<Secret>::namespaced(ctx.client.clone(), object_namespace.0);
 
     let secret = secrets
-        .get_opt(&object.spec.secret.name)
+        .get_opt(object.secret_name())
         .await
         .map_err(Error::Kube)?;
 
@@ -164,8 +168,8 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
     if let Some(secret) = secret {
         secrets
             .patch(
-                &object.spec.secret.name,
-                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY).force(),
+                object.secret_name(),
+                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force(),
                 &Patch::Apply(&secret),
             )
             .await
@@ -187,7 +191,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
         Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0)
             .patch_status(
                 object_name.0,
-                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY),
+                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
                 &Patch::Merge(serde_json::json!({
                     "status": OnionKeyStatus {
                         hostname,
@@ -201,7 +205,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
 
     let owned_secrets = secrets
         .list(&ListParams::default().labels(&format!(
-            "tor.agabani.co.uk/owned-by={}",
+            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
             object.metadata.uid.as_ref().unwrap()
         )))
         .await
@@ -209,7 +213,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
 
     for owned_secret in owned_secrets {
         let name = owned_secret.metadata.name.unwrap();
-        if name != object.spec.secret.name {
+        if name != object.secret_name() {
             secrets
                 .delete(&name, &DeleteParams::default())
                 .await
@@ -254,20 +258,20 @@ fn generate_annotations() -> Annotations {
 fn generate_labels(object: &OnionKey, object_name: &ObjectName) -> Labels {
     Labels(BTreeMap::from([
         (
-            "app.kubernetes.io/component".into(),
-            APP_KUBERNETES_IO_COMPONENT.into(),
+            APP_KUBERNETES_IO_COMPONENT_KEY.into(),
+            APP_KUBERNETES_IO_COMPONENT_VALUE.into(),
         ),
-        ("app.kubernetes.io/instance".into(), object_name.0.into()),
+        (APP_KUBERNETES_IO_INSTANCE_KEY.into(), object_name.0.into()),
         (
-            "app.kubernetes.io/managed-by".into(),
-            APP_KUBERNETES_IO_MANAGED_BY.into(),
-        ),
-        (
-            "app.kubernetes.io/name".into(),
-            APP_KUBERNETES_IO_NAME.into(),
+            APP_KUBERNETES_IO_MANAGED_BY_KEY.into(),
+            APP_KUBERNETES_IO_MANAGED_BY_VALUE.into(),
         ),
         (
-            "tor.agabani.co.uk/owned-by".into(),
+            APP_KUBERNETES_IO_NAME_KEY.into(),
+            APP_KUBERNETES_IO_NAME_VALUE.into(),
+        ),
+        (
+            TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
             object.metadata.uid.clone().unwrap(),
         ),
     ]))
@@ -311,7 +315,7 @@ fn generate_secret(
     annotations: &Annotations,
     labels: &Labels,
 ) -> (GenerateSecretResult, Option<Secret>) {
-    let auto_generate = object.spec.auto_generate();
+    let auto_generate = object.auto_generate();
 
     let Some(secret) = secret else {
         if !auto_generate {
@@ -506,7 +510,7 @@ fn generate_owned_secret(
 ) -> Secret {
     Secret {
         metadata: ObjectMeta {
-            name: Some(object.spec.secret.name.clone()),
+            name: Some(object.secret_name().to_string()),
             annotations: Some(annotations.0.clone()),
             labels: Some(labels.0.clone()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),

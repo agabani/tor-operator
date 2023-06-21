@@ -27,6 +27,20 @@ spec:
         properties:
           spec:
             properties:
+              config_map:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
+              deployment:
+                properties:
+                  name:
+                    type: string
+                required:
+                - name
+                type: object
               onion_balance:
                 nullable: true
                 properties:
@@ -63,6 +77,8 @@ spec:
                   type: object
                 type: array
             required:
+            - config_map
+            - deployment
             - onion_key
             - ports
             type: object
