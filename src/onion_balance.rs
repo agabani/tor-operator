@@ -24,7 +24,7 @@ use sha2::{Digest, Sha256};
 
 use crate::{
     Annotations, ConfigYaml, Error, Labels, ObjectName, ObjectNamespace, Result, SelectorLabels,
-    Torrc,
+    Torrc, APP_KUBERNETES_IO_MANAGED_BY, APP_KUBERNETES_IO_NAME,
 };
 
 /*
@@ -112,8 +112,6 @@ pub async fn run_controller(config: Config) {
  * ============================================================================
  */
 const APP_KUBERNETES_IO_COMPONENT: &str = "onion-balance";
-const APP_KUBERNETES_IO_NAME: &str = "tor";
-const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
 
 /*
  * ============================================================================

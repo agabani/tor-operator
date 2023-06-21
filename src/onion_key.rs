@@ -17,7 +17,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     crypto::{self, Hostname},
     utils::btree_maps_are_equal,
-    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result,
+    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result, APP_KUBERNETES_IO_MANAGED_BY,
+    APP_KUBERNETES_IO_NAME,
 };
 
 /*
@@ -114,8 +115,6 @@ pub async fn run_controller(config: Config) {
  * ============================================================================
  */
 const APP_KUBERNETES_IO_COMPONENT: &str = "onion-key";
-const APP_KUBERNETES_IO_NAME: &str = "tor";
-const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
 
 /*
  * ============================================================================

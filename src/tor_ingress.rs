@@ -26,7 +26,8 @@ use crate::{
         OnionServiceSpecOnionBalance, OnionServiceSpecOnionBalanceOnionKey,
         OnionServiceSpecOnionKey,
     },
-    Error, Result,
+    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result, APP_KUBERNETES_IO_MANAGED_BY,
+    APP_KUBERNETES_IO_NAME,
 };
 
 /*
@@ -150,18 +151,12 @@ pub async fn run_controller(config: Config) {
  * ============================================================================
  */
 const APP_KUBERNETES_IO_COMPONENT: &str = "tor-ingress";
-const APP_KUBERNETES_IO_NAME: &str = "tor";
-const APP_KUBERNETES_IO_MANAGED_BY: &str = "tor-operator";
 
 /*
  * ============================================================================
  * Types
  * ============================================================================
  */
-struct Annotations(BTreeMap<String, String>);
-struct Labels(BTreeMap<String, String>);
-struct ObjectName<'a>(&'a str);
-struct ObjectNamespace<'a>(&'a str);
 #[derive(PartialEq, Eq, Hash)]
 struct OnionKeyName(String);
 struct OnionKeySecretName(String);
