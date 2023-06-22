@@ -29,7 +29,7 @@ jobs:
           pip3 install mkdocs
           pip3 install mkdocs-include-markdown-plugin
       - name: Deploy Mkdocs
-        run: mkdocs gh-deploy
+        run: mkdocs gh-deploy --dirty
   helm:
     runs-on: ubuntu-latest
     permissions:
