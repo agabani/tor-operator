@@ -1,0 +1,119 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: toringresses.tor.agabani.co.uk
+spec:
+  group: tor.agabani.co.uk
+  names:
+    categories: []
+    kind: TorIngress
+    plural: toringresses
+    shortNames: []
+    singular: toringress
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns: []
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: Auto-generated derived type for TorIngressSpec via `CustomResource`
+        properties:
+          spec:
+            properties:
+              onion_balance:
+                nullable: true
+                properties:
+                  config_map:
+                    nullable: true
+                    properties:
+                      name:
+                        nullable: true
+                        type: string
+                    type: object
+                  deployment:
+                    nullable: true
+                    properties:
+                      name:
+                        nullable: true
+                        type: string
+                    type: object
+                  name:
+                    nullable: true
+                    type: string
+                  onion_key:
+                    nullable: true
+                    properties:
+                      name:
+                        nullable: true
+                        type: string
+                    type: object
+                type: object
+              onion_service:
+                properties:
+                  config_map:
+                    nullable: true
+                    properties:
+                      name_prefix:
+                        nullable: true
+                        type: string
+                    type: object
+                  deployment:
+                    nullable: true
+                    properties:
+                      name_prefix:
+                        nullable: true
+                        type: string
+                    type: object
+                  name_prefix:
+                    nullable: true
+                    type: string
+                  onion_key:
+                    nullable: true
+                    properties:
+                      name_prefix:
+                        nullable: true
+                        type: string
+                      secret:
+                        nullable: true
+                        properties:
+                          name_prefix:
+                            nullable: true
+                            type: string
+                        type: object
+                    type: object
+                  ports:
+                    items:
+                      properties:
+                        target:
+                          description: The target any incoming traffic will be redirect to.
+                          type: string
+                        virtport:
+                          description: The virtual port that the Onion Service will be using.
+                          format: int32
+                          type: integer
+                      required:
+                      - target
+                      - virtport
+                      type: object
+                    type: array
+                  replicas:
+                    format: int32
+                    nullable: true
+                    type: integer
+                required:
+                - ports
+                type: object
+            required:
+            - onion_service
+            type: object
+          status:
+            nullable: true
+            type: object
+        required:
+        - spec
+        title: TorIngress
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
