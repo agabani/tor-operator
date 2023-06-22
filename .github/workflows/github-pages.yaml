@@ -33,10 +33,7 @@ jobs:
       - name: Deploy Mkdocs
         run: |
           mkdocs build
-          git fetch
-          git checkout gh-pages -- index.yaml || true
-          mv index.yaml site/index.yaml
-          ghp-import site -p
+          ghp-import site -p -x docs
   helm:
     runs-on: ubuntu-latest
     permissions:
