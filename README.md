@@ -1,78 +1,71 @@
 # Tor Operator
 
+Tor Operator is a Kubernetes Operator that manages high availability Onion Services.
+
 ## Installation
 
-```terminal
-helm repo add agabani-tor-operator https://agabani.github.io/tor-operator
+1.  Add the chart repository.
 
-helm install tor-operator agabani-tor-operator/tor-operator --create-namespace --namespace tor-operator --set image.repository=ghcr.io/agabani/tor-operator --set image.tag=main --set tor.image.repository=ghcr.io/agabani/tor-operator --set tor.image.tag=tor-0.4.7.13
-```
+        helm repo add agabani-tor-operator https://agabani.github.io/tor-operator
 
-## Creating a Tor Onion Service
+1.  Install the Tor Operator.
 
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: tor-onion-service-example
-data:
-  hostname: ...
-  hs_ed25519_public_key: ...
-  hs_ed25519_secret_key: ...
-```
+        helm install tor-operator agabani-tor-operator/tor-operator \
+            --create-namespace \
+            --namespace tor-operator \
+            --set image.tag=main
 
-```yaml
-apiVersion: tor.agabani.co.uk/v1
-kind: OnionService
-metadata:
-  name: tor-onion-service-example
-spec:
-  hidden_service_ports:
-    - target: example:80
-      virtport: 80
-  secret_name: tor-onion-service-example
-```
+## Creating a Tor Ingress
 
-## Tutorial
+1.  Prepare your existing Onion Key to look like:
 
-1.  Install the Tor Operator
+    - `hostname`
+    - `hs_ed25519_public_key`
+    - `hs_ed25519_public_key`
 
-    ```terminal
-    helm repo add agabani-tor-operator https://agabani.github.io/tor-operator
+    or generate a new Onion Key using:
 
-    helm install tor-operator agabani-tor-operator/tor-operator --create-namespace --namespace tor-operator --set image.repository=ghcr.io/agabani/tor-operator --set image.tag=main --set tor.image.repository=ghcr.io/agabani/tor-operator --set tor.image.tag=tor-0.4.7.13
-    ```
+        tor-operator onion-key generate
 
-1.  Install a web server
+1.  Create a `Secret` containing the Onion Key.
 
-    ```
-    helm install example oci://registry-1.docker.io/bitnamicharts/nginx --create-namespace --namespace example --set service.type=ClusterIP
-    ```
+        kubectl create secret generic tor-ingress-example \
+            --from-file=hostname=./hostname \
+            --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \
+            --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key
 
-1.  Create a secret containing Tor Onion Service hidden service files
+1.  Create an `OnionKey` wrapping the `Secret`.
 
-    ```
-    kubectl -n example create secret generic tor-onion-service-example-nginx --from-file=hostname=./hostname --from-file=hs_ed25519_public_key=./hs_ed25519_public_key --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key
-    ```
+        # onionkey.yaml
+        apiVersion: tor.agabani.co.uk/v1
+        kind: OnionKey
+        metadata:
+          name: tor-ingress-example
+        spec:
+          secret:
+            name: tor-ingress-example
 
-1.  Create a `onionservice.yaml` with contents:
+    `kubectl apply -f onionkey.yaml`
 
-    ```yaml
-    apiVersion: tor.agabani.co.uk/v1
-    kind: OnionService
-    metadata:
-      name: example-nginx
-    spec:
-      hidden_service_ports:
-        - target: example-nginx:80
-          virtport: 80
-      secret_name: tor-onion-service-example-nginx
-    ```
+1.  Create a `TorIngress`, changing `example:80` to your targets `host:port`
 
-1.  Create the Tor Onion Service
+        # toringress.yaml
+        apiVersion: tor.agabani.co.uk/v1
+        kind: TorIngress
+        metadata:
+          name: tor-ingress-example
+        spec:
+          onion_balance:
+            onion_key:
+              name: tor-ingress-example
+          onion_service:
+            ports:
+              - target: example:80
+                virtport: 80
+            replicas: 3
 
-    ```
-    kubectl -n example apply -f onionservice.yaml
-    ```
+    `kubectl apply -f toringress.yaml`
 
-1.  Visit the `*****.onion` address using your Tor Browser
+## Documentation
+
+[https://agabani.github.io/tor-operator/docs/](https://agabani.github.io/tor-operator/docs/)

@@ -8,6 +8,8 @@ nav:
       - Onion Key: 'custom_resource_definitions/onion_key.md'
       - Onion Service: 'custom_resource_definitions/onion_service.md'
       - Tor Ingress: 'custom_resource_definitions/tor_ingress.md'
+  - Security:
+      - Cluster Role: 'security/cluster_role.md'
 plugins:
   - include-markdown
 theme: readthedocs

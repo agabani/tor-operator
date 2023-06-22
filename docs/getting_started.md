@@ -15,7 +15,7 @@
 
 ## Creating a Tor Ingress
 
-1.  Prepare your existing Onion Key as:
+1.  Prepare your existing Onion Key to look like:
 
     - `hostname`
     - `hs_ed25519_public_key`
@@ -43,9 +43,9 @@
           secret:
             name: tor-ingress-example
 
-    `kubectl apply -f onionservice.yaml`
+    `kubectl apply -f onionkey.yaml`
 
-1.  Create a `TorIngress`.
+1.  Create a `TorIngress`, changing `example:80` to your targets `host:port`
 
         # toringress.yaml
         apiVersion: tor.agabani.co.uk/v1
