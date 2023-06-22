@@ -65,6 +65,11 @@
                   <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/tor_ingress/">Tor Ingress</a>
                   </li>
               </ul>
+              <p class="caption"><span class="caption-text">Security</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../security/cluster_role/">Cluster Role</a>
+                  </li>
+              </ul>
       </div>
     </div>
     </nav>
@@ -108,7 +113,7 @@
 <h2 id="creating-a-tor-ingress">Creating a Tor Ingress</h2>
 <ol>
 <li>
-<p>Prepare your existing Onion Key as:</p>
+<p>Prepare your existing Onion Key to look like:</p>
 <ul>
 <li><code>hostname</code></li>
 <li><code>hs_ed25519_public_key</code></li>
@@ -137,10 +142,10 @@ spec:
   secret:
     name: tor-ingress-example
 </code></pre>
-<p><code>kubectl apply -f onionservice.yaml</code></p>
+<p><code>kubectl apply -f onionkey.yaml</code></p>
 </li>
 <li>
-<p>Create a <code>TorIngress</code>.</p>
+<p>Create a <code>TorIngress</code>, changing <code>example:80</code> to your targets <code>host:port</code></p>
 <pre><code># toringress.yaml
 apiVersion: tor.agabani.co.uk/v1
 kind: TorIngress

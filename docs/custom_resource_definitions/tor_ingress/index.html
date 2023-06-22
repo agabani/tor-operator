@@ -58,9 +58,22 @@
                   </li>
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Tor Ingress</a>
     <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#full">Full</a>
+    </li>
+        </ul>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#openapi-spec">OpenAPI Spec</a>
     </li>
     </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Security</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../security/cluster_role/">Cluster Role</a>
                   </li>
               </ul>
       </div>
@@ -88,6 +101,83 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="tor-ingress">Tor Ingress</h1>
+<h2 id="examples">Examples</h2>
+<h3 id="basic">Basic</h3>
+<p>The Tor Operator will create a load balanced Onion Service using an auto generated Onion Key for the Onion Balance instance.</p>
+<pre><code>#onionkey.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionKey
+metadata:
+  name: tor-ingress-{{ include &quot;example.fullname&quot; . }}
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  auto_generate: true
+  secret:
+    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}
+
+</code></pre>
+<pre><code>#toringress.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: TorIngress
+metadata:
+  name: {{ include &quot;example.fullname&quot; . }}
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  onion_service:
+    ports:
+      - target: example:80
+        virtport: 80
+
+</code></pre>
+<h3 id="full">Full</h3>
+<p>The Tor Operator will create a load balanced Onion Service using an auto generated Onion Key for the Onion Balance instance.</p>
+<pre><code>#onionkey.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionKey
+metadata:
+  name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  auto_generate: true
+  secret:
+    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+
+</code></pre>
+<pre><code>#toringress.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: TorIngress
+metadata:
+  name: {{ include &quot;example.fullname&quot; . }}-full
+  labels: 
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  onion_balance:
+    config_map:
+      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+    deployment:
+      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+    onion_key:
+      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+  onion_service:
+    config_map:
+      name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+    deployment:
+      name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+    name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+    onion_key:
+      name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+      secret:
+        name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+    ports:
+      - target: example:80
+        virtport: 80
+    replicas: 3
+
+</code></pre>
 <h2 id="openapi-spec">OpenAPI Spec</h2>
 <pre><code>apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -215,6 +305,7 @@ spec:
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
         <a href="../onion_service/" class="btn btn-neutral float-left" title="Onion Service"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../security/cluster_role/" class="btn btn-neutral float-right" title="Cluster Role">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -239,6 +330,8 @@ spec:
     
       <span><a href="../onion_service/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
+    
+      <span><a href="../../security/cluster_role/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
