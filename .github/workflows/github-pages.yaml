@@ -26,11 +26,14 @@ jobs:
           python-version: 3.x
       - name: Install Mkdocs
         run: |
+          pip3 install ghp-import
           pip3 install mkdocs
           pip3 install mkdocs-exclude
           pip3 install mkdocs-include-markdown-plugin
       - name: Deploy Mkdocs
-        run: mkdocs gh-deploy --dirty
+        run: |
+          mkdocs build
+          ghp-import site -p -x site
   helm:
     runs-on: ubuntu-latest
     permissions:
