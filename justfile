@@ -102,6 +102,7 @@ mkdocs-build:
 # mkdocs install
 mkdocs-install:
   @pip3 install mkdocs
+  @pip3 install mkdocs-exclude
   @pip3 install mkdocs-include-markdown-plugin
 
 # mkdocs serve
