@@ -28,7 +28,6 @@ jobs:
         run: |
           pip3 install ghp-import
           pip3 install mkdocs
-          pip3 install mkdocs-exclude
           pip3 install mkdocs-include-markdown-plugin
       - name: Deploy Mkdocs
         run: |

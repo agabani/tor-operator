@@ -9,8 +9,5 @@ nav:
       - Onion Service: 'custom_resource_definitions/onion_service.md'
       - Tor Ingress: 'custom_resource_definitions/tor_ingress.md'
 plugins:
-  - exclude:
-      glob:
-        - index.yaml
   - include-markdown
 theme: readthedocs
