@@ -1,0 +1,11 @@
+site_name: My Docs
+nav:
+  - Tor Operator: 'index.md'
+  - Getting Started: 'getting_started.md'
+  - CLI: 'cli.md'
+  - Custom Resource Definitions:
+      - Onion Balance: 'custom_resource_definitions/onion_balance.md'
+      - Onion Key: 'custom_resource_definitions/onion_key.md'
+      - Onion Service: 'custom_resource_definitions/onion_service.md'
+      - Tor Ingress: 'custom_resource_definitions/tor_ingress.md'
+theme: readthedocs
