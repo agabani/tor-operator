@@ -28,68 +28,65 @@ spec:
           spec:
             properties:
               onion_balance:
+                nullable: true
                 properties:
                   config_map:
+                    nullable: true
                     properties:
                       name:
+                        nullable: true
                         type: string
-                    required:
-                    - name
                     type: object
                   deployment:
+                    nullable: true
                     properties:
                       name:
+                        nullable: true
                         type: string
-                    required:
-                    - name
                     type: object
                   name:
+                    nullable: true
                     type: string
                   onion_key:
+                    nullable: true
                     properties:
                       name:
+                        nullable: true
                         type: string
-                    required:
-                    - name
                     type: object
-                required:
-                - config_map
-                - deployment
-                - name
-                - onion_key
                 type: object
               onion_service:
                 properties:
                   config_map:
+                    nullable: true
                     properties:
                       name_prefix:
+                        nullable: true
                         type: string
-                    required:
-                    - name_prefix
                     type: object
                   deployment:
+                    nullable: true
                     properties:
                       name_prefix:
+                        nullable: true
                         type: string
-                    required:
-                    - name_prefix
                     type: object
                   name_prefix:
+                    nullable: true
                     type: string
                   onion_key:
+                    nullable: true
                     properties:
                       name_prefix:
+                        nullable: true
                         type: string
                       secret:
+                        nullable: true
                         properties:
                           name_prefix:
+                            nullable: true
                             type: string
-                        required:
-                        - name_prefix
                         type: object
-                    required:
-                    - name_prefix
-                    - secret
                     type: object
                   ports:
                     items:
@@ -108,17 +105,12 @@ spec:
                     type: array
                   replicas:
                     format: int32
+                    nullable: true
                     type: integer
                 required:
-                - config_map
-                - deployment
-                - name_prefix
-                - onion_key
                 - ports
-                - replicas
                 type: object
             required:
-            - onion_balance
             - onion_service
             type: object
           status:

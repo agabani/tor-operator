@@ -22,7 +22,7 @@ cli-crd-generate:
 
 # cli markdown generate
 cli-markdown-generate:
-  @cargo run -- markdown generate --output ./docs/cli/help.md
+  @cargo run -- markdown generate --output ./docs/cli_help.md
 
 # cli onion key generate
 cli-onion-key-generate:

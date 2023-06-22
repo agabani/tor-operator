@@ -1,6 +1,6 @@
 # CLI
 
 {%
-   include-markdown "cli/help.md"
+   include-markdown "cli_help.md"
    heading-offset=1
 %}

@@ -48,7 +48,7 @@ use crate::{
     version = "v1"
 )]
 pub struct TorIngressSpec {
-    pub onion_balance: TorIngressSpecOnionBalance,
+    pub onion_balance: Option<TorIngressSpecOnionBalance>,
 
     pub onion_service: TorIngressSpecOnionService,
 }
@@ -56,73 +56,73 @@ pub struct TorIngressSpec {
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionBalance {
-    pub config_map: TorIngressSpecOnionBalanceConfigMap,
+    pub config_map: Option<TorIngressSpecOnionBalanceConfigMap>,
 
-    pub deployment: TorIngressSpecOnionBalanceDeployment,
+    pub deployment: Option<TorIngressSpecOnionBalanceDeployment>,
 
-    pub name: String,
+    pub name: Option<String>,
 
-    pub onion_key: TorIngressSpecOnionBalanceOnionKey,
+    pub onion_key: Option<TorIngressSpecOnionBalanceOnionKey>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionBalanceConfigMap {
-    pub name: String,
+    pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionBalanceDeployment {
-    pub name: String,
+    pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionBalanceOnionKey {
-    pub name: String,
+    pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionService {
-    pub config_map: TorIngressSpecOnionServiceConfigMap,
+    pub config_map: Option<TorIngressSpecOnionServiceConfigMap>,
 
-    pub deployment: TorIngressSpecOnionServiceDeployment,
+    pub deployment: Option<TorIngressSpecOnionServiceDeployment>,
 
-    pub name_prefix: String,
+    pub name_prefix: Option<String>,
 
-    pub onion_key: TorIngressSpecOnionServiceOnionKey,
+    pub onion_key: Option<TorIngressSpecOnionServiceOnionKey>,
 
     pub ports: Vec<TorIngressSpecOnionServicePort>,
 
-    pub replicas: i32,
+    pub replicas: Option<i32>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionServiceConfigMap {
-    pub name_prefix: String,
+    pub name_prefix: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionServiceDeployment {
-    pub name_prefix: String,
+    pub name_prefix: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionServiceOnionKey {
-    pub name_prefix: String,
+    pub name_prefix: Option<String>,
 
-    pub secret: TorIngressSpecOnionServiceOnionKeySecret,
+    pub secret: Option<TorIngressSpecOnionServiceOnionKeySecret>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionServiceOnionKeySecret {
-    pub name_prefix: String,
+    pub name_prefix: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -141,28 +141,57 @@ pub struct TorIngressStatus {}
 
 impl TorIngress {
     #[must_use]
+    fn default_name(&self) -> &str {
+        self.metadata.name.as_ref().unwrap()
+    }
+
+    #[must_use]
     pub fn onion_balance_config_map_name(&self) -> &str {
-        &self.spec.onion_balance.config_map.name
+        self.spec
+            .onion_balance
+            .as_ref()
+            .and_then(|f| f.config_map.as_ref())
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
     pub fn onion_balance_deployment_name(&self) -> &str {
-        &self.spec.onion_balance.deployment.name
+        self.spec
+            .onion_balance
+            .as_ref()
+            .and_then(|f| f.deployment.as_ref())
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
     pub fn onion_balance_name(&self) -> &str {
-        &self.spec.onion_balance.name
+        self.spec
+            .onion_balance
+            .as_ref()
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
     pub fn onion_balance_onion_key_name(&self) -> &str {
-        &self.spec.onion_balance.onion_key.name
+        self.spec
+            .onion_balance
+            .as_ref()
+            .and_then(|f| f.onion_key.as_ref())
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
     pub fn onion_service_config_map_name_prefix(&self) -> &str {
-        &self.spec.onion_service.config_map.name_prefix
+        self.spec
+            .onion_service
+            .config_map
+            .as_ref()
+            .and_then(|f| f.name_prefix.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
@@ -172,7 +201,12 @@ impl TorIngress {
 
     #[must_use]
     pub fn onion_service_deployment_name_prefix(&self) -> &str {
-        &self.spec.onion_service.deployment.name_prefix
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.name_prefix.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
@@ -182,7 +216,11 @@ impl TorIngress {
 
     #[must_use]
     pub fn onion_service_name_prefix(&self) -> &str {
-        &self.spec.onion_service.name_prefix
+        self.spec
+            .onion_service
+            .name_prefix
+            .as_ref()
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
@@ -192,7 +230,12 @@ impl TorIngress {
 
     #[must_use]
     pub fn onion_service_onion_key_name_prefix(&self) -> &str {
-        &self.spec.onion_service.onion_key.name_prefix
+        self.spec
+            .onion_service
+            .onion_key
+            .as_ref()
+            .and_then(|f| f.name_prefix.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
@@ -202,7 +245,13 @@ impl TorIngress {
 
     #[must_use]
     pub fn onion_service_onion_key_secret_name_prefix(&self) -> &str {
-        &self.spec.onion_service.onion_key.secret.name_prefix
+        self.spec
+            .onion_service
+            .onion_key
+            .as_ref()
+            .and_then(|f| f.secret.as_ref())
+            .and_then(|f| f.name_prefix.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
@@ -215,7 +264,7 @@ impl TorIngress {
 
     #[must_use]
     pub fn onion_service_replicas(&self) -> i32 {
-        self.spec.onion_service.replicas
+        self.spec.onion_service.replicas.unwrap_or(3)
     }
 }
 

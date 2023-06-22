@@ -5,25 +5,7 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  onion_balance:
-    config_map:
-      name: tor-ingress-{{ include "example.fullname" . }}
-    deployment:
-      name: tor-ingress-{{ include "example.fullname" . }}
-    name: tor-ingress-{{ include "example.fullname" . }}
-    onion_key:
-      name: tor-ingress-{{ include "example.fullname" . }}
   onion_service:
-    config_map:
-      name_prefix: tor-ingress-{{ include "example.fullname" . }}
-    deployment:
-      name_prefix: tor-ingress-{{ include "example.fullname" . }}
-    name_prefix: tor-ingress-{{ include "example.fullname" . }}
-    onion_key:
-      name_prefix: tor-ingress-{{ include "example.fullname" . }}
-      secret:
-        name_prefix: tor-ingress-{{ include "example.fullname" . }}
     ports:
       - target: example:80
         virtport: 80
-    replicas: 3

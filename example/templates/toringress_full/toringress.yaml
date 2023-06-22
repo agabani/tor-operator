@@ -1,0 +1,29 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: TorIngress
+metadata:
+  name: {{ include "example.fullname" . }}-full
+  labels: 
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  onion_balance:
+    config_map:
+      name: tor-ingress-{{ include "example.fullname" . }}-full
+    deployment:
+      name: tor-ingress-{{ include "example.fullname" . }}-full
+    name: tor-ingress-{{ include "example.fullname" . }}-full
+    onion_key:
+      name: tor-ingress-{{ include "example.fullname" . }}-full
+  onion_service:
+    config_map:
+      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
+    deployment:
+      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
+    name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
+    onion_key:
+      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
+      secret:
+        name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
+    ports:
+      - target: example:80
+        virtport: 80
+    replicas: 3
