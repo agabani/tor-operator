@@ -28,6 +28,9 @@ pub enum CliCommands {
     /// Custom Resource Definition
     Crd(CrdArgs),
 
+    /// Markdown
+    Markdown(MarkdownArgs),
+
     /// Onion Key
     OnionKey(OnionKeyArgs),
 }
@@ -104,6 +107,30 @@ pub enum CrdGenerateArgsFormat {
     Helm,
     Json,
     Yaml,
+}
+
+/*
+ * ============================================================================
+ * Markdown
+ * ============================================================================
+ */
+#[derive(Args, Debug)]
+#[clap(hide = true)]
+pub struct MarkdownArgs {
+    #[command(subcommand)]
+    pub command: MarkdownCommands,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum MarkdownCommands {
+    /// Generate
+    Generate(MarkdownGenerateArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct MarkdownGenerateArgs {
+    #[arg(long, value_hint = clap::ValueHint::DirPath)]
+    pub output: Option<PathBuf>,
 }
 
 /*

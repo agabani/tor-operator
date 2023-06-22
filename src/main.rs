@@ -3,8 +3,9 @@ use std::{fs::File, io::Write};
 use tor_operator::{
     cli::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
-        CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat, OnionKeyArgs,
-        OnionKeyCommands, OnionKeyGenerateArgs,
+        CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat, MarkdownArgs,
+        MarkdownCommands, MarkdownGenerateArgs, OnionKeyArgs, OnionKeyCommands,
+        OnionKeyGenerateArgs,
     },
     crypto, http_server, onion_balance, onion_key, onion_service, tor_ingress,
 };
@@ -21,6 +22,9 @@ async fn main() {
         },
         CliCommands::Crd(crd) => match &crd.command {
             CrdCommands::Generate(generate) => crd_generate(cli, crd, generate),
+        },
+        CliCommands::Markdown(markdown) => match &markdown.command {
+            MarkdownCommands::Generate(help) => markdown_generate(cli, markdown, help),
         },
         CliCommands::OnionKey(onion_address) => match &onion_address.command {
             OnionKeyCommands::Generate(generate) => {
@@ -128,6 +132,17 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
         } else {
             print!("{content}");
         }
+    }
+}
+
+fn markdown_generate(_cli: &CliArgs, _markdown: &MarkdownArgs, generate: &MarkdownGenerateArgs) {
+    if let Some(output) = &generate.output {
+        File::create(output)
+            .unwrap()
+            .write_all(clap_markdown::help_markdown::<CliArgs>().as_bytes())
+            .unwrap();
+    } else {
+        clap_markdown::print_help_markdown::<CliArgs>();
     }
 }
 

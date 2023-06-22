@@ -18,6 +18,11 @@ cli-controller-run:
 # cli crd generate
 cli-crd-generate:
   @cargo run -- crd generate --format helm --output ./charts/tor-operator/templates
+  @cargo run -- crd generate --format yaml --output ./docs/custom_resource_definitions
+
+# cli markdown generate
+cli-markdown-generate:
+  @cargo run -- markdown generate --output ./docs/cli/help.md
 
 # cli onion key generate
 cli-onion-key-generate:
@@ -89,6 +94,19 @@ kube-dashboard-port-forward:
 # kube dashboard token
 kube-dashboard-token:
   @kubectl -n kubernetes-dashboard create token admin-user
+
+# mkdocs build
+mkdocs-build:
+  @mkdocs build
+
+# mkdocs install
+mkdocs-install:
+  @pip3 install mkdocs
+  @pip3 install mkdocs-include-markdown-plugin
+
+# mkdocs serve
+mkdocs-serve:
+  @mkdocs serve
 
 # lint
 lint:
