@@ -1,6 +1,6 @@
 # Tor Operator
 
-Tor Operator is a Kubernetes Operator that manages [Onion Balances](./custom_resource_definitions/onion_balance.md), [Onion Keys](./custom_resource_definitions/onion_key.md) and [Onion Services](./custom_resource_definitions/onion_service.md) to provide a highly available, load balanced and fault tolerate [Tor Ingress](./custom_resource_definitions/tor_ingress.md).
+Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onion_balance/), [Onion Keys](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onion_key/) and [Onion Services](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onion_service/) to provide a highly available, load balanced and fault tolerate [Tor Ingress](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/tor_ingress/).
 
 ## Installation
 
