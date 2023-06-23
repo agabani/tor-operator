@@ -27,6 +27,7 @@ RUN apt update && \
     libevent-dev \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --from=build /tor/LICENSE /licenses/tor/LICENSE
 COPY --from=build /tor/src/app/tor /usr/bin
 
 CMD ["tor"]

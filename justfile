@@ -79,6 +79,9 @@ docker-run-tor: docker-build-tor
 docker-run-tor-operator: docker-build-tor-operator
   @docker run --rm agabani/tor-operator:{{GIT_COMMIT}}
 
+# generate
+generate: cli-crd-generate cli-markdown-generate license
+
 # kube clean
 kube-clean:
   @tilt down
@@ -95,6 +98,14 @@ kube-dashboard-port-forward:
 kube-dashboard-token:
   @kubectl -n kubernetes-dashboard create token admin-user
 
+# license
+license:
+  @cargo bundle-licenses --format yaml --output docs/licenses/third_party.yaml
+
+# lint
+lint:
+  @cargo clippy
+
 # mkdocs build
 mkdocs-build:
   @mkdocs build
@@ -108,6 +119,3 @@ mkdocs-install:
 mkdocs-serve:
   @mkdocs serve
 
-# lint
-lint:
-  @cargo clippy

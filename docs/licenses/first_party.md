@@ -1,0 +1,5 @@
+# First Party
+
+```
+{% include "../../LICENSE" %}
+```

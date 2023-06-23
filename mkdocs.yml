@@ -12,6 +12,9 @@ nav:
       - Tor Ingress: 'custom_resource_definitions/tor_ingress.md'
   - Security:
       - Cluster Role: 'security/cluster_role.md'
+  - Licenses:
+      - First Party: 'licenses/first_party.md'
+      - Third Party: 'licenses/third_party.md'
 plugins:
   - include-markdown
 theme: readthedocs
