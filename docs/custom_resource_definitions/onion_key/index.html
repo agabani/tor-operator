@@ -64,9 +64,17 @@
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#imported">Imported</a>
+    <li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#auto-generated">Auto Generated</a>
+    <li class="toctree-l3"><a class="reference internal" href="#auto-generate">Auto Generate</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#features">Features</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#auto-generate_1">Auto Generate</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#validation">Validation</a>
     </li>
         </ul>
     </li>
@@ -125,7 +133,7 @@
 <p>A user can have the Tor Operator create a new random Onion Key by using the
 auto generate feature controlled by <code>.auto_generate</code>.</p>
 <h2 id="examples">Examples</h2>
-<h3 id="imported">Imported</h3>
+<h3 id="basic">Basic</h3>
 <p>The Tor Operator will use the Onion Key provided in the <code>Secret</code>.</p>
 <pre><code>#secret.yaml
 apiVersion: v1
@@ -153,7 +161,7 @@ spec:
     name: onion-key-{{ include &quot;example.fullname&quot; . }}
 
 </code></pre>
-<h3 id="auto-generated">Auto Generated</h3>
+<h3 id="auto-generate">Auto Generate</h3>
 <p>The Tor Operator will auto generated a random Onion Key and store it in a <code>Secret</code> on your behalf.</p>
 <pre><code>#onionkey.yaml
 apiVersion: tor.agabani.co.uk/v1
@@ -168,6 +176,48 @@ spec:
     name: onion-key-{{ include &quot;example.fullname&quot; . }}-auto-generate
 
 </code></pre>
+<h2 id="features">Features</h2>
+<h3 id="auto-generate_1">Auto Generate</h3>
+<p>The Tor Operator will generate a random Onion Key and save it in the
+secret specified in <code>.secret.name</code>.</p>
+<ul>
+<li>If the Onion Key's secret key is missing or malformed, the Tor Operator
+  will recreate the secret key.</li>
+<li>If the Onion Key's public key is missing, malformed, or does not match
+  the secret key, the Tor Operator will deterministically recreate the
+  public key from the secret key.</li>
+<li>If the Onion Key's hostname is missing, malformed, or does not match
+  the public key, the Tor Operator will deterministically recreate the
+  hostname from the public key.</li>
+</ul>
+<h3 id="validation">Validation</h3>
+<p>Onion Key validation can be observed in the Onion Key status.</p>
+<pre><code>kubectl describe onionkeys example
+</code></pre>
+<pre><code># ...
+Spec:
+  auto_generate:  true
+  Secret:
+    Name:  example
+Status:
+  Hostname:    ********.onion
+  Validation:  valid
+Events:        &lt;none&gt;
+# ...
+</code></pre>
+<p>Possible Values for <code>Validation</code>:</p>
+<ul>
+<li><code>secret not found</code></li>
+<li><code>secret key not found</code></li>
+<li><code>secret key malformed: (reason)</code></li>
+<li><code>public key not found</code></li>
+<li><code>public key malformed: (reason)</code></li>
+<li><code>public key mismatch</code></li>
+<li><code>hostname not found</code></li>
+<li><code>hostname malformed: (reason)</code></li>
+<li><code>hostname mismatch</code></li>
+<li><code>valid</code></li>
+</ul>
 <h2 id="openapi-spec">OpenAPI Spec</h2>
 <pre><code>apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
