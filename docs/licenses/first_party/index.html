@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Cluster Role - Tor Operator</title>
+    <title>First Party - Tor Operator</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Cluster Role";
-        var mkdocs_page_input_path = "security/cluster_role.md";
+        var mkdocs_page_name = "First Party";
+        var mkdocs_page_input_path = "licenses/first_party.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -68,17 +68,17 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Security</span></p>
-              <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Cluster Role</a>
-    <ul class="current">
-    </ul>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../security/cluster_role/">Cluster Role</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Licenses</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../../licenses/first_party/">First Party</a>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">First Party</a>
+    <ul class="current">
+    </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../licenses/third_party/">Third Party</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../third_party/">Third Party</a>
                   </li>
               </ul>
       </div>
@@ -95,8 +95,8 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
-          <li>Security &raquo;</li>
-      <li>Cluster Role</li>
+          <li>Licenses &raquo;</li>
+      <li>First Party</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -105,65 +105,36 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="cluster-role">Cluster Role</h1>
-<pre><code>{{- if .Values.clusterRole.create -}}
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: {{ include &quot;tor-operator.clusterRoleName&quot; . }}
-  labels:
-    {{- include &quot;tor-operator.labels&quot; . | nindent 4 }}
-  {{- with .Values.clusterRole.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-rules:
-  # used by Onion Balance
-  - apiGroups: [&quot;&quot;]
-    resources: [&quot;configmaps&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
-  - apiGroups: [&quot;apps&quot;]
-    resources: [&quot;deployments&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
-  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
-    resources: [&quot;onionbalances&quot;]
-    verbs: [&quot;list&quot;, &quot;watch&quot;]
-  # used by Onion Keys
-  - apiGroups: [&quot;&quot;]
-    resources: [&quot;secrets&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
-  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
-    resources: [&quot;onionkeys&quot;]
-    verbs: [&quot;list&quot;, &quot;watch&quot;]
-  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
-    resources: [&quot;onionkeys/status&quot;]
-    verbs: [&quot;patch&quot;]
-  # used by Onion Service
-  - apiGroups: [&quot;&quot;]
-    resources: [&quot;configmaps&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
-  - apiGroups: [&quot;apps&quot;]
-    resources: [&quot;deployments&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
-  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
-    resources: [&quot;onionservices&quot;]
-    verbs: [&quot;list&quot;, &quot;watch&quot;]
-  # used by Tor Ingress
-  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
-    resources: [&quot;onionbalances&quot;, &quot;onionkeys&quot;, &quot;onionservices&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;patch&quot;]
-  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
-    resources: [&quot;toringresses&quot;]
-    verbs: [&quot;list&quot;, &quot;watch&quot;]
-{{- end }}
+                <h1 id="first-party">First Party</h1>
+<pre><code>MIT License
+
+Copyright (c) 2023 Ahmed Agabani
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 </code></pre>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../../custom_resource_definitions/tor_ingress/" class="btn btn-neutral float-left" title="Tor Ingress"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../../licenses/first_party/" class="btn btn-neutral float-right" title="First Party">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../../security/cluster_role/" class="btn btn-neutral float-left" title="Cluster Role"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../third_party/" class="btn btn-neutral float-right" title="Third Party">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -186,10 +157,10 @@ rules:
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../../custom_resource_definitions/tor_ingress/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../../security/cluster_role/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../../licenses/first_party/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../third_party/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
