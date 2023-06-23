@@ -32,34 +32,34 @@ Controller
 
 ###### **Subcommands:**
 
-* `run` — Run
+* `run` — Run the Tor Operator
 
 
 
 ## `tor-operator controller run`
 
-Run
+Run the Tor Operator
 
 **Usage:** `tor-operator controller run [OPTIONS]`
 
 ###### **Options:**
 
-* `--onion-balance-image-pull-policy <ONION_BALANCE_IMAGE_PULL_POLICY>`
+* `--onion-balance-image-pull-policy <ONION_BALANCE_IMAGE_PULL_POLICY>` — Onion Balance image pull policy
 
   Default value: `IfNotPresent`
-* `--onion-balance-image-uri <ONION_BALANCE_IMAGE_URI>`
+* `--onion-balance-image-uri <ONION_BALANCE_IMAGE_URI>` — Onion Balance image uri
 
   Default value: `ghcr.io/agabani/tor-operator:onion-balance-0.2.2`
-* `--host <HOST>`
+* `--host <HOST>` — Host the web server binds to
 
   Default value: `127.0.0.1`
-* `--port <PORT>`
+* `--port <PORT>` — Port the web server binds to
 
   Default value: `8080`
-* `--tor-image-pull-policy <TOR_IMAGE_PULL_POLICY>`
+* `--tor-image-pull-policy <TOR_IMAGE_PULL_POLICY>` — Tor image pull policy
 
   Default value: `IfNotPresent`
-* `--tor-image-uri <TOR_IMAGE_URI>`
+* `--tor-image-uri <TOR_IMAGE_URI>` — Tor image uri
 
   Default value: `ghcr.io/agabani/tor-operator:tor-0.4.7.13`
 
@@ -73,25 +73,25 @@ Custom Resource Definition
 
 ###### **Subcommands:**
 
-* `generate` — Generate
+* `generate` — Generate the Tor Operator CRDs
 
 
 
 ## `tor-operator crd generate`
 
-Generate
+Generate the Tor Operator CRDs
 
 **Usage:** `tor-operator crd generate [OPTIONS]`
 
 ###### **Options:**
 
-* `--format <FORMAT>`
+* `--format <FORMAT>` — Format of the CRDs
 
   Default value: `yaml`
 
   Possible values: `helm`, `json`, `yaml`
 
-* `--output <OUTPUT>`
+* `--output <OUTPUT>` — Output the CRDs into a directory
 
 
 
@@ -103,13 +103,13 @@ Onion Key
 
 ###### **Subcommands:**
 
-* `generate` — Generate
+* `generate` — Generate a random Tor Onion Key
 
 
 
 ## `tor-operator onion-key generate`
 
-Generate
+Generate a random Tor Onion Key
 
 **Usage:** `tor-operator onion-key generate`
 

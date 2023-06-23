@@ -35,6 +35,14 @@ use crate::{
  * Custom Resource Definition
  * ============================================================================
  */
+/// # Onion Balance
+///
+/// An Onion Balance is an abstraction of a Tor Onion Balance.
+///
+/// Tor Onion Balance is the best way to load balance Tor Onion Services. The
+/// load of introduction and rendezvous requests gets distributed across
+/// multiple hosts while also increasing resiliency by eliminating single
+/// points of failure.
 #[allow(clippy::module_name_repetitions)]
 #[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[kube(
@@ -45,42 +53,57 @@ use crate::{
     version = "v1"
 )]
 pub struct OnionBalanceSpec {
-    pub config_map: OnionBalanceSpecConfigMap,
+    /// Config Map settings.
+    pub config_map: Option<OnionBalanceSpecConfigMap>,
 
-    pub deployment: OnionBalanceSpecDeployment,
+    /// Deployment settings.
+    pub deployment: Option<OnionBalanceSpecDeployment>,
 
+    /// Onion Key settings.
     pub onion_key: OnionBalanceSpecOnionKey,
 
+    /// Onion Service part of the Onion Balance load balancing.
     pub onion_services: Vec<OnionBalanceSpecOnionService>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecConfigMap {
-    pub name: String,
+    /// Name of the Config Map.
+    ///
+    /// Default: name of the Onion Balance
+    pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecDeployment {
-    pub name: String,
+    /// Name of the Deployment.
+    ///
+    /// Default: name of the Onion Balance
+    pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecOnionKey {
+    /// Name of the Onion Key.
     pub name: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecOnionService {
+    /// Onion Key reference of the Onion Service.
     pub onion_key: OnionBalanceSpecOnionServiceOnionKey,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceSpecOnionServiceOnionKey {
+    /// Hostname value of the Onion Key.
+    ///
+    /// Example: "abcdefg.onion"
     pub hostname: String,
 }
 
@@ -90,13 +113,26 @@ pub struct OnionBalanceStatus {}
 
 impl OnionBalance {
     #[must_use]
+    fn default_name(&self) -> &str {
+        self.metadata.name.as_ref().unwrap()
+    }
+
+    #[must_use]
     pub fn config_map_name(&self) -> &str {
-        &self.spec.config_map.name
+        self.spec
+            .config_map
+            .as_ref()
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
     pub fn deployment_name(&self) -> &str {
-        &self.spec.deployment.name
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]

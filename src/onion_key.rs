@@ -28,6 +28,27 @@ use crate::{
  * Custom Resource Definition
  * ============================================================================
  */
+/// # Onion Key
+///
+/// An Onion Key is an abstraction of a Tor Onion Key.
+///
+/// A Tor Onion Key consists of the following files:
+///
+/// - `hostname`
+/// - `hs_ed25519_public_key`
+/// - `hs_ed25519_public_key`
+///
+/// A user can import their existing Tor Onion keys by creating a secret.
+///
+/// ```ignore
+/// kubectl create secret generic tor-ingress-example \
+///   --from-file=hostname=./hostname \
+///   --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \
+///   --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key
+/// ```
+///
+/// A user can have the Tor Operator create a new random Onion Key by using the
+/// auto generate feature controlled by `.auto_generate`.
 #[allow(clippy::module_name_repetitions)]
 #[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[kube(
@@ -38,22 +59,43 @@ use crate::{
     version = "v1"
 )]
 pub struct OnionKeySpec {
-    /// Auto generate a random onion key. [default: false]
+    /// # Auto Generate
     ///
-    /// Set to false if you want to use existing onion key from `secret_name`.
-    /// Set to true if you want to populate `secret_name` with a randomly generated onion key.
+    /// Auto generate a random onion key. default: false.
+    ///
+    /// ## Auto Generate: False
+    ///
+    /// Tor Operator will use an existing Onion Key from the Secret specified
+    /// in `.secret.name`.
+    ///
+    /// ## Auto Generate: True
+    ///
+    /// The Tor Operator will generate a random Onion Key and save it in the
+    /// secret specified in `.secret.name`.
+    ///
+    /// If the Onion Key's secret key is missing or malformed, the Tor Operator
+    /// will recreate the secret key.
+    ///
+    /// If the Onion Key's public key is missing, malformed, or does not match
+    /// the secret key, the Tor Operator will deterministically recreate the
+    /// public key from the secret key.
+    ///
+    /// If the Onion Key's hostname is missing, malformed, or does not match
+    /// the public key, the Tor Operator will deterministically recreate the
+    /// hostname from the public key.
     pub auto_generate: Option<bool>,
 
-    /// Secret to use as the backing store.
-    ///
-    /// Secret data must have keys `hostname`, `hs_ed25519_public_key` and `hs_ed25519_secret_key`.
+    /// Secret settings.
     pub secret: OnionKeySpecSecret,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionKeySpecSecret {
-    /// Name.
+    /// Name of the secret.
+    ///
+    /// Secret data must have keys `hostname`, `hs_ed25519_public_key` and
+    /// `hs_ed25519_secret_key`.
     pub name: String,
 }
 
@@ -61,9 +103,24 @@ pub struct OnionKeySpecSecret {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
 pub struct OnionKeyStatus {
     /// Onion key hostname.
+    ///
+    /// The hostname is only populated once `validation` is "valid".
     pub hostname: Option<String>,
 
     /// Human readable description of onion key validation.
+    ///
+    /// Possible Values:
+    ///
+    ///  - secret not found
+    ///  - secret key not found
+    ///  - secret key malformed: (reason)
+    ///  - public key not found
+    ///  - public key malformed: (reason)
+    ///  - public key mismatch
+    ///  - hostname not found
+    ///  - hostname malformed: (reason)
+    ///  - hostname mismatch
+    ///  - valid
     pub validation: String,
 }
 

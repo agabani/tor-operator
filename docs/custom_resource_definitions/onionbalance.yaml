@@ -19,34 +19,56 @@ spec:
         description: Auto-generated derived type for OnionBalanceSpec via `CustomResource`
         properties:
           spec:
+            description: |-
+              An Onion Balance is an abstraction of a Tor Onion Balance.
+
+              Tor Onion Balance is the best way to load balance Tor Onion Services. The load of introduction and rendezvous requests gets distributed across multiple hosts while also increasing resiliency by eliminating single points of failure.
             properties:
               config_map:
+                description: Config Map settings.
+                nullable: true
                 properties:
                   name:
+                    description: |-
+                      Name of the Config Map.
+
+                      Default: name of the Onion Balance
+                    nullable: true
                     type: string
-                required:
-                - name
                 type: object
               deployment:
+                description: Deployment settings.
+                nullable: true
                 properties:
                   name:
+                    description: |-
+                      Name of the Deployment.
+
+                      Default: name of the Onion Balance
+                    nullable: true
                     type: string
-                required:
-                - name
                 type: object
               onion_key:
+                description: Onion Key settings.
                 properties:
                   name:
+                    description: Name of the Onion Key.
                     type: string
                 required:
                 - name
                 type: object
               onion_services:
+                description: Onion Service part of the Onion Balance load balancing.
                 items:
                   properties:
                     onion_key:
+                      description: Onion Key reference of the Onion Service.
                       properties:
                         hostname:
+                          description: |-
+                            Hostname value of the Onion Key.
+
+                            Example: "abcdefg.onion"
                           type: string
                       required:
                       - hostname
@@ -56,10 +78,9 @@ spec:
                   type: object
                 type: array
             required:
-            - config_map
-            - deployment
             - onion_key
             - onion_services
+            title: Onion Balance
             type: object
           status:
             nullable: true

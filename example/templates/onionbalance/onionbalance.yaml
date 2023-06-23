@@ -1,14 +1,9 @@
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionBalance
 metadata:
-  name: {{ include "example.fullname" . }}
-  labels:
-    {{- include "example.labels" . | nindent 4 }}
+  name: onion-balance-{{ include "example.fullname" . }}
+  labels: {{- include "example.labels" . | nindent 4 }}
 spec:
-  config_map:
-    name: onion-balance-{{ include "example.fullname" . }}
-  deployment:
-    name: onion-balance-{{ include "example.fullname" . }}
   onion_key:
     name: onion-balance-{{ include "example.fullname" . }}
   onion_services:

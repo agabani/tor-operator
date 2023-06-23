@@ -44,45 +44,70 @@ use crate::{
     status = "OnionServiceStatus",
     version = "v1"
 )]
+/// # Onion Service
+///
+/// An Onion Service is an abstraction of a Tor Onion Service.
+///
+/// A Tor Onion Service is a service that can only be accessed over Tor.
+/// Running a Tor Onion Service gives your users all teh security of HTTPS with
+/// the added privacy benefits of Tor.
 pub struct OnionServiceSpec {
-    pub config_map: OnionServiceSpecConfigMap,
+    /// Config Map settings.
+    pub config_map: Option<OnionServiceSpecConfigMap>,
 
-    pub deployment: OnionServiceSpecDeployment,
+    /// Deployment settings.
+    pub deployment: Option<OnionServiceSpecDeployment>,
 
+    /// Onion Balance part the Onion Service belongs to.
+    ///
+    /// Default: nil / none / null / undefined.
     pub onion_balance: Option<OnionServiceSpecOnionBalance>,
 
+    /// Onion Key settings.
     pub onion_key: OnionServiceSpecOnionKey,
 
+    /// Onion Service Hidden Service ports.
     pub ports: Vec<OnionServiceSpecHiddenServicePort>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecConfigMap {
-    pub name: String,
+    /// Name of the Config Map.
+    ///
+    /// Default: name of the Onion Service
+    pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecDeployment {
-    pub name: String,
+    /// Name of the Deployment.
+    ///
+    /// Default: name of the Onion Service
+    pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecOnionBalance {
+    /// Onion Key reference of the Onion Balance.
     pub onion_key: OnionServiceSpecOnionBalanceOnionKey,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecOnionBalanceOnionKey {
+    /// Hostname value of the Onion Key.
+    ///
+    /// Example: "abcdefg.onion"
     pub hostname: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecOnionKey {
+    /// Name of the Onion Key.
     pub name: String,
 }
 
@@ -90,9 +115,13 @@ pub struct OnionServiceSpecOnionKey {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecHiddenServicePort {
     /// The target any incoming traffic will be redirect to.
+    ///
+    /// Example: example.default.svc.cluster.local:80
     pub target: String,
 
     /// The virtual port that the Onion Service will be using.
+    ///
+    /// Example: 80
     pub virtport: i32,
 }
 
@@ -102,13 +131,26 @@ pub struct OnionServiceStatus {}
 
 impl OnionService {
     #[must_use]
+    fn default_name(&self) -> &str {
+        self.metadata.name.as_ref().unwrap()
+    }
+
+    #[must_use]
     pub fn config_map_name(&self) -> &str {
-        &self.spec.config_map.name
+        self.spec
+            .config_map
+            .as_ref()
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
     pub fn deployment_name(&self) -> &str {
-        &self.spec.deployment.name
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]

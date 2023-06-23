@@ -1,7 +1,7 @@
 apiVersion: tor.agabani.co.uk/v1
 kind: TorIngress
 metadata:
-  name: {{ include "example.fullname" . }}-full
+  name: tor-ingress-{{ include "example.fullname" . }}-full
   labels: 
     {{- include "example.labels" . | nindent 4 }}
 spec:

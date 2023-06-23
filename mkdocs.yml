@@ -3,6 +3,8 @@ nav:
   - Tor Operator: 'index.md'
   - Getting Started: 'getting_started.md'
   - CLI: 'cli.md'
+  - Container Images: 'container_images.md'
+  - Helm: 'helm.md'
   - Custom Resource Definitions:
       - Onion Balance: 'custom_resource_definitions/onion_balance.md'
       - Onion Key: 'custom_resource_definitions/onion_key.md'

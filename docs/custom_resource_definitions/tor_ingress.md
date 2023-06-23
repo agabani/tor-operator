@@ -1,5 +1,11 @@
 # Tor Ingress
 
+A Tor Ingress is collection of Onion Services load balanced by a Onion Balance.
+
+The user must provide the Onion Key for the Onion Balance.
+
+The Tor Operator wil auto generate random Onion Keys for the Onion Services.
+
 ## Examples
 
 ### Basic

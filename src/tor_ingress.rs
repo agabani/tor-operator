@@ -38,6 +38,13 @@ use crate::{
  * Custom Resource Definition
  * ============================================================================
  */
+/// # Tor Ingress
+///
+/// A Tor Ingress is collection of Onion Services load balanced by a Onion Balance.
+///
+/// The user must provide the Onion Key for the Onion Balance.
+///
+/// The Tor Operator will auto generate random Onion Keys for the Onion Services.
 #[allow(clippy::module_name_repetitions)]
 #[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[kube(
@@ -48,80 +55,118 @@ use crate::{
     version = "v1"
 )]
 pub struct TorIngressSpec {
-    pub onion_balance: Option<TorIngressSpecOnionBalance>,
+    /// Onion Balance settings.
+    pub onion_balance: TorIngressSpecOnionBalance,
 
+    /// Onion Service settings.
     pub onion_service: TorIngressSpecOnionService,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionBalance {
+    /// Config Map settings.
     pub config_map: Option<TorIngressSpecOnionBalanceConfigMap>,
 
+    /// Deployment settings.
     pub deployment: Option<TorIngressSpecOnionBalanceDeployment>,
 
+    /// Name of the Onion Balance.
+    ///
+    /// Default: name of the Tor Ingress
     pub name: Option<String>,
 
-    pub onion_key: Option<TorIngressSpecOnionBalanceOnionKey>,
+    /// Onion Key settings.
+    pub onion_key: TorIngressSpecOnionBalanceOnionKey,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionBalanceConfigMap {
+    /// Name of the Config Map.
+    ///
+    /// Default: name of the Tor Ingress
     pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionBalanceDeployment {
+    /// Name of the Deployment.
+    ///
+    /// Default: name of the Tor Ingress
     pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionBalanceOnionKey {
-    pub name: Option<String>,
+    /// Name of the Onion Key.
+    pub name: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionService {
+    /// Config Map settings.
     pub config_map: Option<TorIngressSpecOnionServiceConfigMap>,
 
+    /// Deployment settings.
     pub deployment: Option<TorIngressSpecOnionServiceDeployment>,
 
+    /// Name prefix of the Onion Service.
+    ///
+    /// Default: name of the Tor Ingress
     pub name_prefix: Option<String>,
 
+    /// Onion Key settings.
     pub onion_key: Option<TorIngressSpecOnionServiceOnionKey>,
 
+    /// Onion Service Hidden Service ports.
     pub ports: Vec<TorIngressSpecOnionServicePort>,
 
+    /// Number of replicas.
+    ///
+    /// Default: 3
     pub replicas: Option<i32>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionServiceConfigMap {
+    /// Name prefix of the Config Map.
+    ///
+    /// Default: name of the Tor Ingress
     pub name_prefix: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionServiceDeployment {
+    /// Name prefix of the Deployment.
+    ///
+    /// Default: name of the Tor Ingress
     pub name_prefix: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionServiceOnionKey {
+    /// Name prefix of the Onion Key.
+    ///
+    /// Default: name of the Tor Ingress
     pub name_prefix: Option<String>,
 
+    /// Secret settings.
     pub secret: Option<TorIngressSpecOnionServiceOnionKeySecret>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionServiceOnionKeySecret {
+    /// Name prefix of the Secret.
+    ///
+    /// Default: name of the Tor Ingress
     pub name_prefix: Option<String>,
 }
 
@@ -149,8 +194,8 @@ impl TorIngress {
     pub fn onion_balance_config_map_name(&self) -> &str {
         self.spec
             .onion_balance
+            .config_map
             .as_ref()
-            .and_then(|f| f.config_map.as_ref())
             .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), String::as_str)
     }
@@ -159,8 +204,8 @@ impl TorIngress {
     pub fn onion_balance_deployment_name(&self) -> &str {
         self.spec
             .onion_balance
+            .deployment
             .as_ref()
-            .and_then(|f| f.deployment.as_ref())
             .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), String::as_str)
     }
@@ -169,19 +214,14 @@ impl TorIngress {
     pub fn onion_balance_name(&self) -> &str {
         self.spec
             .onion_balance
+            .name
             .as_ref()
-            .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), String::as_str)
     }
 
     #[must_use]
     pub fn onion_balance_onion_key_name(&self) -> &str {
-        self.spec
-            .onion_balance
-            .as_ref()
-            .and_then(|f| f.onion_key.as_ref())
-            .and_then(|f| f.name.as_ref())
-            .map_or_else(|| self.default_name(), String::as_str)
+        &self.spec.onion_balance.onion_key.name
     }
 
     #[must_use]
@@ -708,12 +748,12 @@ fn generate_onion_balance(
     }
 
     let spec = OnionBalanceSpec {
-        config_map: OnionBalanceSpecConfigMap {
-            name: object.onion_balance_config_map_name().to_string(),
-        },
-        deployment: OnionBalanceSpecDeployment {
-            name: object.onion_balance_deployment_name().to_string(),
-        },
+        config_map: Some(OnionBalanceSpecConfigMap {
+            name: Some(object.onion_balance_config_map_name().to_string()),
+        }),
+        deployment: Some(OnionBalanceSpecDeployment {
+            name: Some(object.onion_balance_deployment_name().to_string()),
+        }),
         onion_key: OnionBalanceSpecOnionKey {
             name: object.onion_balance_onion_key_name().to_string(),
         },
@@ -817,12 +857,12 @@ fn generate_onion_service(
     }
 
     let spec = OnionServiceSpec {
-        config_map: OnionServiceSpecConfigMap {
-            name: object.onion_service_config_map_name(instance),
-        },
-        deployment: OnionServiceSpecDeployment {
-            name: object.onion_service_deployment_name(instance),
-        },
+        config_map: Some(OnionServiceSpecConfigMap {
+            name: Some(object.onion_service_config_map_name(instance)),
+        }),
+        deployment: Some(OnionServiceSpecDeployment {
+            name: Some(object.onion_service_deployment_name(instance)),
+        }),
         onion_balance: Some(OnionServiceSpecOnionBalance {
             onion_key: OnionServiceSpecOnionBalanceOnionKey {
                 hostname: onion_balance_onion_key.hostname().unwrap().to_string(),

@@ -23,6 +23,7 @@
 
     or generate a new Onion Key using:
 
+        cargo install --git https://github.com/agabani/tor-operator
         tor-operator onion-key generate
 
 1.  Create a `Secret` containing the Onion Key.

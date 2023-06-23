@@ -48,30 +48,36 @@ pub struct ControllerArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum ControllerCommands {
-    /// Run
+    /// Run the Tor Operator
     Run(ControllerRunArgs),
 }
 
 #[derive(Args, Debug)]
 pub struct ControllerRunArgs {
+    /// Onion Balance image pull policy
     #[arg(long, default_value = "IfNotPresent")]
     pub onion_balance_image_pull_policy: String,
 
+    /// Onion Balance image uri
     #[arg(
         long,
         default_value = "ghcr.io/agabani/tor-operator:onion-balance-0.2.2"
     )]
     pub onion_balance_image_uri: String,
 
+    /// Host the web server binds to
     #[arg(long, default_value = "127.0.0.1")]
     pub host: String,
 
+    /// Port the web server binds to
     #[arg(long, default_value_t = 8080)]
     pub port: u16,
 
+    /// Tor image pull policy
     #[arg(long, default_value = "IfNotPresent")]
     pub tor_image_pull_policy: String,
 
+    /// Tor image uri
     #[arg(long, default_value = "ghcr.io/agabani/tor-operator:tor-0.4.7.13")]
     pub tor_image_uri: String,
 }
@@ -89,15 +95,17 @@ pub struct CrdArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum CrdCommands {
-    /// Generate
+    /// Generate the Tor Operator CRDs
     Generate(CrdGenerateArgs),
 }
 
 #[derive(Args, Debug)]
 pub struct CrdGenerateArgs {
+    /// Format of the CRDs
     #[arg(long, value_enum, default_value_t = CrdGenerateArgsFormat::Yaml)]
     pub format: CrdGenerateArgsFormat,
 
+    /// Output the CRDs into a directory
     #[arg(long, value_hint = clap::ValueHint::DirPath)]
     pub output: Option<PathBuf>,
 }
@@ -123,12 +131,13 @@ pub struct MarkdownArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum MarkdownCommands {
-    /// Generate
+    /// Generate the CLI help docs
     Generate(MarkdownGenerateArgs),
 }
 
 #[derive(Args, Debug)]
 pub struct MarkdownGenerateArgs {
+    /// Output the CLI help docs to a file
     #[arg(long, value_hint = clap::ValueHint::DirPath)]
     pub output: Option<PathBuf>,
 }
@@ -146,7 +155,7 @@ pub struct OnionKeyArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum OnionKeyCommands {
-    /// Generate
+    /// Generate a random Tor Onion Key
     Generate(OnionKeyGenerateArgs),
 }
 

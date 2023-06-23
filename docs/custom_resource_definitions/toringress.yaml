@@ -19,69 +19,119 @@ spec:
         description: Auto-generated derived type for TorIngressSpec via `CustomResource`
         properties:
           spec:
+            description: |-
+              A Tor Ingress is collection of Onion Services load balanced by a Onion Balance.
+
+              The user must provide the Onion Key for the Onion Balance.
+
+              The Tor Operator will auto generate random Onion Keys for the Onion Services.
             properties:
               onion_balance:
-                nullable: true
+                description: Onion Balance settings.
                 properties:
                   config_map:
+                    description: Config Map settings.
                     nullable: true
                     properties:
                       name:
+                        description: |-
+                          Name of the Config Map.
+
+                          Default: name of the Tor Ingress
                         nullable: true
                         type: string
                     type: object
                   deployment:
+                    description: Deployment settings.
                     nullable: true
                     properties:
                       name:
+                        description: |-
+                          Name of the Deployment.
+
+                          Default: name of the Tor Ingress
                         nullable: true
                         type: string
                     type: object
                   name:
+                    description: |-
+                      Name of the Onion Balance.
+
+                      Default: name of the Tor Ingress
                     nullable: true
                     type: string
                   onion_key:
-                    nullable: true
+                    description: Onion Key settings.
                     properties:
                       name:
-                        nullable: true
+                        description: Name of the Onion Key.
                         type: string
+                    required:
+                    - name
                     type: object
+                required:
+                - onion_key
                 type: object
               onion_service:
+                description: Onion Service settings.
                 properties:
                   config_map:
+                    description: Config Map settings.
                     nullable: true
                     properties:
                       name_prefix:
+                        description: |-
+                          Name prefix of the Config Map.
+
+                          Default: name of the Tor Ingress
                         nullable: true
                         type: string
                     type: object
                   deployment:
+                    description: Deployment settings.
                     nullable: true
                     properties:
                       name_prefix:
+                        description: |-
+                          Name prefix of the Deployment.
+
+                          Default: name of the Tor Ingress
                         nullable: true
                         type: string
                     type: object
                   name_prefix:
+                    description: |-
+                      Name prefix of the Onion Service.
+
+                      Default: name of the Tor Ingress
                     nullable: true
                     type: string
                   onion_key:
+                    description: Onion Key settings.
                     nullable: true
                     properties:
                       name_prefix:
+                        description: |-
+                          Name prefix of the Onion Key.
+
+                          Default: name of the Tor Ingress
                         nullable: true
                         type: string
                       secret:
+                        description: Secret settings.
                         nullable: true
                         properties:
                           name_prefix:
+                            description: |-
+                              Name prefix of the Secret.
+
+                              Default: name of the Tor Ingress
                             nullable: true
                             type: string
                         type: object
                     type: object
                   ports:
+                    description: Onion Service Hidden Service ports.
                     items:
                       properties:
                         target:
@@ -97,6 +147,10 @@ spec:
                       type: object
                     type: array
                   replicas:
+                    description: |-
+                      Number of replicas.
+
+                      Default: 3
                     format: int32
                     nullable: true
                     type: integer
@@ -104,7 +158,9 @@ spec:
                 - ports
                 type: object
             required:
+            - onion_balance
             - onion_service
+            title: Tor Ingress
             type: object
           status:
             nullable: true
