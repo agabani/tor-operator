@@ -19,27 +19,50 @@ spec:
         description: Auto-generated derived type for OnionServiceSpec via `CustomResource`
         properties:
           spec:
+            description: |-
+              An Onion Service is an abstraction of a Tor Onion Service.
+
+              A Tor Onion Service is a service that can only be accessed over Tor. Running a Tor Onion Service gives your users all teh security of HTTPS with the added privacy benefits of Tor.
             properties:
               config_map:
+                description: Config Map settings.
+                nullable: true
                 properties:
                   name:
+                    description: |-
+                      Name of the Config Map.
+
+                      Default: name of the Onion Service
+                    nullable: true
                     type: string
-                required:
-                - name
                 type: object
               deployment:
+                description: Deployment settings.
+                nullable: true
                 properties:
                   name:
+                    description: |-
+                      Name of the Deployment.
+
+                      Default: name of the Onion Service
+                    nullable: true
                     type: string
-                required:
-                - name
                 type: object
               onion_balance:
+                description: |-
+                  Onion Balance part the Onion Service belongs to.
+
+                  Default: nil / none / null / undefined.
                 nullable: true
                 properties:
                   onion_key:
+                    description: Onion Key reference of the Onion Balance.
                     properties:
                       hostname:
+                        description: |-
+                          Hostname value of the Onion Key.
+
+                          Example: "abcdefg.onion"
                         type: string
                     required:
                     - hostname
@@ -48,20 +71,29 @@ spec:
                 - onion_key
                 type: object
               onion_key:
+                description: Onion Key settings.
                 properties:
                   name:
+                    description: Name of the Onion Key.
                     type: string
                 required:
                 - name
                 type: object
               ports:
+                description: Onion Service Hidden Service ports.
                 items:
                   properties:
                     target:
-                      description: The target any incoming traffic will be redirect to.
+                      description: |-
+                        The target any incoming traffic will be redirect to.
+
+                        Example: example.default.svc.cluster.local:80
                       type: string
                     virtport:
-                      description: The virtual port that the Onion Service will be using.
+                      description: |-
+                        The virtual port that the Onion Service will be using.
+
+                        Example: 80
                       format: int32
                       type: integer
                   required:
@@ -70,10 +102,9 @@ spec:
                   type: object
                 type: array
             required:
-            - config_map
-            - deployment
             - onion_key
             - ports
+            title: Onion Service
             type: object
           status:
             nullable: true

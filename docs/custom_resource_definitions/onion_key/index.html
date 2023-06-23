@@ -48,6 +48,14 @@
                 <li class="toctree-l1"><a class="reference internal" href="../../cli/">CLI</a>
                 </li>
               </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../container_images/">Container Images</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../helm/">Helm</a>
+                </li>
+              </ul>
               <p class="caption"><span class="caption-text">Custom Resource Definitions</span></p>
               <ul class="current">
                   <li class="toctree-l1"><a class="reference internal" href="../onion_balance/">Onion Balance</a>
@@ -101,6 +109,21 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="onion-key">Onion Key</h1>
+<p>An Onion Key is an abstraction of a Tor Onion Key.</p>
+<p>A Tor Onion Key consists of the following files:</p>
+<ul>
+<li><code>hostname</code></li>
+<li><code>hs_ed25519_public_key</code></li>
+<li><code>hs_ed25519_public_key</code></li>
+</ul>
+<p>A user can import their existing Tor Onion keys by creating a secret.</p>
+<pre><code> kubectl create secret generic tor-ingress-example \
+   --from-file=hostname=./hostname \
+   --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \
+   --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key
+</code></pre>
+<p>A user can have the Tor Operator create a new random Onion Key by using the
+auto generate feature controlled by <code>.auto_generate</code>.</p>
 <h2 id="examples">Examples</h2>
 <h3 id="imported">Imported</h3>
 <p>The Tor Operator will use the Onion Key provided in the <code>Secret</code>.</p>
@@ -122,7 +145,7 @@ data:
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
 metadata:
-  name: {{ include &quot;example.fullname&quot; . }}
+  name: onion-key-{{ include &quot;example.fullname&quot; . }}
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
@@ -136,13 +159,13 @@ spec:
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
 metadata:
-  name: {{ include &quot;example.fullname&quot; . }}-auto-generated
+  name: onion-key-{{ include &quot;example.fullname&quot; . }}-auto-generate
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
   auto_generate: true
   secret:
-    name: onion-key-{{ include &quot;example.fullname&quot; . }}-auto-generated
+    name: onion-key-{{ include &quot;example.fullname&quot; . }}-auto-generate
 
 </code></pre>
 <h2 id="openapi-spec">OpenAPI Spec</h2>
@@ -167,38 +190,72 @@ spec:
         description: Auto-generated derived type for OnionKeySpec via `CustomResource`
         properties:
           spec:
+            description: |-
+              An Onion Key is an abstraction of a Tor Onion Key.
+
+              A Tor Onion Key consists of the following files:
+
+              - `hostname` - `hs_ed25519_public_key` - `hs_ed25519_public_key`
+
+              A user can import their existing Tor Onion keys by creating a secret.
+
+              ```ignore kubectl create secret generic tor-ingress-example \ --from-file=hostname=./hostname \ --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \ --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key ```
+
+              A user can have the Tor Operator create a new random Onion Key by using the auto generate feature controlled by `.auto_generate`.
             properties:
               auto_generate:
                 description: |-
-                  Auto generate a random onion key. [default: false]
+                  Auto generate a random onion key. default: false.
 
-                  Set to false if you want to use existing onion key from `secret_name`. Set to true if you want to populate `secret_name` with a randomly generated onion key.
+                  ## Auto Generate: False
+
+                  Tor Operator will use an existing Onion Key from the Secret specified in `.secret.name`.
+
+                  ## Auto Generate: True
+
+                  The Tor Operator will generate a random Onion Key and save it in the secret specified in `.secret.name`.
+
+                  If the Onion Key's secret key is missing or malformed, the Tor Operator will recreate the secret key.
+
+                  If the Onion Key's public key is missing, malformed, or does not match the secret key, the Tor Operator will deterministically recreate the public key from the secret key.
+
+                  If the Onion Key's hostname is missing, malformed, or does not match the public key, the Tor Operator will deterministically recreate the hostname from the public key.
                 nullable: true
+                title: Auto Generate
                 type: boolean
               secret:
-                description: |-
-                  Secret to use as the backing store.
-
-                  Secret data must have keys `hostname`, `hs_ed25519_public_key` and `hs_ed25519_secret_key`.
+                description: Secret settings.
                 properties:
                   name:
-                    description: Name.
+                    description: |-
+                      Name of the secret.
+
+                      Secret data must have keys `hostname`, `hs_ed25519_public_key` and `hs_ed25519_secret_key`.
                     type: string
                 required:
                 - name
                 type: object
             required:
             - secret
+            title: Onion Key
             type: object
           status:
             nullable: true
             properties:
               hostname:
-                description: Onion key hostname.
+                description: |-
+                  Onion key hostname.
+
+                  The hostname is only populated once `validation` is &quot;valid&quot;.
                 nullable: true
                 type: string
               validation:
-                description: Human readable description of onion key validation.
+                description: |-
+                  Human readable description of onion key validation.
+
+                  Possible Values:
+
+                  - secret not found - secret key not found - secret key malformed: (reason) - public key not found - public key malformed: (reason) - public key mismatch - hostname not found - hostname malformed: (reason) - hostname mismatch - valid
                 type: string
             required:
             - validation

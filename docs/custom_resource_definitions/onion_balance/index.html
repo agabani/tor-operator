@@ -48,6 +48,14 @@
                 <li class="toctree-l1"><a class="reference internal" href="../../cli/">CLI</a>
                 </li>
               </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../container_images/">Container Images</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../helm/">Helm</a>
+                </li>
+              </ul>
               <p class="caption"><span class="caption-text">Custom Resource Definitions</span></p>
               <ul class="current">
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Onion Balance</a>
@@ -55,6 +63,8 @@
     <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#full">Full</a>
     </li>
         </ul>
     </li>
@@ -99,6 +109,11 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="onion-balance">Onion Balance</h1>
+<p>An Onion Balance is an abstraction of a Tor Onion Balance.</p>
+<p>Tor Onion Balance is the best way to load balance Tor Onion Services. The
+load of introduction and rendezvous requests gets distributed across
+multiple hosts while also increasing resiliency by eliminating single
+points of failure.</p>
 <h2 id="examples">Examples</h2>
 <h3 id="basic">Basic</h3>
 <p>The Tor Operator will create an Onion Balance using an auto generated Onion Key load load balancing a list of Onion Services.</p>
@@ -119,16 +134,44 @@ spec:
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionBalance
 metadata:
-  name: {{ include &quot;example.fullname&quot; . }}
+  name: onion-balance-{{ include &quot;example.fullname&quot; . }}
+  labels: {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  onion_key:
+    name: onion-balance-{{ include &quot;example.fullname&quot; . }}
+  onion_services:
+    - onion_key:
+        hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
+
+</code></pre>
+<h3 id="full">Full</h3>
+<p>The Tor Operator will create an Onion Balance using an auto generated Onion Key load load balancing a list of Onion Services.</p>
+<pre><code>#onionkey.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionKey
+metadata:
+  name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
+  labels: {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  auto_generate: true
+  secret:
+    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
+
+</code></pre>
+<pre><code>#onionbalance.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionBalance
+metadata:
+  name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
   config_map:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}
+    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
   deployment:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}
+    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
   onion_key:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}
+    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
   onion_services:
     - onion_key:
         hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
@@ -156,34 +199,56 @@ spec:
         description: Auto-generated derived type for OnionBalanceSpec via `CustomResource`
         properties:
           spec:
+            description: |-
+              An Onion Balance is an abstraction of a Tor Onion Balance.
+
+              Tor Onion Balance is the best way to load balance Tor Onion Services. The load of introduction and rendezvous requests gets distributed across multiple hosts while also increasing resiliency by eliminating single points of failure.
             properties:
               config_map:
+                description: Config Map settings.
+                nullable: true
                 properties:
                   name:
+                    description: |-
+                      Name of the Config Map.
+
+                      Default: name of the Onion Balance
+                    nullable: true
                     type: string
-                required:
-                - name
                 type: object
               deployment:
+                description: Deployment settings.
+                nullable: true
                 properties:
                   name:
+                    description: |-
+                      Name of the Deployment.
+
+                      Default: name of the Onion Balance
+                    nullable: true
                     type: string
-                required:
-                - name
                 type: object
               onion_key:
+                description: Onion Key settings.
                 properties:
                   name:
+                    description: Name of the Onion Key.
                     type: string
                 required:
                 - name
                 type: object
               onion_services:
+                description: Onion Service part of the Onion Balance load balancing.
                 items:
                   properties:
                     onion_key:
+                      description: Onion Key reference of the Onion Service.
                       properties:
                         hostname:
+                          description: |-
+                            Hostname value of the Onion Key.
+
+                            Example: &quot;abcdefg.onion&quot;
                           type: string
                       required:
                       - hostname
@@ -193,10 +258,9 @@ spec:
                   type: object
                 type: array
             required:
-            - config_map
-            - deployment
             - onion_key
             - onion_services
+            title: Onion Balance
             type: object
           status:
             nullable: true
@@ -215,7 +279,7 @@ spec:
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../../cli/" class="btn btn-neutral float-left" title="CLI"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../helm/" class="btn btn-neutral float-left" title="Helm"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../onion_key/" class="btn btn-neutral float-right" title="Onion Key">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
@@ -239,7 +303,7 @@ spec:
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../../cli/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../../helm/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
       <span><a href="../onion_key/" style="color: #fcfcfc">Next &raquo;</a></span>

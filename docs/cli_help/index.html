@@ -48,6 +48,14 @@
                 <li class="toctree-l1"><a class="reference internal" href="../cli/">CLI</a>
                 </li>
               </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../container_images/">Container Images</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../helm/">Helm</a>
+                </li>
+              </ul>
               <p class="caption"><span class="caption-text">Custom Resource Definitions</span></p>
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/onion_balance/">Onion Balance</a>
@@ -112,54 +120,54 @@
 <p><strong>Usage:</strong> <code>tor-operator controller &lt;COMMAND&gt;</code></p>
 <h6 id="subcommands_1"><strong>Subcommands:</strong></h6>
 <ul>
-<li><code>run</code> — Run</li>
+<li><code>run</code> — Run the Tor Operator</li>
 </ul>
 <h2 id="tor-operator-controller-run"><code>tor-operator controller run</code></h2>
-<p>Run</p>
+<p>Run the Tor Operator</p>
 <p><strong>Usage:</strong> <code>tor-operator controller run [OPTIONS]</code></p>
 <h6 id="options"><strong>Options:</strong></h6>
 <ul>
-<li><code>--onion-balance-image-pull-policy &lt;ONION_BALANCE_IMAGE_PULL_POLICY&gt;</code></li>
+<li><code>--onion-balance-image-pull-policy &lt;ONION_BALANCE_IMAGE_PULL_POLICY&gt;</code> — Onion Balance image pull policy</li>
 </ul>
 <p>Default value: <code>IfNotPresent</code>
-* <code>--onion-balance-image-uri &lt;ONION_BALANCE_IMAGE_URI&gt;</code></p>
+* <code>--onion-balance-image-uri &lt;ONION_BALANCE_IMAGE_URI&gt;</code> — Onion Balance image uri</p>
 <p>Default value: <code>ghcr.io/agabani/tor-operator:onion-balance-0.2.2</code>
-* <code>--host &lt;HOST&gt;</code></p>
+* <code>--host &lt;HOST&gt;</code> — Host the web server binds to</p>
 <p>Default value: <code>127.0.0.1</code>
-* <code>--port &lt;PORT&gt;</code></p>
+* <code>--port &lt;PORT&gt;</code> — Port the web server binds to</p>
 <p>Default value: <code>8080</code>
-* <code>--tor-image-pull-policy &lt;TOR_IMAGE_PULL_POLICY&gt;</code></p>
+* <code>--tor-image-pull-policy &lt;TOR_IMAGE_PULL_POLICY&gt;</code> — Tor image pull policy</p>
 <p>Default value: <code>IfNotPresent</code>
-* <code>--tor-image-uri &lt;TOR_IMAGE_URI&gt;</code></p>
+* <code>--tor-image-uri &lt;TOR_IMAGE_URI&gt;</code> — Tor image uri</p>
 <p>Default value: <code>ghcr.io/agabani/tor-operator:tor-0.4.7.13</code></p>
 <h2 id="tor-operator-crd"><code>tor-operator crd</code></h2>
 <p>Custom Resource Definition</p>
 <p><strong>Usage:</strong> <code>tor-operator crd &lt;COMMAND&gt;</code></p>
 <h6 id="subcommands_2"><strong>Subcommands:</strong></h6>
 <ul>
-<li><code>generate</code> — Generate</li>
+<li><code>generate</code> — Generate the Tor Operator CRDs</li>
 </ul>
 <h2 id="tor-operator-crd-generate"><code>tor-operator crd generate</code></h2>
-<p>Generate</p>
+<p>Generate the Tor Operator CRDs</p>
 <p><strong>Usage:</strong> <code>tor-operator crd generate [OPTIONS]</code></p>
 <h6 id="options_1"><strong>Options:</strong></h6>
 <ul>
-<li><code>--format &lt;FORMAT&gt;</code></li>
+<li><code>--format &lt;FORMAT&gt;</code> — Format of the CRDs</li>
 </ul>
 <p>Default value: <code>yaml</code></p>
 <p>Possible values: <code>helm</code>, <code>json</code>, <code>yaml</code></p>
 <ul>
-<li><code>--output &lt;OUTPUT&gt;</code></li>
+<li><code>--output &lt;OUTPUT&gt;</code> — Output the CRDs into a directory</li>
 </ul>
 <h2 id="tor-operator-onion-key"><code>tor-operator onion-key</code></h2>
 <p>Onion Key</p>
 <p><strong>Usage:</strong> <code>tor-operator onion-key &lt;COMMAND&gt;</code></p>
 <h6 id="subcommands_3"><strong>Subcommands:</strong></h6>
 <ul>
-<li><code>generate</code> — Generate</li>
+<li><code>generate</code> — Generate a random Tor Onion Key</li>
 </ul>
 <h2 id="tor-operator-onion-key-generate"><code>tor-operator onion-key generate</code></h2>
-<p>Generate</p>
+<p>Generate a random Tor Onion Key</p>
 <p><strong>Usage:</strong> <code>tor-operator onion-key generate</code></p>
 <hr/>
 
