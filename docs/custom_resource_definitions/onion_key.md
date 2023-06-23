@@ -22,7 +22,7 @@ auto generate feature controlled by `.auto_generate`.
 
 ## Examples
 
-### Imported
+### Basic
 
 The Tor Operator will use the Onion Key provided in the `Secret`.
 
@@ -36,7 +36,7 @@ The Tor Operator will use the Onion Key provided in the `Secret`.
 {% include "../../example/templates/onionkey/onionkey.yaml" %}
 ```
 
-### Auto Generated
+### Auto Generate
 
 The Tor Operator will auto generated a random Onion Key and store it in a `Secret` on your behalf.
 
@@ -44,6 +44,56 @@ The Tor Operator will auto generated a random Onion Key and store it in a `Secre
 #onionkey.yaml
 {% include "../../example/templates/onionkey_auto_generate/onionkey.yaml" %}
 ```
+
+## Features
+
+### Auto Generate
+
+The Tor Operator will generate a random Onion Key and save it in the
+secret specified in `.secret.name`.
+
+- If the Onion Key's secret key is missing or malformed, the Tor Operator
+  will recreate the secret key.
+- If the Onion Key's public key is missing, malformed, or does not match
+  the secret key, the Tor Operator will deterministically recreate the
+  public key from the secret key.
+- If the Onion Key's hostname is missing, malformed, or does not match
+  the public key, the Tor Operator will deterministically recreate the
+  hostname from the public key.
+
+### Validation
+
+Onion Key validation can be observed in the Onion Key status.
+
+```
+kubectl describe onionkeys example
+```
+
+```
+# ...
+Spec:
+  auto_generate:  true
+  Secret:
+    Name:  example
+Status:
+  Hostname:    ********.onion
+  Validation:  valid
+Events:        <none>
+# ...
+```
+
+Possible Values for `Validation`:
+
+- `secret not found`
+- `secret key not found`
+- `secret key malformed: (reason)`
+- `public key not found`
+- `public key malformed: (reason)`
+- `public key mismatch`
+- `hostname not found`
+- `hostname malformed: (reason)`
+- `hostname mismatch`
+- `valid`
 
 ## OpenAPI Spec
 
