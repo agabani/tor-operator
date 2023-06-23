@@ -46,8 +46,8 @@ jobs:
           context: ./containers/onion-balance
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:onion-balance-buildcache-${{ matrix.platform }}-${{ steps.meta.outputs.labels }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:onion-balance-buildcache-${{ matrix.platform }}-${{ steps.meta.outputs.labels }},mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:onion-balance-buildcache-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}-${{ steps.meta.outputs.labels }}
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:onion-balance-buildcache-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}-${{ steps.meta.outputs.labels }},mode=max
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
       - name: Export digest
         run: |
