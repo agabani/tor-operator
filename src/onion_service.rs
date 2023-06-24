@@ -13,21 +13,18 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::LabelSelector,
 };
 use kube::{
-    api::{DeleteParams, ListParams, Patch, PatchParams},
+    api::Patch,
     core::ObjectMeta,
     runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
     Api, Client, CustomResource, CustomResourceExt, Resource,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 use crate::{
-    onion_key::OnionKey, Annotations, Error, Labels, OBConfig, ObjectName, ObjectNamespace, Result,
-    SelectorLabels, Torrc, APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
-    APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
-    APP_KUBERNETES_IO_NAME_KEY, APP_KUBERNETES_IO_NAME_VALUE, TOR_AGABANI_CO_UK_OWNED_BY_KEY,
-    TOR_AGABANI_CO_UK_TORRC_HASH_KEY,
+    onion_key::OnionKey,
+    utils::{KubeCrdResourceExt, KubeResourceExt},
+    Annotations, Error, Labels, OBConfig, Result, SelectorLabels, Torrc,
 };
 
 /*
@@ -132,7 +129,7 @@ pub struct OnionServiceStatus {}
 impl OnionService {
     #[must_use]
     fn default_name(&self) -> &str {
-        self.metadata.name.as_ref().unwrap()
+        self.try_name().unwrap().0
     }
 
     #[must_use]
@@ -177,6 +174,12 @@ impl OnionService {
     }
 }
 
+impl KubeResourceExt for OnionService {}
+
+impl KubeCrdResourceExt for OnionService {
+    const APP_KUBERNETES_IO_COMPONENT_VALUE: &'static str = "onion-service";
+}
+
 #[must_use]
 pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
     OnionService::crd()
@@ -202,27 +205,27 @@ pub struct ImageConfig {
  * ============================================================================
  */
 pub async fn run_controller(client: Client, config: Config) {
-    let config_maps = Api::<ConfigMap>::all(client.clone());
-    let deployments = Api::<Deployment>::all(client.clone());
-    let onion_services = Api::<OnionService>::all(client.clone());
-
-    let context = Arc::new(Context { client, config });
-
-    Controller::new(onion_services, WatcherConfig::default())
-        .owns(config_maps, WatcherConfig::default())
-        .owns(deployments, WatcherConfig::default())
-        .shutdown_on_signal()
-        .run(reconciler, error_policy, context)
-        .for_each(|_| async {})
-        .await;
+    Controller::new(
+        Api::<OnionService>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .owns(
+        Api::<ConfigMap>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .owns(
+        Api::<Deployment>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .shutdown_on_signal()
+    .run(
+        reconciler,
+        error_policy,
+        Arc::new(Context { client, config }),
+    )
+    .for_each(|_| async {})
+    .await;
 }
-
-/*
- * ============================================================================
- * Constants
- * ============================================================================
- */
-const APP_KUBERNETES_IO_COMPONENT_VALUE: &str = "onion-service";
 
 /*
  * ============================================================================
@@ -243,27 +246,31 @@ struct Context {
 async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Action> {
     tracing::info!("reconciling");
 
-    let object_name = get_object_name(&object)?;
-    let object_namespace = get_object_namespace(&object)?;
+    let namespace = object.try_namespace()?;
 
     let ob_config = generate_ob_config(&object);
     let torrc = generate_torrc(&object);
 
     let annotations = generate_annotations(&torrc);
-    let labels = generate_labels(&object, &object_name);
-    let selector_labels = generate_selector_labels(&object_name);
+    let labels = object.try_labels()?;
+    let selector_labels = object.try_selector_labels()?;
 
-    let onion_key = reconcile_onion_key(&object, &ctx, &object_namespace).await?;
-
+    // onion key
+    let onion_key = reconcile_onion_key(
+        //
+        &Api::namespaced(ctx.client.clone(), &namespace),
+        &object,
+    )
+    .await?;
     let Some(onion_key) = onion_key else {
         tracing::info!("status: waiting for onion key hostname.");
         return Ok(Action::requeue(Duration::from_secs(5)));
     };
 
+    // config map
     reconcile_config_map(
+        &Api::namespaced(ctx.client.clone(), &namespace),
         &object,
-        &ctx,
-        &object_namespace,
         &annotations,
         &labels,
         &torrc,
@@ -271,10 +278,11 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     )
     .await?;
 
+    // deployment
     reconcile_deployment(
+        &Api::namespaced(ctx.client.clone(), &namespace),
+        &ctx.config,
         &object,
-        &ctx,
-        &object_namespace,
         &annotations,
         &labels,
         &selector_labels,
@@ -288,13 +296,10 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
 }
 
 async fn reconcile_onion_key(
+    api: &Api<OnionKey>,
     object: &OnionService,
-    ctx: &Context,
-    object_namespace: &ObjectNamespace<'_>,
 ) -> Result<Option<OnionKey>> {
-    let onion_keys = Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0);
-
-    let onion_key = onion_keys
+    let onion_key = api
         .get(object.onion_key_name())
         .await
         .map_err(Error::Kube)?;
@@ -307,51 +312,35 @@ async fn reconcile_onion_key(
 }
 
 async fn reconcile_config_map(
+    api: &Api<ConfigMap>,
     object: &OnionService,
-    ctx: &Context,
-    object_namespace: &ObjectNamespace<'_>,
     annotations: &Annotations,
     labels: &Labels,
     torrc: &Torrc,
     ob_config: &Option<OBConfig>,
 ) -> Result<()> {
-    let config_maps = Api::<ConfigMap>::namespaced(ctx.client.clone(), object_namespace.0);
-
     // creation
-    let config_map = generate_owned_config_map(object, annotations, labels, ob_config, torrc);
+    let config_map = generate_config_map(object, annotations, labels, ob_config, torrc);
 
-    config_maps
-        .patch(
-            config_map
-                .metadata
-                .name
-                .as_ref()
-                .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?,
-            &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force(),
-            &Patch::Apply(&config_map),
-        )
-        .await
-        .map_err(Error::Kube)?;
+    api.patch(
+        &config_map.try_name()?,
+        &object.patch_params(),
+        &Patch::Apply(&config_map),
+    )
+    .await
+    .map_err(Error::Kube)?;
 
     // deletion
-    let owned_config_maps = config_maps
-        .list(&ListParams::default().labels(&format!(
-            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
-            object.metadata.uid.as_ref().unwrap()
-        )))
+    let config_maps = api
+        .list(&object.try_owned_list_params()?)
         .await
         .map_err(Error::Kube)?;
 
-    for config_map in &owned_config_maps {
-        let config_map_name = config_map
-            .meta()
-            .name
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?;
+    for config_map in &config_maps {
+        let config_map_name = config_map.try_name()?;
 
-        if config_map_name != object.config_map_name() {
-            config_maps
-                .delete(config_map_name, &DeleteParams::default())
+        if config_map_name.as_str() != object.config_map_name() {
+            api.delete(&config_map_name, &object.delete_params())
                 .await
                 .map_err(Error::Kube)?;
         }
@@ -361,57 +350,42 @@ async fn reconcile_config_map(
 }
 
 async fn reconcile_deployment(
+    api: &Api<Deployment>,
+    config: &Config,
     object: &OnionService,
-    ctx: &Context,
-    object_namespace: &ObjectNamespace<'_>,
     annotations: &Annotations,
     labels: &Labels,
     selector_labels: &SelectorLabels,
     onion_key: &OnionKey,
 ) -> Result<()> {
-    let deployments = Api::<Deployment>::namespaced(ctx.client.clone(), object_namespace.0);
-
-    let deployment = generate_owned_deployment(
+    let deployment = generate_deployment(
         object,
-        &ctx.config,
+        config,
         annotations,
         labels,
         selector_labels,
         onion_key,
     );
 
-    deployments
-        .patch(
-            deployment
-                .metadata
-                .name
-                .as_ref()
-                .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?,
-            &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force(),
-            &Patch::Apply(&deployment),
-        )
-        .await
-        .map_err(Error::Kube)?;
+    api.patch(
+        &deployment.try_name()?,
+        &object.patch_params(),
+        &Patch::Apply(&deployment),
+    )
+    .await
+    .map_err(Error::Kube)?;
 
     // deletion
-    let owned_deployments = deployments
-        .list(&ListParams::default().labels(&format!(
-            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
-            object.metadata.uid.as_ref().unwrap()
-        )))
+    let deployments = api
+        .list(&object.try_owned_list_params()?)
         .await
         .map_err(Error::Kube)?;
 
-    for deployment in &owned_deployments {
-        let deployment_name = deployment
-            .meta()
-            .name
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?;
+    for deployment in &deployments {
+        let deployment_name = deployment.try_name()?;
 
-        if deployment_name != object.deployment_name() {
-            deployments
-                .delete(deployment_name, &DeleteParams::default())
+        if deployment_name.as_str() != object.deployment_name() {
+            api.delete(&deployment_name, &object.delete_params())
                 .await
                 .map_err(Error::Kube)?;
         }
@@ -420,72 +394,8 @@ async fn reconcile_deployment(
     Ok(())
 }
 
-fn get_object_name(object: &OnionService) -> Result<ObjectName> {
-    Ok(ObjectName(
-        object
-            .metadata
-            .name
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?
-            .as_str(),
-    ))
-}
-
-fn get_object_namespace(object: &OnionService) -> Result<ObjectNamespace> {
-    Ok(ObjectNamespace(
-        object
-            .metadata
-            .namespace
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.namespace"))?
-            .as_str(),
-    ))
-}
-
 fn generate_annotations(torrc: &Torrc) -> Annotations {
-    let mut sha = Sha256::new();
-    sha.update(&torrc.0);
-    let torrc_hash = format!("sha256:{:x}", sha.finalize());
-    Annotations(BTreeMap::from([(
-        TOR_AGABANI_CO_UK_TORRC_HASH_KEY.into(),
-        torrc_hash,
-    )]))
-}
-
-fn generate_labels(object: &OnionService, object_name: &ObjectName) -> Labels {
-    Labels(BTreeMap::from([
-        (
-            APP_KUBERNETES_IO_COMPONENT_KEY.into(),
-            APP_KUBERNETES_IO_COMPONENT_VALUE.into(),
-        ),
-        (APP_KUBERNETES_IO_INSTANCE_KEY.into(), object_name.0.into()),
-        (
-            APP_KUBERNETES_IO_MANAGED_BY_KEY.into(),
-            APP_KUBERNETES_IO_MANAGED_BY_VALUE.into(),
-        ),
-        (
-            APP_KUBERNETES_IO_NAME_KEY.into(),
-            APP_KUBERNETES_IO_NAME_VALUE.into(),
-        ),
-        (
-            TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
-            object.metadata.uid.clone().unwrap(),
-        ),
-    ]))
-}
-
-fn generate_selector_labels(object_name: &ObjectName) -> SelectorLabels {
-    SelectorLabels(BTreeMap::from([
-        (
-            APP_KUBERNETES_IO_COMPONENT_KEY.into(),
-            APP_KUBERNETES_IO_COMPONENT_VALUE.into(),
-        ),
-        (APP_KUBERNETES_IO_INSTANCE_KEY.into(), object_name.0.into()),
-        (
-            APP_KUBERNETES_IO_NAME_KEY.into(),
-            APP_KUBERNETES_IO_NAME_VALUE.into(),
-        ),
-    ]))
+    Annotations(BTreeMap::from([(torrc.to_annotation_tuple())]))
 }
 
 fn generate_ob_config(object: &OnionService) -> Option<OBConfig> {
@@ -510,31 +420,33 @@ fn generate_torrc(object: &OnionService) -> Torrc {
     Torrc(torrc.join("\n"))
 }
 
-fn generate_owned_config_map(
+fn generate_config_map(
     object: &OnionService,
     annotations: &Annotations,
     labels: &Labels,
     ob_config: &Option<OBConfig>,
     torrc: &Torrc,
 ) -> ConfigMap {
-    let mut x = BTreeMap::from([("torrc".into(), torrc.0.clone())]);
-    if let Some(ob_config) = ob_config {
-        x.insert("ob_config".into(), ob_config.0.clone());
-    }
     ConfigMap {
         metadata: ObjectMeta {
             name: Some(object.config_map_name().to_string()),
-            annotations: Some(annotations.0.clone()),
-            labels: Some(labels.0.clone()),
+            annotations: Some(annotations.into()),
+            labels: Some(labels.into()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
-        data: Some(x),
+        data: Some({
+            let mut data = BTreeMap::from([("torrc".into(), torrc.into())]);
+            if let Some(ob_config) = ob_config {
+                data.insert("ob_config".into(), ob_config.into());
+            }
+            data
+        }),
         ..Default::default()
     }
 }
 
-fn generate_owned_deployment(
+fn generate_deployment(
     object: &OnionService,
     config: &Config,
     annotations: &Annotations,
@@ -545,21 +457,21 @@ fn generate_owned_deployment(
     Deployment {
         metadata: ObjectMeta {
             name: Some(object.deployment_name().to_string()),
-            annotations: Some(annotations.0.clone()),
-            labels: Some(labels.0.clone()),
+            annotations: Some(annotations.into()),
+            labels: Some(labels.into()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
         spec: Some(DeploymentSpec {
             replicas: Some(1),
             selector: LabelSelector {
-                match_labels: Some(selector_labels.0.clone()),
+                match_labels: Some(selector_labels.into()),
                 ..Default::default()
             },
             template: PodTemplateSpec {
                 metadata: Some(ObjectMeta {
-                    annotations: Some(annotations.0.clone()),
-                    labels: Some(labels.0.clone()),
+                    annotations: Some(annotations.into()),
+                    labels: Some(labels.into()),
                     ..Default::default()
                 }),
                 spec: Some(PodSpec {

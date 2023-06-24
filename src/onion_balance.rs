@@ -253,10 +253,10 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
 }
 
 async fn reconcile_onion_key(
-    onion_keys: &Api<OnionKey>,
+    api: &Api<OnionKey>,
     object: &OnionBalance,
 ) -> Result<Option<OnionKey>> {
-    let onion_key = onion_keys
+    let onion_key = api
         .get(object.onion_key_name())
         .await
         .map_err(Error::Kube)?;

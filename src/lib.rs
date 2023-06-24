@@ -123,6 +123,18 @@ impl From<&Labels> for BTreeMap<String, String> {
 
 struct OBConfig(String);
 
+impl From<OBConfig> for String {
+    fn from(value: OBConfig) -> Self {
+        value.0
+    }
+}
+
+impl From<&OBConfig> for String {
+    fn from(value: &OBConfig) -> Self {
+        value.0.clone()
+    }
+}
+
 pub struct ObjectName<'a>(&'a str);
 
 impl ObjectName<'_> {
