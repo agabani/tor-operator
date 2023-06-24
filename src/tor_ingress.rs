@@ -7,7 +7,7 @@ use std::{
 use futures::StreamExt;
 use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition;
 use kube::{
-    api::{DeleteParams, ListParams, Patch, PatchParams},
+    api::Patch,
     core::ObjectMeta,
     runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
     Api, Client, CustomResource, CustomResourceExt, Resource,
@@ -27,10 +27,8 @@ use crate::{
         OnionServiceSpecHiddenServicePort, OnionServiceSpecOnionBalance,
         OnionServiceSpecOnionBalanceOnionKey, OnionServiceSpecOnionKey,
     },
-    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result,
-    APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
-    APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
-    APP_KUBERNETES_IO_NAME_KEY, APP_KUBERNETES_IO_NAME_VALUE, TOR_AGABANI_CO_UK_OWNED_BY_KEY,
+    utils::{KubeCrdResourceExt, KubeResourceExt},
+    Annotations, Error, Labels, Result,
 };
 
 /*
@@ -187,7 +185,7 @@ pub struct TorIngressStatus {}
 impl TorIngress {
     #[must_use]
     fn default_name(&self) -> &str {
-        self.metadata.name.as_ref().unwrap()
+        self.try_name().unwrap().0
     }
 
     #[must_use]
@@ -308,6 +306,12 @@ impl TorIngress {
     }
 }
 
+impl KubeResourceExt for TorIngress {}
+
+impl KubeCrdResourceExt for TorIngress {
+    const APP_KUBERNETES_IO_COMPONENT_VALUE: &'static str = "tor-ingress";
+}
+
 #[must_use]
 pub fn generate_custom_resource_definition() -> CustomResourceDefinition {
     TorIngress::crd()
@@ -326,32 +330,34 @@ pub struct Config {}
  * ============================================================================
  */
 pub async fn run_controller(client: Client, config: Config) {
-    let onion_balances = Api::<OnionBalance>::all(client.clone());
-    let onion_keys = Api::<OnionKey>::all(client.clone());
-    let onion_services = Api::<OnionService>::all(client.clone());
-    let tor_ingresses = Api::<TorIngress>::all(client.clone());
-
-    let context = Arc::new(Context {
-        client,
-        _config: config,
-    });
-
-    Controller::new(tor_ingresses, WatcherConfig::default())
-        .owns(onion_balances, WatcherConfig::default())
-        .owns(onion_keys, WatcherConfig::default())
-        .owns(onion_services, WatcherConfig::default())
-        .shutdown_on_signal()
-        .run(reconciler, error_policy, context)
-        .for_each(|_| async {})
-        .await;
+    Controller::new(
+        Api::<TorIngress>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .owns(
+        Api::<OnionBalance>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .owns(
+        Api::<OnionKey>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .owns(
+        Api::<OnionService>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .shutdown_on_signal()
+    .run(
+        reconciler,
+        error_policy,
+        Arc::new(Context {
+            client,
+            _config: config,
+        }),
+    )
+    .for_each(|_| async {})
+    .await;
 }
-
-/*
- * ============================================================================
- * Constants
- * ============================================================================
- */
-const APP_KUBERNETES_IO_COMPONENT_VALUE: &str = "tor-ingress";
 
 /*
  * ============================================================================
@@ -372,16 +378,20 @@ struct Context {
 async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action> {
     tracing::info!("reconciling");
 
-    let object_name = get_object_name(&object)?;
-    let object_namespace = get_object_namespace(&object)?;
+    let namespace = object.try_namespace()?;
 
     let annotations = generate_annotations();
-    let labels = generate_labels(&object, &object_name);
+    let labels = object.try_labels()?;
+
+    let onion_keys = Api::namespaced(ctx.client.clone(), &namespace);
 
     // onion balance onion key
-    let onion_balance_onion_key =
-        reconcile_onion_balance_onion_key(&object, &ctx, &object_namespace).await?;
-
+    let onion_balance_onion_key = reconcile_onion_balance_onion_key(
+        //
+        &onion_keys,
+        &object,
+    )
+    .await?;
     let Some(onion_balance_onion_key) = onion_balance_onion_key else {
         // TODO: status: waiting for onion balance onion key hostname.
         tracing::info!("status: waiting for onion balance onion key hostname.");
@@ -389,10 +399,14 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
     };
 
     // onion service onion keys
-    let onion_service_onion_keys =
-        reconcile_onion_service_onion_keys(&object, &ctx, &object_namespace, &annotations, &labels)
-            .await?;
-
+    let onion_service_onion_keys = reconcile_onion_service_onion_keys(
+        //
+        &onion_keys,
+        &object,
+        &annotations,
+        &labels,
+    )
+    .await?;
     let Some(onion_service_onion_keys) = onion_service_onion_keys else {
         // TODO: status: waiting for onion service onion key hostnames.
         tracing::info!("status: waiting for onion service onion key hostnames.");
@@ -401,9 +415,8 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 
     // onion services
     reconcile_onion_services(
+        &Api::namespaced(ctx.client.clone(), &namespace),
         &object,
-        &ctx,
-        &object_namespace,
         &annotations,
         &labels,
         &onion_balance_onion_key,
@@ -412,9 +425,8 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 
     // onion balance
     reconcile_onion_balance(
+        &Api::namespaced(ctx.client.clone(), &namespace),
         &object,
-        &ctx,
-        &object_namespace,
         &annotations,
         &labels,
         &onion_service_onion_keys,
@@ -427,13 +439,10 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 }
 
 async fn reconcile_onion_balance_onion_key(
+    api: &Api<OnionKey>,
     object: &TorIngress,
-    ctx: &Context,
-    object_namespace: &ObjectNamespace<'_>,
 ) -> Result<Option<OnionKey>> {
-    let onion_keys = Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0);
-
-    let onion_key = onion_keys
+    let onion_key = api
         .get(object.onion_balance_onion_key_name())
         .await
         .map_err(Error::Kube)?;
@@ -446,17 +455,14 @@ async fn reconcile_onion_balance_onion_key(
 }
 
 async fn reconcile_onion_service_onion_keys(
+    api: &Api<OnionKey>,
     object: &TorIngress,
-    ctx: &Context,
-    object_namespace: &ObjectNamespace<'_>,
     annotations: &Annotations,
     labels: &Labels,
 ) -> Result<Option<HashMap<i32, OnionKey>>> {
-    let onion_keys = Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0);
-
     // creation
     for instance in 0..object.onion_service_replicas() {
-        let onion_key = onion_keys
+        let onion_key = api
             .get_opt(&object.onion_service_onion_key_name(instance))
             .await
             .map_err(Error::Kube)?;
@@ -465,32 +471,24 @@ async fn reconcile_onion_service_onion_keys(
             generate_onion_service_onion_key(object, &onion_key, annotations, labels, instance);
 
         if let Some(onion_key) = onion_key {
-            onion_keys
-                .patch(
-                    onion_key
-                        .metadata
-                        .name
-                        .as_ref()
-                        .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?,
-                    &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
-                    &Patch::Apply(&onion_key),
-                )
-                .await
-                .map_err(Error::Kube)?;
+            api.patch(
+                &onion_key.try_name()?,
+                &object.patch_params(),
+                &Patch::Apply(&onion_key),
+            )
+            .await
+            .map_err(Error::Kube)?;
         }
     }
 
     // ready and deletion
-    let mut owned_onion_keys = onion_keys
-        .list(&ListParams::default().labels(&format!(
-            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
-            object.metadata.uid.as_ref().unwrap()
-        )))
+    let mut onion_keys = api
+        .list(&object.try_owned_list_params()?)
         .await
         .map_err(Error::Kube)?
         .into_iter()
         .map(|onion_key| {
-            let name = onion_key.metadata.name.clone().unwrap();
+            let name = onion_key.try_name().unwrap().0.to_string();
             (name, onion_key)
         })
         .collect::<HashMap<_, _>>();
@@ -501,7 +499,7 @@ async fn reconcile_onion_service_onion_keys(
 
     // ready
     let ready = manifest.iter().all(|(onion_key_name, _)| {
-        let Some(onion_key) = owned_onion_keys.get(onion_key_name) else {
+        let Some(onion_key) = onion_keys.get(onion_key_name) else {
             return false;
         };
         onion_key.hostname().is_some()
@@ -512,12 +510,11 @@ async fn reconcile_onion_service_onion_keys(
     }
 
     // deletion
-    for onion_key_name in owned_onion_keys.keys() {
+    for onion_key_name in onion_keys.keys() {
         let keep = manifest.get(onion_key_name).is_some();
 
         if !keep {
-            onion_keys
-                .delete(onion_key_name, &DeleteParams::default())
+            api.delete(onion_key_name, &object.delete_params())
                 .await
                 .map_err(Error::Kube)?;
         }
@@ -527,7 +524,7 @@ async fn reconcile_onion_service_onion_keys(
         manifest
             .iter()
             .map(|(name, instance)| {
-                let onion_key = owned_onion_keys.remove(name).unwrap();
+                let onion_key = onion_keys.remove(name).unwrap();
                 (*instance, onion_key)
             })
             .collect(),
@@ -535,18 +532,15 @@ async fn reconcile_onion_service_onion_keys(
 }
 
 async fn reconcile_onion_services(
+    api: &Api<OnionService>,
     object: &TorIngress,
-    ctx: &Context,
-    object_namespace: &ObjectNamespace<'_>,
     annotations: &Annotations,
     labels: &Labels,
     onion_balance_onion_key: &OnionKey,
 ) -> Result<()> {
-    let onion_services = Api::<OnionService>::namespaced(ctx.client.clone(), object_namespace.0);
-
     // creation
     for instance in 0..object.onion_service_replicas() {
-        let onion_service = onion_services
+        let onion_service = api
             .get_opt(&object.onion_service_name(instance))
             .await
             .map_err(Error::Kube)?;
@@ -561,27 +555,19 @@ async fn reconcile_onion_services(
         );
 
         if let Some(onion_service) = onion_service {
-            onion_services
-                .patch(
-                    onion_service
-                        .metadata
-                        .name
-                        .as_ref()
-                        .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?,
-                    &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
-                    &Patch::Apply(&onion_service),
-                )
-                .await
-                .map_err(Error::Kube)?;
+            api.patch(
+                &onion_service.try_name()?,
+                &object.patch_params(),
+                &Patch::Apply(&onion_service),
+            )
+            .await
+            .map_err(Error::Kube)?;
         }
     }
 
     // deletion
-    let owned_onion_services = onion_services
-        .list(&ListParams::default().labels(&format!(
-            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
-            object.metadata.uid.as_ref().unwrap()
-        )))
+    let owned_onion_services = api
+        .list(&object.try_owned_list_params()?)
         .await
         .map_err(Error::Kube)?;
 
@@ -590,15 +576,10 @@ async fn reconcile_onion_services(
         .collect();
 
     for onion_service in &owned_onion_services {
-        let onion_service_name = onion_service
-            .meta()
-            .name
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?;
+        let onion_service_name = onion_service.try_name()?;
 
-        if !manifest.contains(onion_service_name) {
-            onion_services
-                .delete(onion_service_name, &DeleteParams::default())
+        if !manifest.contains(onion_service_name.as_str()) {
+            api.delete(&onion_service_name, &object.delete_params())
                 .await
                 .map_err(Error::Kube)?;
         }
@@ -608,17 +589,14 @@ async fn reconcile_onion_services(
 }
 
 async fn reconcile_onion_balance(
+    api: &Api<OnionBalance>,
     object: &TorIngress,
-    ctx: &Context,
-    object_namespace: &ObjectNamespace<'_>,
     annotations: &Annotations,
     labels: &Labels,
     onion_service_onion_keys: &HashMap<i32, OnionKey>,
 ) -> Result<()> {
-    let onion_balances = Api::<OnionBalance>::namespaced(ctx.client.clone(), object_namespace.0);
-
     // creation
-    let onion_balance = onion_balances
+    let onion_balance = api
         .get_opt(object.onion_balance_name())
         .await
         .map_err(Error::Kube)?;
@@ -632,35 +610,26 @@ async fn reconcile_onion_balance(
     );
 
     if let Some(onion_balance) = onion_balance {
-        onion_balances
-            .patch(
-                onion_balance.metadata.name.as_ref().unwrap(),
-                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
-                &Patch::Apply(&onion_balance),
-            )
-            .await
-            .map_err(Error::Kube)?;
+        api.patch(
+            &onion_balance.try_name()?,
+            &object.patch_params(),
+            &Patch::Apply(&onion_balance),
+        )
+        .await
+        .map_err(Error::Kube)?;
     }
 
     // deletion
-    let owned_onion_balances = onion_balances
-        .list(&ListParams::default().labels(&format!(
-            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
-            object.metadata.uid.as_ref().unwrap()
-        )))
+    let onion_balances = api
+        .list(&object.try_owned_list_params()?)
         .await
         .map_err(Error::Kube)?;
 
-    for onion_balance in &owned_onion_balances {
-        let onion_balances_name = onion_balance
-            .meta()
-            .name
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?;
+    for onion_balance in &onion_balances {
+        let onion_balances_name = onion_balance.try_name()?;
 
-        if onion_balances_name != object.onion_balance_name() {
-            onion_balances
-                .delete(onion_balances_name, &DeleteParams::default())
+        if onion_balances_name.as_str() != object.onion_balance_name() {
+            api.delete(&onion_balances_name, &object.delete_params())
                 .await
                 .map_err(Error::Kube)?;
         }
@@ -669,52 +638,8 @@ async fn reconcile_onion_balance(
     Ok(())
 }
 
-fn get_object_name(object: &TorIngress) -> Result<ObjectName> {
-    Ok(ObjectName(
-        object
-            .metadata
-            .name
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?
-            .as_str(),
-    ))
-}
-
-fn get_object_namespace(object: &TorIngress) -> Result<ObjectNamespace> {
-    Ok(ObjectNamespace(
-        object
-            .metadata
-            .namespace
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.namespace"))?
-            .as_str(),
-    ))
-}
-
 fn generate_annotations() -> Annotations {
     Annotations(BTreeMap::from([]))
-}
-
-fn generate_labels(object: &TorIngress, object_name: &ObjectName) -> Labels {
-    Labels(BTreeMap::from([
-        (
-            APP_KUBERNETES_IO_COMPONENT_KEY.into(),
-            APP_KUBERNETES_IO_COMPONENT_VALUE.into(),
-        ),
-        (APP_KUBERNETES_IO_INSTANCE_KEY.into(), object_name.0.into()),
-        (
-            APP_KUBERNETES_IO_MANAGED_BY_KEY.into(),
-            APP_KUBERNETES_IO_MANAGED_BY_VALUE.into(),
-        ),
-        (
-            APP_KUBERNETES_IO_NAME_KEY.into(),
-            APP_KUBERNETES_IO_NAME_VALUE.into(),
-        ),
-        (
-            TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
-            object.metadata.uid.clone().unwrap(),
-        ),
-    ]))
 }
 
 /// only returns an onion key if a change needs to be made...
@@ -734,8 +659,8 @@ fn generate_onion_balance(
         OnionBalance {
             metadata: ObjectMeta {
                 name: Some(object.onion_balance_name().to_string()),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
+                annotations: Some(annotations.into()),
+                labels: Some(labels.into()),
                 owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
                 ..Default::default()
             },
@@ -796,8 +721,8 @@ fn generate_onion_service_onion_key(
         OnionKey {
             metadata: ObjectMeta {
                 name: Some(object.onion_service_onion_key_name(instance)),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
+                annotations: Some(annotations.into()),
+                labels: Some(labels.into()),
                 owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
                 ..Default::default()
             },
@@ -843,8 +768,8 @@ fn generate_onion_service(
         OnionService {
             metadata: ObjectMeta {
                 name: Some(object.onion_service_name(instance)),
-                annotations: Some(annotations.0.clone()),
-                labels: Some(labels.0.clone()),
+                annotations: Some(annotations.into()),
+                labels: Some(labels.into()),
                 owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
                 ..Default::default()
             },

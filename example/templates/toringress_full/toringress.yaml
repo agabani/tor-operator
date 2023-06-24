@@ -2,27 +2,27 @@ apiVersion: tor.agabani.co.uk/v1
 kind: TorIngress
 metadata:
   name: tor-ingress-{{ include "example.fullname" . }}-full
-  labels: 
+  labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
   onion_balance:
     config_map:
-      name: tor-ingress-{{ include "example.fullname" . }}-full
+      name: tor-ingress-{{ include "example.fullname" . }}-full-2
     deployment:
-      name: tor-ingress-{{ include "example.fullname" . }}-full
-    name: tor-ingress-{{ include "example.fullname" . }}-full
+      name: tor-ingress-{{ include "example.fullname" . }}-full-3
+    name: tor-ingress-{{ include "example.fullname" . }}-full-4
     onion_key:
-      name: tor-ingress-{{ include "example.fullname" . }}-full
+      name: tor-ingress-{{ include "example.fullname" . }}-full-0
   onion_service:
     config_map:
-      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
+      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-6
     deployment:
-      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
-    name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
+      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-7
+    name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-8
     onion_key:
-      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
+      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-9
       secret:
-        name_prefix: tor-ingress-{{ include "example.fullname" . }}-full
+        name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-10
     ports:
       - target: example:80
         virtport: 80

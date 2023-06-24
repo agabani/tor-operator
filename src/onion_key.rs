@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     crypto::{self, Hostname},
-    utils::btree_maps_are_equal,
+    utils::{btree_maps_are_equal, KubeCrdResourceExt, KubeResourceExt},
     Annotations, Error, Labels, ObjectName, ObjectNamespace, Result,
     APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
     APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
@@ -142,6 +142,12 @@ impl OnionKey {
     pub fn secret_name(&self) -> &str {
         &self.spec.secret.name
     }
+}
+
+impl KubeResourceExt for OnionKey {}
+
+impl KubeCrdResourceExt for OnionKey {
+    const APP_KUBERNETES_IO_COMPONENT_VALUE: &'static str = "onion-key";
 }
 
 #[must_use]
