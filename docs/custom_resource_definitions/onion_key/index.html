@@ -74,7 +74,7 @@
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#auto-generate_1">Auto Generate</a>
     </li>
-    <li class="toctree-l3"><a class="reference internal" href="#validation">Validation</a>
+    <li class="toctree-l3"><a class="reference internal" href="#state">State</a>
     </li>
         </ul>
     </li>
@@ -197,8 +197,8 @@ secret specified in <code>.secret.name</code>.</p>
   the public key, the Tor Operator will deterministically recreate the
   hostname from the public key.</li>
 </ul>
-<h3 id="validation">Validation</h3>
-<p>Onion Key validation can be observed in the Onion Key status.</p>
+<h3 id="state">State</h3>
+<p>Onion Key state can be observed in the Onion Key status.</p>
 <pre><code>kubectl describe onionkeys example
 </code></pre>
 <pre><code># ...
@@ -207,12 +207,12 @@ Spec:
   Secret:
     Name:  example
 Status:
-  Hostname:    ********.onion
-  Validation:  valid
-Events:        &lt;none&gt;
+  Hostname:  ********.onion
+  State:     valid
+Events:      &lt;none&gt;
 # ...
 </code></pre>
-<p>Possible Values for <code>Validation</code>:</p>
+<p>Possible Values for <code>State</code>:</p>
 <ul>
 <li><code>secret not found</code></li>
 <li><code>secret key not found</code></li>
@@ -303,19 +303,19 @@ spec:
                 description: |-
                   Onion key hostname.
 
-                  The hostname is only populated once `validation` is &quot;valid&quot;.
+                  The hostname is only populated once `state` is &quot;valid&quot;.
                 nullable: true
                 type: string
-              validation:
+              state:
                 description: |-
-                  Human readable description of onion key validation.
+                  Human readable description of onion key state.
 
                   Possible Values:
 
                   - secret not found - secret key not found - secret key malformed: (reason) - public key not found - public key malformed: (reason) - public key mismatch - hostname not found - hostname malformed: (reason) - hostname mismatch - valid
                 type: string
             required:
-            - validation
+            - state
             type: object
         required:
         - spec
