@@ -1,5 +1,6 @@
 use std::{fs::File, io::Write};
 
+use kube::Client;
 use tor_operator::{
     cli::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
@@ -37,6 +38,8 @@ async fn main() {
 async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
+    let client = Client::try_default().await.unwrap();
+
     let onion_balance_config = onion_balance::Config {
         onion_balance_image: onion_balance::ImageConfig {
             pull_policy: run.onion_balance_image_pull_policy.clone(),
@@ -61,10 +64,10 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 
     tokio::select! {
         _ = http_server::run(addr) => {},
-        _ = onion_balance::run_controller(onion_balance_config) => {},
-        _ = onion_key::run_controller(onion_key_config) => {},
-        _ = onion_service::run_controller(onion_service_config) => {},
-        _ = tor_ingress::run_controller(tor_ingress_config) => {},
+        _ = onion_balance::run_controller(client.clone(), onion_balance_config) => {},
+        _ = onion_key::run_controller(client.clone(), onion_key_config) => {},
+        _ = onion_service::run_controller(client.clone(),onion_service_config) => {},
+        _ = tor_ingress::run_controller(client.clone(), tor_ingress_config) => {},
     }
 }
 

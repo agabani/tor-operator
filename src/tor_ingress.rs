@@ -325,10 +325,7 @@ pub struct Config {}
  * Controller
  * ============================================================================
  */
-#[allow(clippy::missing_panics_doc)]
-pub async fn run_controller(config: Config) {
-    let client = Client::try_default().await.unwrap();
-
+pub async fn run_controller(client: Client, config: Config) {
     let onion_balances = Api::<OnionBalance>::all(client.clone());
     let onion_keys = Api::<OnionKey>::all(client.clone());
     let onion_services = Api::<OnionService>::all(client.clone());

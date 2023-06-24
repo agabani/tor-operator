@@ -201,13 +201,10 @@ pub struct ImageConfig {
  * Controller
  * ============================================================================
  */
-#[allow(clippy::missing_panics_doc)]
-pub async fn run_controller(config: Config) {
-    let client = Client::try_default().await.unwrap();
-
-    let onion_services = Api::<OnionService>::all(client.clone());
+pub async fn run_controller(client: Client, config: Config) {
     let config_maps = Api::<ConfigMap>::all(client.clone());
     let deployments = Api::<Deployment>::all(client.clone());
+    let onion_services = Api::<OnionService>::all(client.clone());
 
     let context = Arc::new(Context { client, config });
 

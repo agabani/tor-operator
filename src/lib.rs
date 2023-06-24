@@ -1,6 +1,8 @@
 #![warn(clippy::pedantic)]
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, ops::Deref};
+
+use sha2::{Digest, Sha256};
 
 pub mod cli;
 pub mod crypto;
@@ -63,11 +65,145 @@ const TOR_AGABANI_CO_UK_TORRC_HASH_KEY: &str = "tor.agabani.co.uk/torrc-hash";
  * Kubernetes Types
  * ============================================================================
  */
-struct Annotations(BTreeMap<String, String>);
-struct ConfigYaml(String);
-struct Labels(BTreeMap<String, String>);
+pub struct Annotations(BTreeMap<String, String>);
+
+impl From<Annotations> for BTreeMap<String, String> {
+    fn from(value: Annotations) -> Self {
+        value.0
+    }
+}
+
+impl From<&Annotations> for BTreeMap<String, String> {
+    fn from(value: &Annotations) -> Self {
+        value.0.clone()
+    }
+}
+
+pub struct ConfigYaml(String);
+
+impl ConfigYaml {
+    #[must_use]
+    pub fn to_annotation_tuple(&self) -> (String, String) {
+        (TOR_AGABANI_CO_UK_CONFIG_HASH_KEY.into(), self.sha_256())
+    }
+
+    #[must_use]
+    pub fn sha_256(&self) -> String {
+        let mut sha = Sha256::new();
+        sha.update(&self.0);
+        format!("sha256:{:x}", sha.finalize())
+    }
+}
+
+impl From<ConfigYaml> for String {
+    fn from(value: ConfigYaml) -> Self {
+        value.0
+    }
+}
+
+impl From<&ConfigYaml> for String {
+    fn from(value: &ConfigYaml) -> Self {
+        value.0.clone()
+    }
+}
+
+pub struct Labels(BTreeMap<String, String>);
+
+impl From<Labels> for BTreeMap<String, String> {
+    fn from(value: Labels) -> Self {
+        value.0
+    }
+}
+
+impl From<&Labels> for BTreeMap<String, String> {
+    fn from(value: &Labels) -> Self {
+        value.0.clone()
+    }
+}
+
 struct OBConfig(String);
-struct ObjectName<'a>(&'a str);
-struct ObjectNamespace<'a>(&'a str);
-struct SelectorLabels(BTreeMap<String, String>);
-struct Torrc(String);
+
+pub struct ObjectName<'a>(&'a str);
+
+impl ObjectName<'_> {
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        self.0
+    }
+}
+
+impl Deref for ObjectName<'_> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.0
+    }
+}
+
+pub struct ObjectNamespace<'a>(&'a str);
+
+impl Deref for ObjectNamespace<'_> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.0
+    }
+}
+
+pub struct SelectorLabels(BTreeMap<String, String>);
+
+impl From<SelectorLabels> for BTreeMap<String, String> {
+    fn from(value: SelectorLabels) -> Self {
+        value.0
+    }
+}
+
+impl From<&SelectorLabels> for BTreeMap<String, String> {
+    fn from(value: &SelectorLabels) -> Self {
+        value.0.clone()
+    }
+}
+
+pub struct Torrc(String);
+
+impl Torrc {
+    #[must_use]
+    pub fn to_annotation_tuple(&self) -> (String, String) {
+        (TOR_AGABANI_CO_UK_TORRC_HASH_KEY.into(), self.sha_256())
+    }
+
+    #[must_use]
+    pub fn sha_256(&self) -> String {
+        let mut sha = Sha256::new();
+        sha.update(&self.0);
+        format!("sha256:{:x}", sha.finalize())
+    }
+}
+
+impl From<Torrc> for String {
+    fn from(value: Torrc) -> Self {
+        value.0
+    }
+}
+
+impl From<&Torrc> for String {
+    fn from(value: &Torrc) -> Self {
+        value.0.clone()
+    }
+}
+
+pub struct Uid<'a>(&'a str);
+
+impl Deref for Uid<'_> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.0
+    }
+}
+
+impl std::fmt::Display for Uid<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
