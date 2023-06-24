@@ -1,6 +1,9 @@
 use std::collections::BTreeMap;
 
-use k8s_openapi::api::{apps::v1::Deployment, core::v1::ConfigMap};
+use k8s_openapi::api::{
+    apps::v1::Deployment,
+    core::v1::{ConfigMap, Secret},
+};
 use kube::{
     api::{DeleteParams, ListParams, PatchParams},
     ResourceExt,
@@ -63,6 +66,8 @@ impl KubeResourceExt for ConfigMap {}
 
 impl KubeResourceExt for Deployment {}
 
+impl KubeResourceExt for Secret {}
+
 pub trait KubeCrdResourceExt: KubeResourceExt {
     const APP_KUBERNETES_IO_COMPONENT_VALUE: &'static str;
 
@@ -72,6 +77,10 @@ pub trait KubeCrdResourceExt: KubeResourceExt {
 
     fn patch_params(&self) -> PatchParams {
         PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force()
+    }
+
+    fn patch_status_params(&self) -> PatchParams {
+        PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE)
     }
 
     fn try_owned_list_params(&self) -> Result<ListParams> {

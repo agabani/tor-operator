@@ -67,6 +67,14 @@ const TOR_AGABANI_CO_UK_TORRC_HASH_KEY: &str = "tor.agabani.co.uk/torrc-hash";
  */
 pub struct Annotations(BTreeMap<String, String>);
 
+impl Deref for Annotations {
+    type Target = BTreeMap<String, String>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl From<Annotations> for BTreeMap<String, String> {
     fn from(value: Annotations) -> Self {
         value.0
@@ -108,6 +116,14 @@ impl From<&ConfigYaml> for String {
 }
 
 pub struct Labels(BTreeMap<String, String>);
+
+impl Deref for Labels {
+    type Target = BTreeMap<String, String>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl From<Labels> for BTreeMap<String, String> {
     fn from(value: Labels) -> Self {

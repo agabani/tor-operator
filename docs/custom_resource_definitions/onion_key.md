@@ -61,9 +61,9 @@ secret specified in `.secret.name`.
   the public key, the Tor Operator will deterministically recreate the
   hostname from the public key.
 
-### Validation
+### State
 
-Onion Key validation can be observed in the Onion Key status.
+Onion Key state can be observed in the Onion Key status.
 
 ```
 kubectl describe onionkeys example
@@ -76,13 +76,13 @@ Spec:
   Secret:
     Name:  example
 Status:
-  Hostname:    ********.onion
-  Validation:  valid
-Events:        <none>
+  Hostname:  ********.onion
+  State:     valid
+Events:      <none>
 # ...
 ```
 
-Possible Values for `Validation`:
+Possible Values for `State`:
 
 - `secret not found`
 - `secret key not found`

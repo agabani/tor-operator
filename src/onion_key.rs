@@ -6,7 +6,7 @@ use k8s_openapi::{
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition, ByteString,
 };
 use kube::{
-    api::{DeleteParams, ListParams, Patch, PatchParams},
+    api::Patch,
     core::ObjectMeta,
     runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
     Api, Client, CustomResource, CustomResourceExt, Resource, ResourceExt,
@@ -17,10 +17,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     crypto::{self, Hostname},
     utils::{btree_maps_are_equal, KubeCrdResourceExt, KubeResourceExt},
-    Annotations, Error, Labels, ObjectName, ObjectNamespace, Result,
-    APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
-    APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
-    APP_KUBERNETES_IO_NAME_KEY, APP_KUBERNETES_IO_NAME_VALUE, TOR_AGABANI_CO_UK_OWNED_BY_KEY,
+    Annotations, Error, Labels, Result,
 };
 
 /*
@@ -104,10 +101,10 @@ pub struct OnionKeySpecSecret {
 pub struct OnionKeyStatus {
     /// Onion key hostname.
     ///
-    /// The hostname is only populated once `validation` is "valid".
+    /// The hostname is only populated once `state` is "valid".
     pub hostname: Option<String>,
 
-    /// Human readable description of onion key validation.
+    /// Human readable description of onion key state.
     ///
     /// Possible Values:
     ///
@@ -121,7 +118,7 @@ pub struct OnionKeyStatus {
     ///  - hostname malformed: (reason)
     ///  - hostname mismatch
     ///  - valid
-    pub validation: String,
+    pub state: String,
 }
 
 impl OnionKey {
@@ -168,28 +165,23 @@ pub struct Config {}
  * ============================================================================
  */
 pub async fn run_controller(client: Client, config: Config) {
-    let onion_keys = Api::<OnionKey>::all(client.clone());
-    let secrets = Api::<Secret>::all(client.clone());
-
-    let context = Arc::new(Context {
-        client,
-        _config: config,
-    });
-
-    Controller::new(onion_keys, WatcherConfig::default())
-        .owns(secrets, WatcherConfig::default())
-        .shutdown_on_signal()
-        .run(reconciler, error_policy, context)
-        .for_each(|_| async {})
-        .await;
+    Controller::new(
+        Api::<OnionKey>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .owns(Api::<Secret>::all(client.clone()), WatcherConfig::default())
+    .shutdown_on_signal()
+    .run(
+        reconciler,
+        error_policy,
+        Arc::new(Context {
+            client,
+            _config: config,
+        }),
+    )
+    .for_each(|_| async {})
+    .await;
 }
-
-/*
- * ============================================================================
- * Constants
- * ============================================================================
- */
-const APP_KUBERNETES_IO_COMPONENT_VALUE: &str = "onion-key";
 
 /*
  * ============================================================================
@@ -210,134 +202,117 @@ struct Context {
 async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> {
     tracing::info!("reconciling");
 
-    let object_name = get_object_name(&object)?;
-    let object_namespace = get_object_namespace(&object)?;
+    let namespace = object.try_namespace()?;
 
     let annotations = generate_annotations();
-    let labels = generate_labels(&object, &object_name);
+    let labels = object.try_labels()?;
 
-    let secrets = Api::<Secret>::namespaced(ctx.client.clone(), object_namespace.0);
+    // secret
+    let state = reconcile_secret(
+        &Api::namespaced(ctx.client.clone(), &namespace),
+        &object,
+        &annotations,
+        &labels,
+    )
+    .await?;
 
-    let secret = secrets
-        .get_opt(object.secret_name())
-        .await
-        .map_err(Error::Kube)?;
-
-    let (result, secret) = generate_secret(&object, &secret, &annotations, &labels);
-
-    if let Some(secret) = secret {
-        secrets
-            .patch(
-                object.secret_name(),
-                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force(),
-                &Patch::Apply(&secret),
-            )
-            .await
-            .map_err(Error::Kube)?;
-    }
-
-    let hostname = match &result {
-        GenerateSecretResult::Valid(hostname) => Some(hostname.to_string()),
-        _ => None,
-    };
-
-    let validation = result.to_string();
-
-    let changed = object.status.as_ref().map_or(true, |status| {
-        status.validation != validation || status.hostname != hostname
-    });
-
-    if changed {
-        Api::<OnionKey>::namespaced(ctx.client.clone(), object_namespace.0)
-            .patch_status(
-                object_name.0,
-                &PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE),
-                &Patch::Merge(serde_json::json!({
-                    "status": OnionKeyStatus {
-                        hostname,
-                        validation,
-                    }
-                })),
-            )
-            .await
-            .map_err(Error::Kube)?;
-    }
-
-    let owned_secrets = secrets
-        .list(&ListParams::default().labels(&format!(
-            "{TOR_AGABANI_CO_UK_OWNED_BY_KEY}={}",
-            object.metadata.uid.as_ref().unwrap()
-        )))
-        .await
-        .map_err(Error::Kube)?;
-
-    for owned_secret in owned_secrets {
-        let name = owned_secret.metadata.name.unwrap();
-        if name != object.secret_name() {
-            secrets
-                .delete(&name, &DeleteParams::default())
-                .await
-                .map_err(Error::Kube)?;
-        }
-    }
+    // onion key
+    reconcile_onion_key(
+        &Api::namespaced(ctx.client.clone(), &namespace),
+        &object,
+        &state,
+    )
+    .await?;
 
     tracing::info!("reconciled");
 
-    match result {
-        GenerateSecretResult::Valid(_) => Ok(Action::requeue(Duration::from_secs(3600))),
+    match state {
+        SecretState::Valid(_) => Ok(Action::requeue(Duration::from_secs(3600))),
         _ => Ok(Action::requeue(Duration::from_secs(5))),
     }
 }
 
-fn get_object_name(object: &OnionKey) -> Result<ObjectName> {
-    Ok(ObjectName(
-        object
-            .metadata
-            .name
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))?
-            .as_str(),
-    ))
+async fn reconcile_secret(
+    api: &Api<Secret>,
+    object: &OnionKey,
+    annotations: &Annotations,
+    labels: &Labels,
+) -> Result<SecretState> {
+    let secret = api
+        .get_opt(object.secret_name())
+        .await
+        .map_err(Error::Kube)?;
+
+    let (state, secret) = generate_secret(object, &secret, annotations, labels);
+
+    if let Some(secret) = secret {
+        api.patch(
+            &secret.try_name()?,
+            &object.patch_params(),
+            &Patch::Apply(&secret),
+        )
+        .await
+        .map_err(Error::Kube)?;
+    }
+
+    if let SecretState::Valid(_) = state {
+        let secrets = api
+            .list(&object.try_owned_list_params()?)
+            .await
+            .map_err(Error::Kube)?;
+
+        for secret in secrets {
+            let name = secret.try_name()?;
+            if name.as_str() != object.secret_name() {
+                api.delete(&name, &object.delete_params())
+                    .await
+                    .map_err(Error::Kube)?;
+            }
+        }
+    }
+
+    Ok(state)
 }
 
-fn get_object_namespace(object: &OnionKey) -> Result<ObjectNamespace> {
-    Ok(ObjectNamespace(
-        object
-            .metadata
-            .namespace
-            .as_ref()
-            .ok_or_else(|| Error::MissingObjectKey(".metadata.namespace"))?
-            .as_str(),
-    ))
+async fn reconcile_onion_key(
+    api: &Api<OnionKey>,
+    object: &OnionKey,
+    state: &SecretState,
+) -> Result<()> {
+    let hostname = match &state {
+        SecretState::Valid(hostname) => Some(hostname.to_string()),
+        _ => None,
+    };
+
+    let state = state.to_string();
+
+    let changed = object.status.as_ref().map_or(true, |status| {
+        status.state != state || status.hostname != hostname
+    });
+
+    if changed {
+        api.patch_status(
+            &object.try_name()?,
+            &object.patch_status_params(),
+            &Patch::Merge(serde_json::json!({
+                "status": OnionKeyStatus {
+                    hostname,
+                    state,
+                }
+            })),
+        )
+        .await
+        .map_err(Error::Kube)?;
+    }
+
+    Ok(())
 }
 
 fn generate_annotations() -> Annotations {
     Annotations(BTreeMap::from([]))
 }
 
-fn generate_labels(object: &OnionKey, object_name: &ObjectName) -> Labels {
-    Labels(BTreeMap::from([
-        (
-            APP_KUBERNETES_IO_COMPONENT_KEY.into(),
-            APP_KUBERNETES_IO_COMPONENT_VALUE.into(),
-        ),
-        (APP_KUBERNETES_IO_INSTANCE_KEY.into(), object_name.0.into()),
-        (
-            APP_KUBERNETES_IO_MANAGED_BY_KEY.into(),
-            APP_KUBERNETES_IO_MANAGED_BY_VALUE.into(),
-        ),
-        (
-            APP_KUBERNETES_IO_NAME_KEY.into(),
-            APP_KUBERNETES_IO_NAME_VALUE.into(),
-        ),
-        (
-            TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
-            object.metadata.uid.clone().unwrap(),
-        ),
-    ]))
-}
-
-enum GenerateSecretResult {
+enum SecretState {
     SecretNotFound,
     SecretKeyNotFound,
     SecretKeyMalformed(crypto::Error),
@@ -350,19 +325,19 @@ enum GenerateSecretResult {
     Valid(Hostname),
 }
 
-impl std::fmt::Display for GenerateSecretResult {
+impl std::fmt::Display for SecretState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GenerateSecretResult::SecretNotFound => write!(f, "secret not found"),
-            GenerateSecretResult::SecretKeyNotFound => write!(f, "secret key not found"),
-            GenerateSecretResult::SecretKeyMalformed(e) => write!(f, "secret key malformed: {e}"),
-            GenerateSecretResult::PublicKeyNotFound => write!(f, "public key not found"),
-            GenerateSecretResult::PublicKeyMalformed(e) => write!(f, "public key malformed: {e}"),
-            GenerateSecretResult::PublicKeyMismatch => write!(f, "public key mismatch"),
-            GenerateSecretResult::HostnameNotFound => write!(f, "hostname not found"),
-            GenerateSecretResult::HostnameMalformed(e) => write!(f, "hostname malformed: {e}"),
-            GenerateSecretResult::HostnameMismatch => write!(f, "hostname mismatch"),
-            GenerateSecretResult::Valid(_) => write!(f, "valid"),
+            SecretState::SecretNotFound => write!(f, "secret not found"),
+            SecretState::SecretKeyNotFound => write!(f, "secret key not found"),
+            SecretState::SecretKeyMalformed(e) => write!(f, "secret key malformed: {e}"),
+            SecretState::PublicKeyNotFound => write!(f, "public key not found"),
+            SecretState::PublicKeyMalformed(e) => write!(f, "public key malformed: {e}"),
+            SecretState::PublicKeyMismatch => write!(f, "public key mismatch"),
+            SecretState::HostnameNotFound => write!(f, "hostname not found"),
+            SecretState::HostnameMalformed(e) => write!(f, "hostname malformed: {e}"),
+            SecretState::HostnameMismatch => write!(f, "hostname mismatch"),
+            SecretState::Valid(_) => write!(f, "valid"),
         }
     }
 }
@@ -374,12 +349,48 @@ fn generate_secret(
     secret: &Option<Secret>,
     annotations: &Annotations,
     labels: &Labels,
-) -> (GenerateSecretResult, Option<Secret>) {
+) -> (SecretState, Option<Secret>) {
+    fn generate(
+        object: &OnionKey,
+        annotations: &Annotations,
+        labels: &Labels,
+        public_key: &crypto::PublicKey,
+        secret_key: &crypto::ExpandedSecretKey,
+        hostname: &crypto::Hostname,
+    ) -> Secret {
+        Secret {
+            metadata: ObjectMeta {
+                name: Some(object.secret_name().to_string()),
+                annotations: Some(annotations.into()),
+                labels: Some(labels.into()),
+                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+                ..Default::default()
+            },
+            data: Some(BTreeMap::from([
+                ("hostname".into(), ByteString(hostname.as_bytes().to_vec())),
+                (
+                    "hs_ed25519_public_key".into(),
+                    ByteString(
+                        crypto::HiddenServicePublicKey::from_public_key(public_key).to_bytes(),
+                    ),
+                ),
+                (
+                    "hs_ed25519_secret_key".into(),
+                    ByteString(
+                        crypto::HiddenServiceSecretKey::from_expanded_secret_key(secret_key)
+                            .to_bytes(),
+                    ),
+                ),
+            ])),
+            ..Default::default()
+        }
+    }
+
     let auto_generate = object.auto_generate();
 
     let Some(secret) = secret else {
         if !auto_generate {
-            return (GenerateSecretResult::SecretNotFound, None);
+            return (SecretState::SecretNotFound, None);
         }
 
         tracing::info!("generating secret key");
@@ -391,7 +402,7 @@ fn generate_secret(
         tracing::info!("generating hostname");
         let hostname = public_key.hostname();
 
-        let secret = generate_owned_secret(
+        let secret = generate(
             object,
             annotations,
             labels,
@@ -400,24 +411,24 @@ fn generate_secret(
             &hostname
         );
 
-        return (GenerateSecretResult::Valid(hostname), Some(secret));
+        return (SecretState::Valid(hostname), Some(secret));
     };
 
     let secret_key = secret
         .data
         .as_ref()
-        .ok_or(GenerateSecretResult::SecretKeyNotFound)
+        .ok_or(SecretState::SecretKeyNotFound)
         .and_then(|f| {
             f.get("hs_ed25519_secret_key")
-                .ok_or(GenerateSecretResult::SecretKeyNotFound)
+                .ok_or(SecretState::SecretKeyNotFound)
         })
         .and_then(|f| {
             crypto::HiddenServiceSecretKey::try_from_bytes(&f.0)
-                .map_err(GenerateSecretResult::SecretKeyMalformed)
+                .map_err(SecretState::SecretKeyMalformed)
         })
         .and_then(|f| {
             crypto::ExpandedSecretKey::try_from_hidden_service_secret_key(&f)
-                .map_err(GenerateSecretResult::SecretKeyMalformed)
+                .map_err(SecretState::SecretKeyMalformed)
         });
 
     let secret_key = match secret_key {
@@ -436,7 +447,7 @@ fn generate_secret(
             tracing::info!("generating hostname");
             let hostname = public_key.hostname();
 
-            let secret = generate_owned_secret(
+            let secret = generate(
                 object,
                 annotations,
                 labels,
@@ -445,31 +456,31 @@ fn generate_secret(
                 &hostname,
             );
 
-            return (GenerateSecretResult::Valid(hostname), Some(secret));
+            return (SecretState::Valid(hostname), Some(secret));
         }
     };
 
     let public_key = secret
         .data
         .as_ref()
-        .ok_or(GenerateSecretResult::PublicKeyNotFound)
+        .ok_or(SecretState::PublicKeyNotFound)
         .and_then(|f| {
             f.get("hs_ed25519_public_key")
-                .ok_or(GenerateSecretResult::PublicKeyNotFound)
+                .ok_or(SecretState::PublicKeyNotFound)
         })
         .and_then(|f| {
             crypto::HiddenServicePublicKey::try_from_bytes(&f.0)
-                .map_err(GenerateSecretResult::PublicKeyMalformed)
+                .map_err(SecretState::PublicKeyMalformed)
         })
         .and_then(|f| {
             crypto::PublicKey::try_from_hidden_service_public_key(&f)
-                .map_err(GenerateSecretResult::PublicKeyMalformed)
+                .map_err(SecretState::PublicKeyMalformed)
         })
         .and_then(|f| {
             if f == secret_key.public_key() {
                 Ok(f)
             } else {
-                Err(GenerateSecretResult::PublicKeyMismatch)
+                Err(SecretState::PublicKeyMismatch)
             }
         });
 
@@ -486,7 +497,7 @@ fn generate_secret(
             tracing::info!("generating hostname");
             let hostname = public_key.hostname();
 
-            let secret = generate_owned_secret(
+            let secret = generate(
                 object,
                 annotations,
                 labels,
@@ -495,26 +506,23 @@ fn generate_secret(
                 &hostname,
             );
 
-            return (GenerateSecretResult::Valid(hostname), Some(secret));
+            return (SecretState::Valid(hostname), Some(secret));
         }
     };
 
     let hostname = secret
         .data
         .as_ref()
-        .ok_or(GenerateSecretResult::HostnameNotFound)
+        .ok_or(SecretState::HostnameNotFound)
+        .and_then(|f| f.get("hostname").ok_or(SecretState::HostnameNotFound))
         .and_then(|f| {
-            f.get("hostname")
-                .ok_or(GenerateSecretResult::HostnameNotFound)
-        })
-        .and_then(|f| {
-            crypto::Hostname::try_from_bytes(&f.0).map_err(GenerateSecretResult::HostnameMalformed)
+            crypto::Hostname::try_from_bytes(&f.0).map_err(SecretState::HostnameMalformed)
         })
         .and_then(|f| {
             if f == public_key.hostname() {
                 Ok(f)
             } else {
-                Err(GenerateSecretResult::HostnameMismatch)
+                Err(SecretState::HostnameMismatch)
             }
         });
 
@@ -528,7 +536,7 @@ fn generate_secret(
             tracing::info!("generating hostname");
             let hostname = public_key.hostname();
 
-            let secret = generate_owned_secret(
+            let secret = generate(
                 object,
                 annotations,
                 labels,
@@ -537,15 +545,15 @@ fn generate_secret(
                 &hostname,
             );
 
-            return (GenerateSecretResult::Valid(hostname), Some(secret));
+            return (SecretState::Valid(hostname), Some(secret));
         }
     };
 
     if auto_generate
-        && !(btree_maps_are_equal(object.annotations(), &annotations.0)
-            && btree_maps_are_equal(object.labels(), &labels.0))
+        && !(btree_maps_are_equal(object.annotations(), annotations)
+            && btree_maps_are_equal(object.labels(), labels))
     {
-        let secret = generate_owned_secret(
+        let secret = generate(
             object,
             annotations,
             labels,
@@ -554,43 +562,10 @@ fn generate_secret(
             &hostname,
         );
 
-        return (GenerateSecretResult::Valid(hostname), Some(secret));
+        return (SecretState::Valid(hostname), Some(secret));
     }
 
-    (GenerateSecretResult::Valid(hostname), None)
-}
-
-fn generate_owned_secret(
-    object: &OnionKey,
-    annotations: &Annotations,
-    labels: &Labels,
-    public_key: &crypto::PublicKey,
-    secret_key: &crypto::ExpandedSecretKey,
-    hostname: &crypto::Hostname,
-) -> Secret {
-    Secret {
-        metadata: ObjectMeta {
-            name: Some(object.secret_name().to_string()),
-            annotations: Some(annotations.0.clone()),
-            labels: Some(labels.0.clone()),
-            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
-            ..Default::default()
-        },
-        data: Some(BTreeMap::from([
-            ("hostname".into(), ByteString(hostname.as_bytes().to_vec())),
-            (
-                "hs_ed25519_public_key".into(),
-                ByteString(crypto::HiddenServicePublicKey::from_public_key(public_key).to_bytes()),
-            ),
-            (
-                "hs_ed25519_secret_key".into(),
-                ByteString(
-                    crypto::HiddenServiceSecretKey::from_expanded_secret_key(secret_key).to_bytes(),
-                ),
-            ),
-        ])),
-        ..Default::default()
-    }
+    (SecretState::Valid(hostname), None)
 }
 
 /*

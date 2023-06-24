@@ -75,19 +75,19 @@ spec:
                 description: |-
                   Onion key hostname.
 
-                  The hostname is only populated once `validation` is "valid".
+                  The hostname is only populated once `state` is "valid".
                 nullable: true
                 type: string
-              validation:
+              state:
                 description: |-
-                  Human readable description of onion key validation.
+                  Human readable description of onion key state.
 
                   Possible Values:
 
                   - secret not found - secret key not found - secret key malformed: (reason) - public key not found - public key malformed: (reason) - public key mismatch - hostname not found - hostname malformed: (reason) - hostname mismatch - valid
                 type: string
             required:
-            - validation
+            - state
             type: object
         required:
         - spec
