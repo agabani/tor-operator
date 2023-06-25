@@ -1,20 +1,23 @@
-site_name: Tor Operator
 nav:
-  - Tor Operator: 'index.md'
-  - Getting Started: 'getting_started.md'
-  - CLI: 'cli.md'
-  - Container Images: 'container_images.md'
-  - Helm: 'helm.md'
+  - Tor Operator: "index.md"
+  - Getting Started: "getting_started.md"
+  - CLI: "cli.md"
+  - Container Images: "container_images.md"
+  - Helm: "helm.md"
   - Custom Resource Definitions:
-      - Onion Balance: 'custom_resource_definitions/onion_balance.md'
-      - Onion Key: 'custom_resource_definitions/onion_key.md'
-      - Onion Service: 'custom_resource_definitions/onion_service.md'
-      - Tor Ingress: 'custom_resource_definitions/tor_ingress.md'
+      - Onion Balance: "custom_resource_definitions/onion_balance.md"
+      - Onion Key: "custom_resource_definitions/onion_key.md"
+      - Onion Service: "custom_resource_definitions/onion_service.md"
+      - Tor Ingress: "custom_resource_definitions/tor_ingress.md"
   - Security:
-      - Cluster Role: 'security/cluster_role.md'
+      - Cluster Role: "security/cluster_role.md"
   - Licenses:
-      - First Party: 'licenses/first_party.md'
-      - Third Party: 'licenses/third_party.md'
+      - First Party: "licenses/first_party.md"
+      - Third Party: "licenses/third_party.md"
 plugins:
   - include-markdown
+repo_url: https://github.com/agabani/tor-operator/
+site_description: Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress.
+site_name: Tor Operator
+site_url: https://agabani.github.io/tor-operator/docs/
 theme: readthedocs
