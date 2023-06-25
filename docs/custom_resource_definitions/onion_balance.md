@@ -37,6 +37,29 @@ The Tor Operator will create an Onion Balance using an auto generated Onion Key 
 {% include "../../example/templates/onionbalance_full/onionbalance.yaml" %}
 ```
 
+## Features
+
+### State
+
+State can be observed in the status.
+
+```
+kubectl describe onionbalances example
+```
+
+```
+# ...
+Status:
+  State:     running
+# ...
+```
+
+Possible values for `State`:
+
+- `onion key not found`
+- `onion key hostname not found`
+- `running`
+
 ## OpenAPI Spec
 
 ```

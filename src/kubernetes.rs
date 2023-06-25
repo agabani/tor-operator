@@ -5,7 +5,7 @@ use k8s_openapi::api::{
     core::v1::{ConfigMap, Secret},
 };
 use kube::{
-    api::{DeleteParams, ListParams, PatchParams},
+    api::{DeleteParams, ListParams, Patch, PatchParams},
     ResourceExt,
 };
 use sha2::{Digest, Sha256};
@@ -305,6 +305,10 @@ pub trait KubeCrdResourceExt: KubeResourceExt {
 
     fn patch_params(&self) -> PatchParams {
         PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE).force()
+    }
+
+    fn patch_status<P: serde::Serialize>(&self, status: P) -> Patch<serde_json::Value> {
+        Patch::Merge(serde_json::json!({ "status": status }))
     }
 
     fn patch_status_params(&self) -> PatchParams {

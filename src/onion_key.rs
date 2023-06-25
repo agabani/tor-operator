@@ -104,9 +104,9 @@ pub struct OnionKeyStatus {
     /// The hostname is only populated once `state` is "valid".
     pub hostname: Option<String>,
 
-    /// Human readable description of onion key state.
+    /// Human readable description of state.
     ///
-    /// Possible Values:
+    /// Possible values:
     ///
     ///  - secret not found
     ///  - secret key not found
@@ -294,12 +294,7 @@ async fn reconcile_onion_key(
         api.patch_status(
             &object.try_name()?,
             &object.patch_status_params(),
-            &Patch::Merge(serde_json::json!({
-                "status": OnionKeyStatus {
-                    hostname,
-                    state,
-                }
-            })),
+            &object.patch_status(OnionKeyStatus { hostname, state }),
         )
         .await
         .map_err(Error::Kube)?;

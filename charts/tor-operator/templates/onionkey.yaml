@@ -87,9 +87,9 @@ spec:
                 type: string
               state:
                 description: |-
-                  Human readable description of onion key state.
+                  Human readable description of state.
 
-                  Possible Values:
+                  Possible values:
 
                   - secret not found - secret key not found - secret key malformed: (reason) - public key not found - public key malformed: (reason) - public key mismatch - hostname not found - hostname malformed: (reason) - hostname mismatch - valid
                 type: string

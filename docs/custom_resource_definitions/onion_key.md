@@ -63,7 +63,7 @@ secret specified in `.secret.name`.
 
 ### State
 
-Onion Key state can be observed in the Onion Key status.
+State can be observed in the status.
 
 ```
 kubectl describe onionkeys example
@@ -82,7 +82,7 @@ Events:      <none>
 # ...
 ```
 
-Possible Values for `State`:
+Possible values for `State`:
 
 - `secret not found`
 - `secret key not found`
