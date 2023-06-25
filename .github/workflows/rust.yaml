@@ -78,6 +78,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   cargo-deny:
+    name: Cargo Deny
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
