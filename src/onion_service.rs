@@ -22,9 +22,11 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    kubernetes::{
+        Annotations, KubeCrdResourceExt, KubeResourceExt, Labels, OBConfig, SelectorLabels, Torrc,
+    },
     onion_key::OnionKey,
-    utils::{KubeCrdResourceExt, KubeResourceExt},
-    Annotations, Error, Labels, OBConfig, Result, SelectorLabels, Torrc,
+    Error, Result,
 };
 
 /*
@@ -129,7 +131,7 @@ pub struct OnionServiceStatus {}
 impl OnionService {
     #[must_use]
     fn default_name(&self) -> &str {
-        self.try_name().unwrap().0
+        self.try_name().unwrap().into()
     }
 
     #[must_use]
@@ -395,7 +397,7 @@ async fn reconcile_deployment(
 }
 
 fn generate_annotations(torrc: &Torrc) -> Annotations {
-    Annotations(BTreeMap::from([(torrc.to_annotation_tuple())]))
+    Annotations::new(BTreeMap::from([(torrc.to_annotation_tuple())]))
 }
 
 fn generate_ob_config(object: &OnionService) -> Option<OBConfig> {
@@ -403,7 +405,7 @@ fn generate_ob_config(object: &OnionService) -> Option<OBConfig> {
         .spec
         .onion_balance
         .as_ref()
-        .map(|f| OBConfig(format!("MasterOnionAddress {}", f.onion_key.hostname)))
+        .map(|f| OBConfig::new(format!("MasterOnionAddress {}", f.onion_key.hostname)))
 }
 
 fn generate_torrc(object: &OnionService) -> Torrc {
@@ -417,7 +419,7 @@ fn generate_torrc(object: &OnionService) -> Torrc {
             port.virtport, port.target
         ));
     }
-    Torrc(torrc.join("\n"))
+    Torrc::new(torrc.join("\n"))
 }
 
 fn generate_config_map(

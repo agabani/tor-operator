@@ -16,6 +16,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    kubernetes::{Annotations, KubeCrdResourceExt, KubeResourceExt, Labels},
     onion_balance::{
         OnionBalance, OnionBalanceSpec, OnionBalanceSpecConfigMap, OnionBalanceSpecDeployment,
         OnionBalanceSpecOnionKey, OnionBalanceSpecOnionService,
@@ -27,8 +28,7 @@ use crate::{
         OnionServiceSpecHiddenServicePort, OnionServiceSpecOnionBalance,
         OnionServiceSpecOnionBalanceOnionKey, OnionServiceSpecOnionKey,
     },
-    utils::{KubeCrdResourceExt, KubeResourceExt},
-    Annotations, Error, Labels, Result,
+    Error, Result,
 };
 
 /*
@@ -185,7 +185,7 @@ pub struct TorIngressStatus {}
 impl TorIngress {
     #[must_use]
     fn default_name(&self) -> &str {
-        self.try_name().unwrap().0
+        self.try_name().unwrap().into()
     }
 
     #[must_use]
@@ -488,7 +488,7 @@ async fn reconcile_onion_service_onion_keys(
         .map_err(Error::Kube)?
         .into_iter()
         .map(|onion_key| {
-            let name = onion_key.try_name().unwrap().0.to_string();
+            let name = onion_key.try_name().unwrap().as_str().to_string();
             (name, onion_key)
         })
         .collect::<HashMap<_, _>>();
@@ -639,7 +639,7 @@ async fn reconcile_onion_balance(
 }
 
 fn generate_annotations() -> Annotations {
-    Annotations(BTreeMap::from([]))
+    Annotations::new(BTreeMap::from([]))
 }
 
 /// only returns an onion key if a change needs to be made...

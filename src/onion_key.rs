@@ -16,8 +16,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     crypto::{self, Hostname},
-    utils::{btree_maps_are_equal, KubeCrdResourceExt, KubeResourceExt},
-    Annotations, Error, Labels, Result,
+    kubernetes::{btree_maps_are_equal, Annotations, KubeCrdResourceExt, KubeResourceExt, Labels},
+    Error, Result,
 };
 
 /*
@@ -309,7 +309,7 @@ async fn reconcile_onion_key(
 }
 
 fn generate_annotations() -> Annotations {
-    Annotations(BTreeMap::from([]))
+    Annotations::new(BTreeMap::from([]))
 }
 
 enum SecretState {

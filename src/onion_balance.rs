@@ -22,9 +22,11 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    kubernetes::{
+        Annotations, ConfigYaml, KubeCrdResourceExt, KubeResourceExt, Labels, SelectorLabels, Torrc,
+    },
     onion_key::OnionKey,
-    utils::{KubeCrdResourceExt, KubeResourceExt},
-    Annotations, ConfigYaml, Error, Labels, Result, SelectorLabels, Torrc,
+    Error, Result,
 };
 
 /*
@@ -111,7 +113,7 @@ pub struct OnionBalanceStatus {}
 impl OnionBalance {
     #[must_use]
     fn default_name(&self) -> &str {
-        self.try_name().unwrap().0
+        self.try_name().unwrap().into()
     }
 
     #[must_use]
@@ -353,7 +355,7 @@ async fn reconcile_deployment(
 }
 
 fn generate_annotations(config_yaml: &ConfigYaml, torrc: &Torrc) -> Annotations {
-    Annotations(BTreeMap::from([
+    Annotations::new(BTreeMap::from([
         config_yaml.to_annotation_tuple(),
         torrc.to_annotation_tuple(),
     ]))
@@ -361,11 +363,11 @@ fn generate_annotations(config_yaml: &ConfigYaml, torrc: &Torrc) -> Annotations 
 
 #[allow(unused_variables)]
 fn generate_torrc(object: &OnionBalance) -> Torrc {
-    Torrc(vec!["SocksPort 9050", "ControlPort 127.0.0.1:6666"].join("\n"))
+    Torrc::new(vec!["SocksPort 9050", "ControlPort 127.0.0.1:6666"].join("\n"))
 }
 
 fn generate_config_yaml(object: &OnionBalance) -> ConfigYaml {
-    ConfigYaml(
+    ConfigYaml::new(
         vec![
             "services:".into(),
             "- instances:".into(),
