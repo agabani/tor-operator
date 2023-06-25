@@ -543,7 +543,7 @@ fn generate_deployment(
                                     "mkdir -p /var/lib/tor/hidden_service",
                                     "chmod 400 /var/lib/tor/hidden_service",
                                     "cp /etc/secrets/* /var/lib/tor/hidden_service",
-                                    "tor",
+                                    "tor -f /usr/local/etc/tor/torrc",
                                 ]
                                 .join(" && "),
                             ]),

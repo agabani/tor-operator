@@ -556,7 +556,7 @@ fn generate_deployment(
 
                                 commands.push("mkdir -p /usr/local/etc/tor");
                                 commands.push("cp /etc/configs/torrc /usr/local/etc/tor/torrc");
-                                commands.push("tor");
+                                commands.push("tor -f /usr/local/etc/tor/torrc");
                                 commands
                             }
                             .join(" && "),

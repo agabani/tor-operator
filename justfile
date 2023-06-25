@@ -73,7 +73,7 @@ docker-run-onion-balance: docker-build-onion-balance
 
 # docker run tor
 docker-run-tor: docker-build-tor
-  @docker run --rm agabani/tor-operator:{{GIT_COMMIT}}
+  @docker run --rm agabani/tor:{{GIT_COMMIT}}
 
 # docker run tor-operator
 docker-run-tor-operator: docker-build-tor-operator
