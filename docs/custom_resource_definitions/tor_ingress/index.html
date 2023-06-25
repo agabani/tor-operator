@@ -74,6 +74,12 @@
     </li>
         </ul>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#features">Features</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#state">State</a>
+    </li>
+        </ul>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#openapi-spec">OpenAPI Spec</a>
     </li>
     </ul>
@@ -200,6 +206,23 @@ spec:
     replicas: 3
 
 </code></pre>
+<h2 id="features">Features</h2>
+<h3 id="state">State</h3>
+<p>State can be observed in the status.</p>
+<pre><code>kubectl describe toringresses example
+</code></pre>
+<pre><code># ...
+Status:
+  State:     running
+# ...
+</code></pre>
+<p>Possible values for <code>State</code>:</p>
+<ul>
+<li><code>onion balance onion key not found</code></li>
+<li><code>onion balance onion key hostname not found</code></li>
+<li><code>onion service onion key hostname not found</code></li>
+<li><code>running</code></li>
+</ul>
 <h2 id="openapi-spec">OpenAPI Spec</h2>
 <pre><code>apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -367,6 +390,17 @@ spec:
             type: object
           status:
             nullable: true
+            properties:
+              state:
+                description: |-
+                  Human readable description of state.
+
+                  Possible values:
+
+                  - onion balance onion key not found - onion balance onion key hostname not found - onion service onion key hostname not found - running
+                type: string
+            required:
+            - state
             type: object
         required:
         - spec

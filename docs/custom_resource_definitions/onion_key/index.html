@@ -199,7 +199,7 @@ secret specified in <code>.secret.name</code>.</p>
   hostname from the public key.</li>
 </ul>
 <h3 id="state">State</h3>
-<p>Onion Key state can be observed in the Onion Key status.</p>
+<p>State can be observed in the status.</p>
 <pre><code>kubectl describe onionkeys example
 </code></pre>
 <pre><code># ...
@@ -213,7 +213,7 @@ Status:
 Events:      &lt;none&gt;
 # ...
 </code></pre>
-<p>Possible Values for <code>State</code>:</p>
+<p>Possible values for <code>State</code>:</p>
 <ul>
 <li><code>secret not found</code></li>
 <li><code>secret key not found</code></li>
@@ -309,9 +309,9 @@ spec:
                 type: string
               state:
                 description: |-
-                  Human readable description of onion key state.
+                  Human readable description of state.
 
-                  Possible Values:
+                  Possible values:
 
                   - secret not found - secret key not found - secret key malformed: (reason) - public key not found - public key malformed: (reason) - public key mismatch - hostname not found - hostname malformed: (reason) - hostname mismatch - valid
                 type: string

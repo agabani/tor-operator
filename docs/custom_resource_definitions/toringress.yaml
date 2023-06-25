@@ -164,6 +164,17 @@ spec:
             type: object
           status:
             nullable: true
+            properties:
+              state:
+                description: |-
+                  Human readable description of state.
+
+                  Possible values:
+
+                  - onion balance onion key not found - onion balance onion key hostname not found - onion service onion key hostname not found - running
+                type: string
+            required:
+            - state
             type: object
         required:
         - spec

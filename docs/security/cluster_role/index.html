@@ -129,6 +129,9 @@ rules:
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;onionbalances&quot;]
     verbs: [&quot;list&quot;, &quot;watch&quot;]
+  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
+    resources: [&quot;onionbalances/status&quot;]
+    verbs: [&quot;patch&quot;]
   # used by Onion Keys
   - apiGroups: [&quot;&quot;]
     resources: [&quot;secrets&quot;]
@@ -149,6 +152,9 @@ rules:
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;onionservices&quot;]
     verbs: [&quot;list&quot;, &quot;watch&quot;]
+  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
+    resources: [&quot;onionservices/status&quot;]
+    verbs: [&quot;patch&quot;]
   # used by Tor Ingress
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;onionbalances&quot;, &quot;onionkeys&quot;, &quot;onionservices&quot;]
@@ -156,6 +162,9 @@ rules:
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;toringresses&quot;]
     verbs: [&quot;list&quot;, &quot;watch&quot;]
+  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
+    resources: [&quot;toringresses/status&quot;]
+    verbs: [&quot;patch&quot;]
 {{- end }}
 
 </code></pre>
