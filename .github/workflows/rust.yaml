@@ -1,0 +1,141 @@
+name: Rust
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cargo-build:
+    name: Cargo Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Cargo Cache
+        id: cargo-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/.crates.toml
+            ~/.cargo/bin
+            ./target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ${{ runner.os }}-cargo-
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          override: true
+          toolchain: stable
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --workspace --release --all-features
+
+  cargo-clippy:
+    name: Cargo Clippy
+    runs-on: ubuntu-latest
+    needs:
+      - cargo-build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Cargo Cache
+        id: cargo-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/.crates.toml
+            ~/.cargo/bin
+            ./target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          components: clippy
+          profile: minimal
+          override: true
+          toolchain: stable
+      - name: Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          args: --workspace -- -D warnings
+          name: Clippy Results
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  cargo-format:
+    name: Cargo Format
+    runs-on: ubuntu-latest
+    needs:
+      - cargo-build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Cargo Cache
+        id: cargo-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/.crates.toml
+            ~/.cargo/bin
+            ./target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          components: rustfmt
+          profile: minimal
+          override: true
+          toolchain: stable
+      - name: Format
+        uses: actions-rs/cargo@v1
+        with:
+          args: --all -- --check
+          command: fmt
+
+  cargo-test:
+    name: Cargo Test
+    runs-on: ubuntu-latest
+    needs:
+      - cargo-build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Cargo Cache
+        id: cargo-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/.crates.toml
+            ~/.cargo/bin
+            ./target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          override: true
+          toolchain: stable
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --workspace --release
