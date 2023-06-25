@@ -180,7 +180,17 @@ pub struct TorIngressSpecOnionServicePort {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
-pub struct TorIngressStatus {}
+pub struct TorIngressStatus {
+    /// Human readable description of state.
+    ///
+    /// Possible values:
+    ///
+    /// - onion balance onion key not found
+    /// - onion balance onion key hostname not found
+    /// - onion service onion key hostname not found
+    /// - running
+    pub state: String,
+}
 
 impl TorIngress {
     #[must_use]
@@ -371,6 +381,33 @@ struct Context {
 
 /*
  * ============================================================================
+ * State
+ * ============================================================================
+ */
+enum State {
+    OnionBalanceOnionKeyNotFound,
+    OnionBalanceOnionKeyHostnameNotFound,
+    OnionServiceOnionKeyHostnameNotFound,
+    Running((OnionKey, HashMap<i32, OnionKey>)),
+}
+
+impl std::fmt::Display for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            State::OnionBalanceOnionKeyNotFound => write!(f, "onion balance onion key not found"),
+            State::OnionBalanceOnionKeyHostnameNotFound => {
+                write!(f, "onion balance onion key hostname not found")
+            }
+            State::OnionServiceOnionKeyHostnameNotFound => {
+                write!(f, "onion service onion key hostname not found")
+            }
+            State::Running(_) => write!(f, "running"),
+        }
+    }
+}
+
+/*
+ * ============================================================================
  * Reconciler
  * ============================================================================
  */
@@ -383,84 +420,72 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
     let annotations = generate_annotations();
     let labels = object.try_labels()?;
 
-    let onion_keys = Api::namespaced(ctx.client.clone(), &namespace);
-
-    // onion balance onion key
-    let onion_balance_onion_key = reconcile_onion_balance_onion_key(
-        //
-        &onion_keys,
-        &object,
-    )
-    .await?;
-    let Some(onion_balance_onion_key) = onion_balance_onion_key else {
-        // TODO: status: waiting for onion balance onion key hostname.
-        tracing::info!("status: waiting for onion balance onion key hostname.");
-        return  Ok(Action::requeue(Duration::from_secs(5)));
-    };
-
-    // onion service onion keys
-    let onion_service_onion_keys = reconcile_onion_service_onion_keys(
-        //
-        &onion_keys,
-        &object,
-        &annotations,
-        &labels,
-    )
-    .await?;
-    let Some(onion_service_onion_keys) = onion_service_onion_keys else {
-        // TODO: status: waiting for onion service onion key hostnames.
-        tracing::info!("status: waiting for onion service onion key hostnames.");
-        return  Ok(Action::requeue(Duration::from_secs(5)));
-    };
-
-    // onion services
-    reconcile_onion_services(
+    // onion key
+    let state = reconcile_onion_key(
         &Api::namespaced(ctx.client.clone(), &namespace),
         &object,
         &annotations,
         &labels,
-        &onion_balance_onion_key,
     )
     .await?;
 
-    // onion balance
-    reconcile_onion_balance(
+    if let State::Running((onion_balance_onion_key, onion_service_onion_keys)) = &state {
+        // onion services
+        reconcile_onion_services(
+            &Api::namespaced(ctx.client.clone(), &namespace),
+            &object,
+            &annotations,
+            &labels,
+            onion_balance_onion_key,
+        )
+        .await?;
+
+        // onion balance
+        reconcile_onion_balance(
+            &Api::namespaced(ctx.client.clone(), &namespace),
+            &object,
+            &annotations,
+            &labels,
+            onion_service_onion_keys,
+        )
+        .await?;
+    }
+
+    // tor ingress
+    reconcile_tor_ingress(
         &Api::namespaced(ctx.client.clone(), &namespace),
         &object,
-        &annotations,
-        &labels,
-        &onion_service_onion_keys,
+        &state,
     )
     .await?;
 
     tracing::info!("reconciled");
 
-    Ok(Action::requeue(Duration::from_secs(3600)))
-}
-
-async fn reconcile_onion_balance_onion_key(
-    api: &Api<OnionKey>,
-    object: &TorIngress,
-) -> Result<Option<OnionKey>> {
-    let onion_key = api
-        .get(object.onion_balance_onion_key_name())
-        .await
-        .map_err(Error::Kube)?;
-
-    if onion_key.hostname().is_some() {
-        Ok(Some(onion_key))
-    } else {
-        Ok(None)
+    match state {
+        State::Running(_) => Ok(Action::requeue(Duration::from_secs(3600))),
+        _ => Ok(Action::requeue(Duration::from_secs(5))),
     }
 }
 
-async fn reconcile_onion_service_onion_keys(
+async fn reconcile_onion_key(
     api: &Api<OnionKey>,
     object: &TorIngress,
     annotations: &Annotations,
     labels: &Labels,
-) -> Result<Option<HashMap<i32, OnionKey>>> {
-    // creation
+) -> Result<State> {
+    // onion balance
+    let Some(onion_balance_onion_key) = api
+        .get_opt(object.onion_balance_onion_key_name())
+        .await
+        .map_err(Error::Kube)? else {
+            return Ok(State::OnionBalanceOnionKeyNotFound)
+        };
+
+    if onion_balance_onion_key.hostname().is_none() {
+        return Ok(State::OnionBalanceOnionKeyHostnameNotFound);
+    }
+
+    // onion service
     for instance in 0..object.onion_service_replicas() {
         let onion_key = api
             .get_opt(&object.onion_service_onion_key_name(instance))
@@ -481,8 +506,8 @@ async fn reconcile_onion_service_onion_keys(
         }
     }
 
-    // ready and deletion
-    let mut onion_keys = api
+    // onion service: ready and deletion
+    let mut onion_service_onion_keys = api
         .list(&object.try_owned_list_params()?)
         .await
         .map_err(Error::Kube)?
@@ -497,38 +522,41 @@ async fn reconcile_onion_service_onion_keys(
         .map(|instance| (object.onion_service_onion_key_name(instance), instance))
         .collect::<HashMap<_, _>>();
 
-    // ready
+    // onion service: ready
     let ready = manifest.iter().all(|(onion_key_name, _)| {
-        let Some(onion_key) = onion_keys.get(onion_key_name) else {
+        let Some(onion_key) = onion_service_onion_keys.get(onion_key_name) else {
             return false;
         };
         onion_key.hostname().is_some()
     });
 
     if !ready {
-        return Ok(None);
+        return Ok(State::OnionServiceOnionKeyHostnameNotFound);
     }
 
-    // deletion
-    for onion_key_name in onion_keys.keys() {
-        let keep = manifest.get(onion_key_name).is_some();
+    // onion service: deletion
+    for onion_service_onion_key_name in onion_service_onion_keys.keys() {
+        let keep = manifest.get(onion_service_onion_key_name).is_some();
 
         if !keep {
-            api.delete(onion_key_name, &object.delete_params())
+            api.delete(onion_service_onion_key_name, &object.delete_params())
                 .await
                 .map_err(Error::Kube)?;
         }
     }
 
-    Ok(Some(
-        manifest
-            .iter()
-            .map(|(name, instance)| {
-                let onion_key = onion_keys.remove(name).unwrap();
-                (*instance, onion_key)
-            })
-            .collect(),
-    ))
+    let onion_service_onion_keys = manifest
+        .iter()
+        .map(|(name, instance)| {
+            let onion_key = onion_service_onion_keys.remove(name).unwrap();
+            (*instance, onion_key)
+        })
+        .collect();
+
+    Ok(State::Running((
+        onion_balance_onion_key,
+        onion_service_onion_keys,
+    )))
 }
 
 async fn reconcile_onion_services(
@@ -633,6 +661,31 @@ async fn reconcile_onion_balance(
                 .await
                 .map_err(Error::Kube)?;
         }
+    }
+
+    Ok(())
+}
+
+async fn reconcile_tor_ingress(
+    api: &Api<TorIngress>,
+    object: &TorIngress,
+    state: &State,
+) -> Result<()> {
+    let state = state.to_string();
+
+    let changed = object
+        .status
+        .as_ref()
+        .map_or(true, |status| status.state != state);
+
+    if changed {
+        api.patch_status(
+            &object.try_name()?,
+            &object.patch_status_params(),
+            &object.patch_status(TorIngressStatus { state }),
+        )
+        .await
+        .map_err(Error::Kube)?;
     }
 
     Ok(())

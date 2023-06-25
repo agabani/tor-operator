@@ -126,7 +126,16 @@ pub struct OnionServiceSpecHiddenServicePort {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
-pub struct OnionServiceStatus {}
+pub struct OnionServiceStatus {
+    /// Human readable description of state.
+    ///
+    /// Possible values:
+    ///
+    /// - onion key not found
+    /// - onion key hostname not found
+    /// - running
+    pub state: String,
+}
 
 impl OnionService {
     #[must_use]
@@ -241,6 +250,27 @@ struct Context {
 
 /*
  * ============================================================================
+ * State
+ * ============================================================================
+ */
+enum State {
+    OnionKeyNotFound,
+    OnionKeyHostnameNotFound,
+    Running(OnionKey),
+}
+
+impl std::fmt::Display for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            State::OnionKeyNotFound => write!(f, "onion key not found"),
+            State::OnionKeyHostnameNotFound => write!(f, "onion key hostname not found"),
+            State::Running(_) => write!(f, "running"),
+        }
+    }
+}
+
+/*
+ * ============================================================================
  * Reconciler
  * ============================================================================
  */
@@ -258,59 +288,67 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     let selector_labels = object.try_selector_labels()?;
 
     // onion key
-    let onion_key = reconcile_onion_key(
+    let state = reconcile_onion_key(
         //
         &Api::namespaced(ctx.client.clone(), &namespace),
         &object,
     )
     .await?;
-    let Some(onion_key) = onion_key else {
-        tracing::info!("status: waiting for onion key hostname.");
-        return Ok(Action::requeue(Duration::from_secs(5)));
-    };
 
-    // config map
-    reconcile_config_map(
+    if let State::Running(onion_key) = &state {
+        // config map
+        reconcile_config_map(
+            &Api::namespaced(ctx.client.clone(), &namespace),
+            &object,
+            &annotations,
+            &labels,
+            &torrc,
+            &ob_config,
+        )
+        .await?;
+
+        // deployment
+        reconcile_deployment(
+            &Api::namespaced(ctx.client.clone(), &namespace),
+            &ctx.config,
+            &object,
+            &annotations,
+            &labels,
+            &selector_labels,
+            onion_key,
+        )
+        .await?;
+    }
+
+    // onion service
+    reconcile_onion_service(
         &Api::namespaced(ctx.client.clone(), &namespace),
         &object,
-        &annotations,
-        &labels,
-        &torrc,
-        &ob_config,
-    )
-    .await?;
-
-    // deployment
-    reconcile_deployment(
-        &Api::namespaced(ctx.client.clone(), &namespace),
-        &ctx.config,
-        &object,
-        &annotations,
-        &labels,
-        &selector_labels,
-        &onion_key,
+        &state,
     )
     .await?;
 
     tracing::info!("reconciled");
 
-    Ok(Action::requeue(Duration::from_secs(3600)))
+    match state {
+        State::Running(_) => Ok(Action::requeue(Duration::from_secs(3600))),
+        _ => Ok(Action::requeue(Duration::from_secs(5))),
+    }
 }
 
-async fn reconcile_onion_key(
-    api: &Api<OnionKey>,
-    object: &OnionService,
-) -> Result<Option<OnionKey>> {
-    let onion_key = api
-        .get(object.onion_key_name())
+async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionService) -> Result<State> {
+    let Some(onion_key)  = api
+        .get_opt(object.onion_key_name())
         .await
-        .map_err(Error::Kube)?;
+        .map_err(Error::Kube)? else {
+            return Ok(State::OnionKeyNotFound)
+        };
 
-    if onion_key.hostname().is_some() {
-        Ok(Some(onion_key))
-    } else {
-        Ok(None)
+    if onion_key.hostname().is_none() {
+        return Ok(State::OnionKeyHostnameNotFound);
     }
+
+    Ok(State::Running(onion_key))
 }
 
 async fn reconcile_config_map(
@@ -391,6 +429,31 @@ async fn reconcile_deployment(
                 .await
                 .map_err(Error::Kube)?;
         }
+    }
+
+    Ok(())
+}
+
+async fn reconcile_onion_service(
+    api: &Api<OnionService>,
+    object: &OnionService,
+    state: &State,
+) -> Result<()> {
+    let state = state.to_string();
+
+    let changed = object
+        .status
+        .as_ref()
+        .map_or(true, |status| status.state != state);
+
+    if changed {
+        api.patch_status(
+            &object.try_name()?,
+            &object.patch_status_params(),
+            &object.patch_status(OnionServiceStatus { state }),
+        )
+        .await
+        .map_err(Error::Kube)?;
     }
 
     Ok(())

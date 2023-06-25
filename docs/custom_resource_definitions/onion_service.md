@@ -50,6 +50,29 @@ The Tor Operator will create an Onion Service registered with an Onion Balance u
 {% include "../../example/templates/onionservice_full/onionservice.yaml" %}
 ```
 
+## Features
+
+### State
+
+State can be observed in the status.
+
+```
+kubectl describe onionservices example
+```
+
+```
+# ...
+Status:
+  State:     running
+# ...
+```
+
+Possible values for `State`:
+
+- `onion key not found`
+- `onion key hostname not found`
+- `running`
+
 ## OpenAPI Spec
 
 ```

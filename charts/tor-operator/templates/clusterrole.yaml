@@ -20,6 +20,9 @@ rules:
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionbalances"]
     verbs: ["list", "watch"]
+  - apiGroups: ["tor.agabani.co.uk"]
+    resources: ["onionbalances/status"]
+    verbs: ["patch"]
   # used by Onion Keys
   - apiGroups: [""]
     resources: ["secrets"]
@@ -40,6 +43,9 @@ rules:
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionservices"]
     verbs: ["list", "watch"]
+  - apiGroups: ["tor.agabani.co.uk"]
+    resources: ["onionservices/status"]
+    verbs: ["patch"]
   # used by Tor Ingress
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionbalances", "onionkeys", "onionservices"]
@@ -47,4 +53,7 @@ rules:
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["toringresses"]
     verbs: ["list", "watch"]
+  - apiGroups: ["tor.agabani.co.uk"]
+    resources: ["toringresses/status"]
+    verbs: ["patch"]
 {{- end }}
