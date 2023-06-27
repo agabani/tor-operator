@@ -8,7 +8,9 @@ use tor_operator::{
         MarkdownCommands, MarkdownGenerateArgs, OnionKeyArgs, OnionKeyCommands,
         OnionKeyGenerateArgs,
     },
-    crypto, http_server, onion_balance, onion_key, onion_service, tor_ingress,
+    crypto, http_server,
+    metrics::Metrics,
+    onion_balance, onion_key, onion_service, tor_ingress,
 };
 
 #[tokio::main]
@@ -40,6 +42,8 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 
     let client = Client::try_default().await.unwrap();
 
+    let metrics = Metrics::new();
+
     let onion_balance_config = onion_balance::Config {
         onion_balance_image: onion_balance::ImageConfig {
             pull_policy: run.onion_balance_image_pull_policy.clone(),
@@ -63,11 +67,11 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
     let tor_ingress_config = tor_ingress::Config {};
 
     tokio::select! {
-        _ = http_server::run(addr) => {},
-        _ = onion_balance::run_controller(client.clone(), onion_balance_config) => {},
-        _ = onion_key::run_controller(client.clone(), onion_key_config) => {},
-        _ = onion_service::run_controller(client.clone(),onion_service_config) => {},
-        _ = tor_ingress::run_controller(client.clone(), tor_ingress_config) => {},
+        _ = http_server::run(addr, metrics.clone()) => {},
+        _ = onion_balance::run_controller(client.clone(), onion_balance_config, metrics.clone()) => {},
+        _ = onion_key::run_controller(client.clone(), onion_key_config, metrics.clone()) => {},
+        _ = onion_service::run_controller(client.clone(),onion_service_config, metrics.clone()) => {},
+        _ = tor_ingress::run_controller(client.clone(), tor_ingress_config, metrics.clone()) => {},
     }
 }
 

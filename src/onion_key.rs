@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     crypto::{self, Hostname},
     kubernetes::{btree_maps_are_equal, Annotations, KubeCrdResourceExt, KubeResourceExt, Labels},
+    metrics::Metrics,
     Error, Result,
 };
 
@@ -164,7 +165,7 @@ pub struct Config {}
  * Controller
  * ============================================================================
  */
-pub async fn run_controller(client: Client, config: Config) {
+pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
     Controller::new(
         Api::<OnionKey>::all(client.clone()),
         WatcherConfig::default(),
@@ -177,6 +178,7 @@ pub async fn run_controller(client: Client, config: Config) {
         Arc::new(Context {
             client,
             _config: config,
+            metrics,
         }),
     )
     .for_each(|_| async {})
@@ -191,6 +193,7 @@ pub async fn run_controller(client: Client, config: Config) {
 struct Context {
     client: Client,
     _config: Config,
+    metrics: Metrics,
 }
 
 /*
@@ -200,6 +203,9 @@ struct Context {
  */
 #[tracing::instrument(skip(object, ctx))]
 async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> {
+    let _timer = ctx
+        .metrics
+        .count_and_measure(OnionKey::APP_KUBERNETES_IO_COMPONENT_VALUE);
     tracing::info!("reconciling");
 
     let namespace = object.try_namespace()?;
@@ -571,6 +577,8 @@ fn generate_secret(
 #[allow(clippy::needless_pass_by_value, unused_variables)]
 #[tracing::instrument(skip(object, ctx))]
 fn error_policy(object: Arc<OnionKey>, error: &Error, ctx: Arc<Context>) -> Action {
-    tracing::error!("failed to reconcile");
+    tracing::warn!("failed to reconcile");
+    ctx.metrics
+        .reconcile_failure(OnionKey::APP_KUBERNETES_IO_COMPONENT_VALUE, error);
     Action::requeue(Duration::from_secs(5))
 }
