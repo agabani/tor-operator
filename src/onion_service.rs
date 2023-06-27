@@ -25,6 +25,7 @@ use crate::{
     kubernetes::{
         Annotations, KubeCrdResourceExt, KubeResourceExt, Labels, OBConfig, SelectorLabels, Torrc,
     },
+    metrics::Metrics,
     onion_key::OnionKey,
     Error, Result,
 };
@@ -215,7 +216,7 @@ pub struct ImageConfig {
  * Controller
  * ============================================================================
  */
-pub async fn run_controller(client: Client, config: Config) {
+pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
     Controller::new(
         Api::<OnionService>::all(client.clone()),
         WatcherConfig::default(),
@@ -232,7 +233,11 @@ pub async fn run_controller(client: Client, config: Config) {
     .run(
         reconciler,
         error_policy,
-        Arc::new(Context { client, config }),
+        Arc::new(Context {
+            client,
+            config,
+            metrics,
+        }),
     )
     .for_each(|_| async {})
     .await;
@@ -246,6 +251,7 @@ pub async fn run_controller(client: Client, config: Config) {
 struct Context {
     client: Client,
     config: Config,
+    metrics: Metrics,
 }
 
 /*
@@ -276,6 +282,9 @@ impl std::fmt::Display for State {
  */
 #[tracing::instrument(skip(object, ctx))]
 async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Action> {
+    let _timer = ctx
+        .metrics
+        .count_and_measure(OnionService::APP_KUBERNETES_IO_COMPONENT_VALUE);
     tracing::info!("reconciling");
 
     let namespace = object.try_namespace()?;
@@ -680,6 +689,8 @@ fn generate_deployment(
 #[allow(clippy::needless_pass_by_value, unused_variables)]
 #[tracing::instrument(skip(object, ctx))]
 fn error_policy(object: Arc<OnionService>, error: &Error, ctx: Arc<Context>) -> Action {
-    tracing::error!("failed to reconcile");
+    tracing::warn!("failed to reconcile");
+    ctx.metrics
+        .reconcile_failure(OnionService::APP_KUBERNETES_IO_COMPONENT_VALUE, error);
     Action::requeue(Duration::from_secs(5))
 }
