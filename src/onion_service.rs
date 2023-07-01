@@ -23,7 +23,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        Annotations, KubeCrdResourceExt, KubeResourceExt, Labels, OBConfig, SelectorLabels, Torrc,
+        self, error_policy, Annotations, KubeCrdResourceExt, KubeResourceExt, Labels, OBConfig,
+        SelectorLabels, Torrc,
     },
     metrics::Metrics,
     onion_key::OnionKey,
@@ -252,6 +253,12 @@ struct Context {
     client: Client,
     config: Config,
     metrics: Metrics,
+}
+
+impl kubernetes::Context for Context {
+    fn metrics(&self) -> &Metrics {
+        &self.metrics
+    }
 }
 
 /*
@@ -679,18 +686,4 @@ fn generate_deployment(
         }),
         ..Default::default()
     }
-}
-
-/*
- * ============================================================================
- * Error Policy
- * ============================================================================
- */
-#[allow(clippy::needless_pass_by_value, unused_variables)]
-#[tracing::instrument(skip(object, ctx))]
-fn error_policy(object: Arc<OnionService>, error: &Error, ctx: Arc<Context>) -> Action {
-    tracing::warn!("failed to reconcile");
-    ctx.metrics
-        .reconcile_failure(OnionService::APP_KUBERNETES_IO_COMPONENT_VALUE, error);
-    Action::requeue(Duration::from_secs(5))
 }

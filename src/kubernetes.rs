@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ops::Deref};
+use std::{collections::BTreeMap, ops::Deref, sync::Arc, time::Duration};
 
 use k8s_openapi::api::{
     apps::v1::Deployment,
@@ -6,11 +6,12 @@ use k8s_openapi::api::{
 };
 use kube::{
     api::{DeleteParams, ListParams, Patch, PatchParams},
+    runtime::controller::Action,
     ResourceExt,
 };
 use sha2::{Digest, Sha256};
 
-use crate::{Error, Result};
+use crate::{metrics::Metrics, Error, Result};
 
 pub(crate) fn btree_maps_are_equal<K: Ord + Eq, V: Eq>(
     map1: &BTreeMap<K, V>,
@@ -258,7 +259,16 @@ impl std::fmt::Display for Uid<'_> {
 
 /*
  * ============================================================================
- * Traits
+ * Traits: Context
+ * ============================================================================
+ */
+pub trait Context {
+    fn metrics(&self) -> &Metrics;
+}
+
+/*
+ * ============================================================================
+ * Traits: KubeResourceExt
  * ============================================================================
  */
 pub trait KubeResourceExt: ResourceExt {
@@ -296,6 +306,11 @@ impl KubeResourceExt for Deployment {}
 
 impl KubeResourceExt for Secret {}
 
+/*
+ * ============================================================================
+ * Traits: KubeCrdResourceExt
+ * ============================================================================
+ */
 pub trait KubeCrdResourceExt: KubeResourceExt {
     const APP_KUBERNETES_IO_COMPONENT_VALUE: &'static str;
 
@@ -363,4 +378,21 @@ pub trait KubeCrdResourceExt: KubeResourceExt {
             ),
         ])))
     }
+}
+
+/*
+ * ============================================================================
+ * Error Policy
+ * ============================================================================
+ */
+#[allow(clippy::needless_pass_by_value)]
+pub fn error_policy<O, C>(_: Arc<O>, error: &Error, ctx: Arc<C>) -> Action
+where
+    O: KubeCrdResourceExt,
+    C: Context,
+{
+    tracing::warn!("failed to reconcile");
+    ctx.metrics()
+        .reconcile_failure(O::APP_KUBERNETES_IO_COMPONENT_VALUE, error);
+    Action::requeue(Duration::from_secs(5))
 }

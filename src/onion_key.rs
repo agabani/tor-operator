@@ -16,7 +16,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     crypto::{self, Hostname},
-    kubernetes::{btree_maps_are_equal, Annotations, KubeCrdResourceExt, KubeResourceExt, Labels},
+    kubernetes::{
+        self, btree_maps_are_equal, error_policy, Annotations, KubeCrdResourceExt, KubeResourceExt,
+        Labels,
+    },
     metrics::Metrics,
     Error, Result,
 };
@@ -194,6 +197,12 @@ struct Context {
     client: Client,
     _config: Config,
     metrics: Metrics,
+}
+
+impl kubernetes::Context for Context {
+    fn metrics(&self) -> &Metrics {
+        &self.metrics
+    }
 }
 
 /*
@@ -567,18 +576,4 @@ fn generate_secret(
     }
 
     (SecretState::Valid(hostname), None)
-}
-
-/*
- * ============================================================================
- * Error Policy
- * ============================================================================
- */
-#[allow(clippy::needless_pass_by_value, unused_variables)]
-#[tracing::instrument(skip(object, ctx))]
-fn error_policy(object: Arc<OnionKey>, error: &Error, ctx: Arc<Context>) -> Action {
-    tracing::warn!("failed to reconcile");
-    ctx.metrics
-        .reconcile_failure(OnionKey::APP_KUBERNETES_IO_COMPONENT_VALUE, error);
-    Action::requeue(Duration::from_secs(5))
 }
