@@ -1,6 +1,6 @@
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
 
-use crate::Error;
+use crate::{kubernetes::Resource, Error};
 
 #[derive(Clone)]
 pub struct Metrics {}
@@ -48,6 +48,19 @@ impl Metrics {
             "tor_operator_reconciliation_errors_total",
             "controller" => controller,
             "error" => error
+        );
+    }
+
+    pub fn kubernetes_api_usage_count<R>(verb: &'static str)
+    where
+        R: Resource,
+    {
+        metrics::increment_counter!(
+            "tor_operator_kubernetes_api_usage_total",
+            "kind" => R::kind(&()),
+            "group" => R::group(&()),
+            "verb" => verb,
+            "version" => R::version(&()),
         );
     }
 }

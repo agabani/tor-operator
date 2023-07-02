@@ -6,10 +6,9 @@ use k8s_openapi::{
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition, ByteString,
 };
 use kube::{
-    api::Patch,
     core::ObjectMeta,
     runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
-    Api, Client, CustomResource, CustomResourceExt, Resource, ResourceExt,
+    Client, CustomResource, CustomResourceExt, Resource, ResourceExt,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -17,11 +16,11 @@ use serde::{Deserialize, Serialize};
 use crate::{
     crypto::{self, Hostname},
     kubernetes::{
-        self, btree_maps_are_equal, error_policy, Annotations, KubeCrdResourceExt, KubeResourceExt,
-        Labels,
+        self, error_policy, Annotations, Api, Labels, Object, Resource as KubernetesResource,
+        ResourceName, Subset,
     },
     metrics::Metrics,
-    Error, Result,
+    Result,
 };
 
 /*
@@ -101,7 +100,7 @@ pub struct OnionKeySpecSecret {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionKeyStatus {
     /// Onion key hostname.
     ///
@@ -140,15 +139,33 @@ impl OnionKey {
     }
 
     #[must_use]
-    pub fn secret_name(&self) -> &str {
-        &self.spec.secret.name
+    pub fn secret_name(&self) -> ResourceName {
+        (&self.spec.secret.name).into()
     }
 }
 
-impl KubeResourceExt for OnionKey {}
+impl KubernetesResource for OnionKey {
+    type Spec = OnionKeySpec;
 
-impl KubeCrdResourceExt for OnionKey {
+    fn spec(&self) -> &Self::Spec {
+        &self.spec
+    }
+}
+
+impl Object for OnionKey {
     const APP_KUBERNETES_IO_COMPONENT_VALUE: &'static str = "onion-key";
+
+    type Status = OnionKeyStatus;
+
+    fn status(&self) -> &Option<Self::Status> {
+        &self.status
+    }
+}
+
+impl Subset for OnionKeySpec {
+    fn is_subset(&self, superset: &Self) -> bool {
+        self == superset
+    }
 }
 
 #[must_use]
@@ -169,11 +186,16 @@ pub struct Config {}
  * ============================================================================
  */
 pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
+    Metrics::kubernetes_api_usage_count::<OnionKey>("watch");
+    Metrics::kubernetes_api_usage_count::<Secret>("watch");
     Controller::new(
-        Api::<OnionKey>::all(client.clone()),
+        kube::Api::<OnionKey>::all(client.clone()),
         WatcherConfig::default(),
     )
-    .owns(Api::<Secret>::all(client.clone()), WatcherConfig::default())
+    .owns(
+        kube::Api::<Secret>::all(client.clone()),
+        WatcherConfig::default(),
+    )
     .shutdown_on_signal()
     .run(
         reconciler,
@@ -224,7 +246,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
 
     // secret
     let state = reconcile_secret(
-        &Api::namespaced(ctx.client.clone(), &namespace),
+        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
         &object,
         &annotations,
         &labels,
@@ -233,7 +255,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
 
     // onion key
     reconcile_onion_key(
-        &Api::namespaced(ctx.client.clone(), &namespace),
+        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
         &object,
         &state,
     )
@@ -253,36 +275,13 @@ async fn reconcile_secret(
     annotations: &Annotations,
     labels: &Labels,
 ) -> Result<SecretState> {
-    let secret = api
-        .get_opt(object.secret_name())
-        .await
-        .map_err(Error::Kube)?;
+    let secret = api.get_opt(&object.secret_name()).await?;
 
     let (state, secret) = generate_secret(object, &secret, annotations, labels);
 
     if let Some(secret) = secret {
-        api.patch(
-            &secret.try_name()?,
-            &object.patch_params(),
-            &Patch::Apply(&secret),
-        )
-        .await
-        .map_err(Error::Kube)?;
-    }
-
-    if let SecretState::Valid(_) = state {
-        let secrets = api
-            .list(&object.try_owned_list_params()?)
-            .await
-            .map_err(Error::Kube)?;
-
-        for secret in secrets {
-            let name = secret.try_name()?;
-            if name.as_str() != object.secret_name() {
-                api.delete(&name, &object.delete_params())
-                    .await
-                    .map_err(Error::Kube)?;
-            }
+        if let SecretState::Valid(_) = state {
+            api.sync(object, [((), secret)].into()).await?;
         }
     }
 
@@ -294,28 +293,17 @@ async fn reconcile_onion_key(
     object: &OnionKey,
     state: &SecretState,
 ) -> Result<()> {
-    let hostname = match &state {
-        SecretState::Valid(hostname) => Some(hostname.to_string()),
-        _ => None,
-    };
-
-    let state = state.to_string();
-
-    let changed = object.status.as_ref().map_or(true, |status| {
-        status.state != state || status.hostname != hostname
-    });
-
-    if changed {
-        api.patch_status(
-            &object.try_name()?,
-            &object.patch_status_params(),
-            &object.patch_status(OnionKeyStatus { hostname, state }),
-        )
-        .await
-        .map_err(Error::Kube)?;
-    }
-
-    Ok(())
+    api.update_status(
+        object,
+        OnionKeyStatus {
+            hostname: match &state {
+                SecretState::Valid(hostname) => Some(hostname.to_string()),
+                _ => None,
+            },
+            state: state.to_string(),
+        },
+    )
+    .await
 }
 
 fn generate_annotations() -> Annotations {
@@ -560,8 +548,7 @@ fn generate_secret(
     };
 
     if auto_generate
-        && !(btree_maps_are_equal(object.annotations(), annotations)
-            && btree_maps_are_equal(object.labels(), labels))
+        && (!annotations.is_subset(object.annotations()) || !labels.is_subset(object.labels()))
     {
         let secret = generate(
             object,
