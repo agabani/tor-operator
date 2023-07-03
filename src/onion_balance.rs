@@ -13,22 +13,21 @@ use k8s_openapi::{
     apimachinery::pkg::apis::meta::v1::LabelSelector,
 };
 use kube::{
-    api::Patch,
     core::ObjectMeta,
     runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
-    Api, Client, CustomResource, CustomResourceExt, Resource,
+    Client, CustomResource, CustomResourceExt, Resource,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, ConfigYaml, KubeCrdResourceExt, KubeResourceExt, Labels,
-        SelectorLabels, Torrc,
+        self, error_policy, Annotations, Api, ConfigYaml, Labels, Object,
+        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset, Torrc,
     },
     metrics::Metrics,
     onion_key::OnionKey,
-    Error, Result,
+    Result,
 };
 
 /*
@@ -109,7 +108,7 @@ pub struct OnionBalanceSpecOnionServiceOnionKey {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceStatus {
     /// Human readable description of state.
     ///
@@ -123,38 +122,56 @@ pub struct OnionBalanceStatus {
 
 impl OnionBalance {
     #[must_use]
-    fn default_name(&self) -> &str {
-        self.try_name().unwrap().into()
+    fn default_name(&self) -> ResourceName {
+        self.try_name().unwrap()
     }
 
     #[must_use]
-    pub fn config_map_name(&self) -> &str {
+    pub fn config_map_name(&self) -> ResourceName {
         self.spec
             .config_map
             .as_ref()
             .and_then(|f| f.name.as_ref())
-            .map_or_else(|| self.default_name(), String::as_str)
+            .map_or_else(|| self.default_name(), Into::into)
     }
 
     #[must_use]
-    pub fn deployment_name(&self) -> &str {
+    pub fn deployment_name(&self) -> ResourceName {
         self.spec
             .deployment
             .as_ref()
             .and_then(|f| f.name.as_ref())
-            .map_or_else(|| self.default_name(), String::as_str)
+            .map_or_else(|| self.default_name(), Into::into)
     }
 
     #[must_use]
-    pub fn onion_key_name(&self) -> &str {
-        &self.spec.onion_key.name
+    pub fn onion_key_name(&self) -> ResourceName {
+        (&self.spec.onion_key.name).into()
     }
 }
 
-impl KubeResourceExt for OnionBalance {}
+impl KubernetesResource for OnionBalance {
+    type Spec = OnionBalanceSpec;
 
-impl KubeCrdResourceExt for OnionBalance {
+    fn spec(&self) -> &Self::Spec {
+        &self.spec
+    }
+}
+
+impl Object for OnionBalance {
     const APP_KUBERNETES_IO_COMPONENT_VALUE: &'static str = "onion-balance";
+
+    type Status = OnionBalanceStatus;
+
+    fn status(&self) -> &Option<Self::Status> {
+        &self.status
+    }
+}
+
+impl Subset for OnionBalanceSpec {
+    fn is_subset(&self, superset: &Self) -> bool {
+        self == superset
+    }
 }
 
 #[must_use]
@@ -183,8 +200,19 @@ pub struct ImageConfig {
  * ============================================================================
  */
 pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
+    Metrics::kubernetes_api_usage_count::<OnionBalance>("watch");
+    Metrics::kubernetes_api_usage_count::<ConfigMap>("watch");
+    Metrics::kubernetes_api_usage_count::<Deployment>("watch");
     Controller::new(
-        Api::<OnionBalance>::all(client.clone()),
+        kube::Api::<OnionBalance>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .owns(
+        kube::Api::<ConfigMap>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .owns(
+        kube::Api::<Deployment>::all(client.clone()),
         WatcherConfig::default(),
     )
     .shutdown_on_signal()
@@ -262,8 +290,7 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
 
     // onion key
     let state = reconcile_onion_key(
-        //
-        &Api::namespaced(ctx.client.clone(), &namespace),
+        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
         &object,
     )
     .await?;
@@ -271,7 +298,7 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
     if let State::Running(onion_key) = &state {
         // config map
         reconcile_config_map(
-            &Api::namespaced(ctx.client.clone(), &namespace),
+            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
             &object,
             &annotations,
             &labels,
@@ -282,7 +309,7 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
 
         // deployment
         reconcile_deployment(
-            &Api::namespaced(ctx.client.clone(), &namespace),
+            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
             &ctx.config,
             &object,
             &annotations,
@@ -295,7 +322,7 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
 
     // onion balance
     reconcile_onion_balance(
-        &Api::namespaced(ctx.client.clone(), &namespace),
+        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
         &object,
         &state,
     )
@@ -311,9 +338,8 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
 
 async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionBalance) -> Result<State> {
     let Some(onion_key)  = api
-        .get_opt(object.onion_key_name())
-        .await
-        .map_err(Error::Kube)? else {
+        .get_opt(&object.onion_key_name())
+        .await? else {
             return Ok(State::OnionKeyNotFound)
         };
 
@@ -332,34 +358,16 @@ async fn reconcile_config_map(
     torrc: &Torrc,
     config_yaml: &ConfigYaml,
 ) -> Result<()> {
-    // creation
-    let config_map = generate_config_map(object, annotations, labels, torrc, config_yaml);
-
-    api.patch(
-        &config_map.try_name()?,
-        &object.patch_params(),
-        &Patch::Apply(&config_map),
+    api.sync(
+        object,
+        [(
+            (),
+            generate_config_map(object, annotations, labels, torrc, config_yaml),
+        )]
+        .into(),
     )
     .await
-    .map_err(Error::Kube)?;
-
-    // deletion
-    let config_maps = api
-        .list(&object.try_owned_list_params()?)
-        .await
-        .map_err(Error::Kube)?;
-
-    for config_map in &config_maps {
-        let config_map_name = config_map.try_name()?;
-
-        if config_map_name.as_str() != object.config_map_name() {
-            api.delete(&config_map_name, &object.delete_params())
-                .await
-                .map_err(Error::Kube)?;
-        }
-    }
-
-    Ok(())
+    .map(|_| ())
 }
 
 async fn reconcile_deployment(
@@ -371,41 +379,23 @@ async fn reconcile_deployment(
     selector_labels: &SelectorLabels,
     onion_key: &OnionKey,
 ) -> Result<()> {
-    // creation
-    let deployment = generate_deployment(
+    api.sync(
         object,
-        config,
-        annotations,
-        labels,
-        selector_labels,
-        onion_key,
-    );
-
-    api.patch(
-        &deployment.try_name()?,
-        &object.patch_params(),
-        &Patch::Apply(&deployment),
+        [(
+            (),
+            generate_deployment(
+                object,
+                config,
+                annotations,
+                labels,
+                selector_labels,
+                onion_key,
+            ),
+        )]
+        .into(),
     )
     .await
-    .map_err(Error::Kube)?;
-
-    // deletion
-    let deployments = api
-        .list(&object.try_owned_list_params()?)
-        .await
-        .map_err(Error::Kube)?;
-
-    for deployment in &deployments {
-        let deployment_name = deployment.try_name()?;
-
-        if deployment_name.as_str() != object.deployment_name() {
-            api.delete(&deployment_name, &object.delete_params())
-                .await
-                .map_err(Error::Kube)?;
-        }
-    }
-
-    Ok(())
+    .map(|_| ())
 }
 
 async fn reconcile_onion_balance(
@@ -413,24 +403,13 @@ async fn reconcile_onion_balance(
     object: &OnionBalance,
     state: &State,
 ) -> Result<()> {
-    let state = state.to_string();
-
-    let changed = object
-        .status
-        .as_ref()
-        .map_or(true, |status| status.state != state);
-
-    if changed {
-        api.patch_status(
-            &object.try_name()?,
-            &object.patch_status_params(),
-            &object.patch_status(OnionBalanceStatus { state }),
-        )
-        .await
-        .map_err(Error::Kube)?;
-    }
-
-    Ok(())
+    api.update_status(
+        object,
+        OnionBalanceStatus {
+            state: state.to_string(),
+        },
+    )
+    .await
 }
 
 fn generate_annotations(config_yaml: &ConfigYaml, torrc: &Torrc) -> Annotations {
