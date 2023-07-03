@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/licenses/third_party/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/observability/logs/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Third Party - Tor Operator</title>
+    <title>Logs - Tor Operator</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Third Party";
-        var mkdocs_page_input_path = "licenses/third_party.md";
-        var mkdocs_page_url = "/tor-operator/docs/licenses/third_party/";
+        var mkdocs_page_name = "Logs";
+        var mkdocs_page_input_path = "observability/logs.md";
+        var mkdocs_page_url = "/tor-operator/docs/observability/logs/";
       </script>
     
     <script src="../../js/jquery-3.6.0.min.js" defer></script>
@@ -68,10 +68,20 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Observability</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../../observability/logs/">Logs</a>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Logs</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#default">Default</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#per-module">Per Module</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../observability/metrics/">Metrics</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../metrics/">Metrics</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Security</span></p>
@@ -80,12 +90,10 @@
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Licenses</span></p>
-              <ul class="current">
-                  <li class="toctree-l1"><a class="reference internal" href="../first_party/">First Party</a>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../licenses/first_party/">First Party</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Third Party</a>
-    <ul class="current">
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../licenses/third_party/">Third Party</a>
                   </li>
               </ul>
       </div>
@@ -102,10 +110,10 @@
         <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
-          <li>Licenses &raquo;</li>
-      <li>Third Party</li>
+          <li>Observability &raquo;</li>
+      <li>Logs</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/agabani/tor-operator/edit/master/docs/licenses/third_party.md" class="icon icon-github"> Edit on GitHub</a>
+          <a href="https://github.com/agabani/tor-operator/edit/master/docs/observability/logs.md" class="icon icon-github"> Edit on GitHub</a>
     </li>
   </ul>
   <hr/>
@@ -113,13 +121,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="third-party">Third Party</h1>
-<p><a href="../third_party.yaml">third_party.yaml</a></p>
+                <h1 id="logs">Logs</h1>
+<p>Logs powered by the <a href="https://crates.io/crates/tracing">tracing</a> and <a href="https://crates.io/crates/tracing-subscriber">tracing-subscriber</a> crate.</p>
+<p>Logs are configured through the <code>RUST_LOG</code> environment variable. <a href="https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#example-syntax">Example Syntax</a></p>
+<h2 id="examples">Examples</h2>
+<h3 id="default">Default</h3>
+<pre><code>RUST_LOG=info
+</code></pre>
+<p><img alt="logs" src="../logs.png" /></p>
+<h3 id="per-module">Per Module</h3>
+<pre><code>RUST_LOG=trace,hyper=debug
+</code></pre>
+<p><img alt="logs per module" src="../logs_per_module.png" /></p>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../first_party/" class="btn btn-neutral float-left" title="First Party"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../custom_resource_definitions/tor_ingress/" class="btn btn-neutral float-left" title="Tor Ingress"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../metrics/" class="btn btn-neutral float-right" title="Metrics">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -146,8 +165,10 @@
         </span>
     
     
-      <span><a href="../first_party/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../../custom_resource_definitions/tor_ingress/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
+    
+      <span><a href="../metrics/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

@@ -67,6 +67,13 @@
                   <li class="toctree-l1"><a class="reference internal" href="../../custom_resource_definitions/tor_ingress/">Tor Ingress</a>
                   </li>
               </ul>
+              <p class="caption"><span class="caption-text">Observability</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../observability/logs/">Logs</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../observability/metrics/">Metrics</a>
+                  </li>
+              </ul>
               <p class="caption"><span class="caption-text">Security</span></p>
               <ul class="current">
                   <li class="toctree-l1 current"><a class="reference internal current" href="./">Cluster Role</a>
@@ -122,10 +129,10 @@ rules:
   # used by Onion Balance
   - apiGroups: [&quot;&quot;]
     resources: [&quot;configmaps&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
   - apiGroups: [&quot;apps&quot;]
     resources: [&quot;deployments&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;onionbalances&quot;]
     verbs: [&quot;list&quot;, &quot;watch&quot;]
@@ -145,10 +152,10 @@ rules:
   # used by Onion Service
   - apiGroups: [&quot;&quot;]
     resources: [&quot;configmaps&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
   - apiGroups: [&quot;apps&quot;]
     resources: [&quot;deployments&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;onionservices&quot;]
     verbs: [&quot;list&quot;, &quot;watch&quot;]
@@ -158,7 +165,7 @@ rules:
   # used by Tor Ingress
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;onionbalances&quot;, &quot;onionkeys&quot;, &quot;onionservices&quot;]
-    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;patch&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;toringresses&quot;]
     verbs: [&quot;list&quot;, &quot;watch&quot;]
@@ -172,7 +179,7 @@ rules:
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../../custom_resource_definitions/tor_ingress/" class="btn btn-neutral float-left" title="Tor Ingress"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../observability/metrics/" class="btn btn-neutral float-left" title="Metrics"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../../licenses/first_party/" class="btn btn-neutral float-right" title="First Party">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
@@ -200,7 +207,7 @@ rules:
         </span>
     
     
-      <span><a href="../../custom_resource_definitions/tor_ingress/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../../observability/metrics/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
       <span><a href="../../licenses/first_party/" style="color: #fcfcfc">Next &raquo;</a></span>
