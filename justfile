@@ -120,9 +120,9 @@ mkdocs-serve:
   @mkdocs serve
 
 # release dryrun
-release-dryrun version:
+release-dryrun version: generate
   @cargo release {{version}}
 
 # release execute
-release-execute version:
+release-execute version: generate
   @cargo release {{version}} --execute --no-publish

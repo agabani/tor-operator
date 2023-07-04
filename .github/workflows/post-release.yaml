@@ -1,17 +1,115 @@
-name: "Release"
-
+name: "Post Release"
 on:
   push:
     tags:
       - "v*"
-  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      version: ${{ github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Release
+        id: release
+        uses: softprops/action-gh-release@v1
+
+  release-binary:
+    name: Release Binary
+    needs: release
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [x86_64-linux, x86_64-macos, x86_64-windows]
+        include:
+          - build: x86_64-linux
+            os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+            cross: false
+          #   - build: aarch64-linux
+          #     os: ubuntu-latest
+          #     rust: stable
+          #     target: aarch64-unknown-linux-gnu
+          #     cross: true
+          - build: x86_64-macos
+            os: macos-latest
+            rust: stable
+            target: x86_64-apple-darwin
+            cross: false
+          - build: aarch64-macos
+            os: macos-latest
+            rust: stable
+            target: aarch64-apple-darwin
+            cross: false
+          - build: x86_64-windows
+            os: windows-latest
+            rust: stable
+            target: x86_64-pc-windows-msvc
+            cross: false
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
+      - name: Cross
+        if: ${{ matrix.cross }}
+        uses: actions-rs/cargo@v1
+        with:
+          args: cargo-auditable cargo-audit
+          command: install
+      - name: Auditable
+        uses: actions-rs/cargo@v1
+        with:
+          args: cargo-auditable cargo-audit
+          command: install
+          use-cross: ${{ matrix.cross }}
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          args: build --release --target ${{ matrix.target }} --verbose
+          command: auditable
+          use-cross: ${{ matrix.cross }}
+      - name: Archive
+        id: archive
+        run: |
+          mkdir -p dist
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp "target/${{ matrix.target }}/release/tor-operator.exe" "dist/"
+            7z a tor-operator-${{ needs.release.outputs.version }}-${{ matrix.build }}.zip ./dist/tor-operator.exe
+            echo "asset=tor-operator-${{ needs.release.outputs.version }}-${{ matrix.build }}.zip" >> $GITHUB_OUTPUT
+          else
+            cp "target/${{ matrix.target }}/release/tor-operator" "dist/"
+            tar czf "tor-operator-${{ needs.release.outputs.version }}-${{ matrix.build }}.tar.gz" -C "dist" .
+            echo "asset=tor-operator-${{ needs.release.outputs.version }}-${{ matrix.build }}.tar.gz" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.archive.outputs.asset }}
+
+  release-container:
+    name: Release Container
+    needs: release
     runs-on: self-hosted
     permissions:
       contents: read
@@ -30,6 +128,11 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -62,13 +165,14 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  merge:
+  release-container-manifest:
+    name: Release Container Manifest
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     needs:
-      - build
+      - release-container
     steps:
       - name: Download digests
         uses: actions/download-artifact@v3
@@ -82,6 +186,11 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -97,12 +206,13 @@ jobs:
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
 
-  mkdocs:
+  release-documentation:
+    name: Release Documentation
     runs-on: ubuntu-latest
     permissions:
       contents: write
     needs:
-      - merge
+      - release
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -126,12 +236,13 @@ jobs:
           mkdocs build
           ghp-import site -p -x docs
 
-  helm:
+  release-helm:
+    name: Release Helm
     runs-on: ubuntu-latest
     permissions:
       contents: write
     needs:
-      - mkdocs
+      - release-container-manifest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -145,7 +256,17 @@ jobs:
         uses: azure/setup-helm@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package Helm
+        run: |
+          rm -rf .cr-release-packages
+          mkdir -p .cr-release-packages
+          cd .cr-release-packages
+          helm package ../charts/tor-operator/
+          cd ..
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.5.0
+        with:
+          config: chart-releaser.yaml
+          skip_packaging: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
