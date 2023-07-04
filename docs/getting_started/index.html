@@ -128,8 +128,7 @@
 <p>Install the Tor Operator.</p>
 <pre><code>helm install tor-operator agabani-tor-operator/tor-operator \
     --create-namespace \
-    --namespace tor-operator \
-    --set image.tag=main
+    --namespace tor-operator
 </code></pre>
 </li>
 </ol>
@@ -143,7 +142,7 @@
 <li><code>hs_ed25519_public_key</code></li>
 </ul>
 <p>or generate a new Onion Key using:</p>
-<pre><code>cargo install --git https://github.com/agabani/tor-operator
+<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag 0.0.1
 tor-operator onion-key generate
 </code></pre>
 </li>
