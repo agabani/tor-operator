@@ -12,8 +12,7 @@ Helm charts can be found at [https://agabani.github.io/tor-operator/index.yaml](
 
         helm install tor-operator agabani-tor-operator/tor-operator \
             --create-namespace \
-            --namespace tor-operator \
-            --set image.tag=main
+            --namespace tor-operator
 
 ## Values
 

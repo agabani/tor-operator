@@ -16,8 +16,7 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
 
         helm install tor-operator agabani-tor-operator/tor-operator \
             --create-namespace \
-            --namespace tor-operator \
-            --set image.tag=main
+            --namespace tor-operator
 
 ## Creating a Tor Ingress
 
@@ -29,7 +28,7 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
 
     or generate a new Onion Key using:
 
-        cargo install --git https://github.com/agabani/tor-operator
+        cargo install --git https://github.com/agabani/tor-operator --tag 0.0.0
         tor-operator onion-key generate
 
 1.  Create a `Secret` containing the Onion Key.

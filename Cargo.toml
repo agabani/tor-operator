@@ -1,7 +1,12 @@
 [package]
 name = "tor-operator"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
+description = "Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress."
+documentation="https://agabani.github.io/tor-operator/docs/"
+license = "MIT"
+license-file = "LICENSE"
+repository="https://github.com/agabani/tor-operator"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

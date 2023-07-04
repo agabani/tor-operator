@@ -9,6 +9,7 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
  */
 #[allow(clippy::module_name_repetitions)]
 #[derive(Parser, Debug)]
+#[command(about, version)]
 pub struct CliArgs {
     #[command(subcommand)]
     pub command: CliCommands,

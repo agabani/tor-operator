@@ -119,3 +119,10 @@ mkdocs-install:
 mkdocs-serve:
   @mkdocs serve
 
+# release dryrun
+release-dryrun version:
+  @cargo release {{version}}
+
+# release execute
+release-execute version:
+  @cargo release {{version}} --execute
