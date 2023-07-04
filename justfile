@@ -125,4 +125,4 @@ release-dryrun version:
 
 # release execute
 release-execute version:
-  @cargo release {{version}} --execute
+  @cargo release {{version}} --execute --no-publish
