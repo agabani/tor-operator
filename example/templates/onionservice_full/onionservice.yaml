@@ -8,14 +8,16 @@ spec:
   config_map:
     name: onion-service-{{ include "example.fullname" . }}-full
   deployment:
+    containers:
+      tor:
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
     name: onion-service-{{ include "example.fullname" . }}-full
-    resources:
-      limits:
-        cpu: 200m
-        memory: 256Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
   onion_key:
     name: onion-service-{{ include "example.fullname" . }}-full
   ports:

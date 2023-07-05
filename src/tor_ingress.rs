@@ -16,8 +16,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, Labels, Object, Resource as KubernetesResource,
-        ResourceName,
+        self, error_policy, Annotations, Api, DeploymentContainerResources, Labels, Object,
+        Resource as KubernetesResource, ResourceName,
     },
     metrics::Metrics,
     onion_balance::{
@@ -28,10 +28,9 @@ use crate::{
     onion_key::{OnionKey, OnionKeySpec, OnionKeySpecSecret},
     onion_service::{
         OnionService, OnionServiceSpec, OnionServiceSpecConfigMap, OnionServiceSpecDeployment,
-        OnionServiceSpecDeploymentResources, OnionServiceSpecDeploymentResourcesLimits,
-        OnionServiceSpecDeploymentResourcesRequests, OnionServiceSpecHiddenServicePort,
-        OnionServiceSpecOnionBalance, OnionServiceSpecOnionBalanceOnionKey,
-        OnionServiceSpecOnionKey,
+        OnionServiceSpecDeploymentContainers, OnionServiceSpecDeploymentContainersTor,
+        OnionServiceSpecHiddenServicePort, OnionServiceSpecOnionBalance,
+        OnionServiceSpecOnionBalanceOnionKey, OnionServiceSpecOnionKey,
     },
     Result,
 };
@@ -154,43 +153,27 @@ pub struct TorIngressSpecOnionServiceConfigMap {
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionServiceDeployment {
+    /// Containers of the Deployment.
+    pub containers: Option<TorIngressSpecOnionServiceDeploymentContainers>,
+
     /// Name prefix of the Deployment.
     ///
     /// Default: name of the Tor Ingress
     pub name_prefix: Option<String>,
-
-    /// Resources of the Deployment.
-    pub resources: Option<TorIngressSpecOnionServiceDeploymentResources>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
-pub struct TorIngressSpecOnionServiceDeploymentResources {
-    /// Limits of the Resources.
-    pub limits: Option<TorIngressSpecOnionServiceDeploymentResourcesLimits>,
-
-    /// Requests of the Resources.
-    pub requests: Option<TorIngressSpecOnionServiceDeploymentResourcesRequests>,
+pub struct TorIngressSpecOnionServiceDeploymentContainers {
+    /// Tor container.
+    pub tor: Option<TorIngressSpecOnionServiceDeploymentContainersTor>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
-pub struct TorIngressSpecOnionServiceDeploymentResourcesLimits {
-    /// CPU quantity of the Limits.
-    pub cpu: Option<String>,
-
-    /// Memory quantity of the Limits.
-    pub memory: Option<String>,
-}
-
-#[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
-pub struct TorIngressSpecOnionServiceDeploymentResourcesRequests {
-    /// CPU quantity of the Requests.
-    pub cpu: Option<String>,
-
-    /// Memory quantity of the Requests.
-    pub memory: Option<String>,
+pub struct TorIngressSpecOnionServiceDeploymentContainersTor {
+    /// Resources of the container.
+    pub resources: Option<DeploymentContainerResources>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -321,51 +304,16 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_deployment_resources_limits_cpu(&self) -> Option<&str> {
+    pub fn onion_service_deployment_container_tor_resources(
+        &self,
+    ) -> Option<&DeploymentContainerResources> {
         self.spec
             .onion_service
             .deployment
             .as_ref()
+            .and_then(|f| f.containers.as_ref())
+            .and_then(|f| f.tor.as_ref())
             .and_then(|f| f.resources.as_ref())
-            .and_then(|f| f.limits.as_ref())
-            .and_then(|f| f.cpu.as_ref())
-            .map(String::as_str)
-    }
-
-    #[must_use]
-    pub fn onion_service_deployment_resources_limits_memory(&self) -> Option<&str> {
-        self.spec
-            .onion_service
-            .deployment
-            .as_ref()
-            .and_then(|f| f.resources.as_ref())
-            .and_then(|f| f.limits.as_ref())
-            .and_then(|f| f.memory.as_ref())
-            .map(String::as_str)
-    }
-
-    #[must_use]
-    pub fn onion_service_deployment_resources_requests_cpu(&self) -> Option<&str> {
-        self.spec
-            .onion_service
-            .deployment
-            .as_ref()
-            .and_then(|f| f.resources.as_ref())
-            .and_then(|f| f.requests.as_ref())
-            .and_then(|f| f.cpu.as_ref())
-            .map(String::as_str)
-    }
-
-    #[must_use]
-    pub fn onion_service_deployment_resources_requests_memory(&self) -> Option<&str> {
-        self.spec
-            .onion_service
-            .deployment
-            .as_ref()
-            .and_then(|f| f.resources.as_ref())
-            .and_then(|f| f.requests.as_ref())
-            .and_then(|f| f.memory.as_ref())
-            .map(String::as_str)
     }
 
     #[must_use]
@@ -804,25 +752,14 @@ fn generate_onion_service(
                 name: Some(object.onion_service_config_map_name(instance)),
             }),
             deployment: Some(OnionServiceSpecDeployment {
-                name: Some(object.onion_service_deployment_name(instance)),
-                resources: Some(OnionServiceSpecDeploymentResources {
-                    limits: Some(OnionServiceSpecDeploymentResourcesLimits {
-                        cpu: object
-                            .onion_service_deployment_resources_limits_cpu()
-                            .map(Into::into),
-                        memory: object
-                            .onion_service_deployment_resources_limits_memory()
-                            .map(Into::into),
-                    }),
-                    requests: Some(OnionServiceSpecDeploymentResourcesRequests {
-                        cpu: object
-                            .onion_service_deployment_resources_requests_cpu()
-                            .map(Into::into),
-                        memory: object
-                            .onion_service_deployment_resources_requests_memory()
-                            .map(Into::into),
+                containers: Some(OnionServiceSpecDeploymentContainers {
+                    tor: Some(OnionServiceSpecDeploymentContainersTor {
+                        resources: object
+                            .onion_service_deployment_container_tor_resources()
+                            .cloned(),
                     }),
                 }),
+                name: Some(object.onion_service_deployment_name(instance)),
             }),
             onion_balance: Some(OnionServiceSpecOnionBalance {
                 onion_key: OnionServiceSpecOnionBalanceOnionKey {

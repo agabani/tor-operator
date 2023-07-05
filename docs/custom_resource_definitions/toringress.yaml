@@ -106,6 +106,47 @@ spec:
                     description: Deployment settings.
                     nullable: true
                     properties:
+                      containers:
+                        description: Containers of the Deployment.
+                        nullable: true
+                        properties:
+                          tor:
+                            description: Tor container.
+                            nullable: true
+                            properties:
+                              resources:
+                                description: Resources of the container.
+                                nullable: true
+                                properties:
+                                  limits:
+                                    description: Limits of the Resources.
+                                    nullable: true
+                                    properties:
+                                      cpu:
+                                        description: CPU quantity of the Limits.
+                                        nullable: true
+                                        type: string
+                                      memory:
+                                        description: Memory quantity of the Limits.
+                                        nullable: true
+                                        type: string
+                                    type: object
+                                  requests:
+                                    description: Requests of the Resources.
+                                    nullable: true
+                                    properties:
+                                      cpu:
+                                        description: CPU quantity of the Requests.
+                                        nullable: true
+                                        type: string
+                                      memory:
+                                        description: Memory quantity of the Requests.
+                                        nullable: true
+                                        type: string
+                                    type: object
+                                type: object
+                            type: object
+                        type: object
                       name_prefix:
                         description: |-
                           Name prefix of the Deployment.
@@ -113,37 +154,6 @@ spec:
                           Default: name of the Tor Ingress
                         nullable: true
                         type: string
-                      resources:
-                        description: Resources of the Deployment.
-                        nullable: true
-                        properties:
-                          limits:
-                            description: Limits of the Resources.
-                            nullable: true
-                            properties:
-                              cpu:
-                                description: CPU quantity of the Limits.
-                                nullable: true
-                                type: string
-                              memory:
-                                description: Memory quantity of the Limits.
-                                nullable: true
-                                type: string
-                            type: object
-                          requests:
-                            description: Requests of the Resources.
-                            nullable: true
-                            properties:
-                              cpu:
-                                description: CPU quantity of the Requests.
-                                nullable: true
-                                type: string
-                              memory:
-                                description: Memory quantity of the Requests.
-                                nullable: true
-                                type: string
-                            type: object
-                        type: object
                     type: object
                   name_prefix:
                     description: |-

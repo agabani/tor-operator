@@ -10,9 +10,11 @@ spec:
       name: tor-ingress-{{ include "example.fullname" . }}-hpa
   onion_service:
     deployment:
-      resources:
-        requests:
-          cpu: 100m
+      containers:
+        tor:
+          resources:
+            requests:
+              cpu: 100m
     ports:
       - target: example:80
         virtport: 80
