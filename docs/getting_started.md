@@ -22,7 +22,7 @@
 
     or generate a new Onion Key using:
 
-        cargo install --git https://github.com/agabani/tor-operator --tag 0.0.1
+        cargo install --git https://github.com/agabani/tor-operator --tag 0.0.2
         tor-operator onion-key generate
 
 1.  Create a `Secret` containing the Onion Key.
