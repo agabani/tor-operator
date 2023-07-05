@@ -107,8 +107,8 @@ jobs:
         with:
           files: ${{ steps.archive.outputs.asset }}
 
-  release-container:
-    name: Release Container
+  release-container-image:
+    name: Release Container Image
     needs: release
     runs-on: self-hosted
     permissions:
@@ -172,7 +172,7 @@ jobs:
       contents: read
       packages: write
     needs:
-      - release-container
+      - release-container-image
     steps:
       - name: Download digests
         uses: actions/download-artifact@v3
