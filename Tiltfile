@@ -3,9 +3,13 @@ load('ext://namespace', 'namespace_create')
 # =============================================================================
 # Kubernetes Dashboard
 # =============================================================================
-k8s_yaml('.kubernetes/clusterrolebinding.yaml')
-k8s_yaml('.kubernetes/kubernetes-dashboard.yaml')
-k8s_yaml('.kubernetes/serviceaccount.yaml')
+k8s_yaml('.kubernetes/kubernetes-dashboard/admin-user.yaml')
+k8s_yaml('.kubernetes/kubernetes-dashboard/kubernetes-dashboard.yaml')
+
+# =============================================================================
+# Metrics Server
+# =============================================================================
+k8s_yaml('.kubernetes/metrics-server/metrics-server.yaml')
 
 # =============================================================================
 # Onion Balance

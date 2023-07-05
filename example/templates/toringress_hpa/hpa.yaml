@@ -1,0 +1,13 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tor-ingress-{{ include "example.fullname" . }}-hpa
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  maxReplicas: 4
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: tor.agabani.co.uk/v1
+    kind: TorIngress
+    name: tor-ingress-{{ include "example.fullname" . }}-hpa

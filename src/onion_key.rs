@@ -87,7 +87,8 @@ pub struct OnionKeySpec {
     /// If the Onion Key's hostname is missing, malformed, or does not match
     /// the public key, the Tor Operator will deterministically recreate the
     /// hostname from the public key.
-    pub auto_generate: Option<bool>,
+    #[serde(default)]
+    pub auto_generate: bool,
 
     /// Secret settings.
     pub secret: OnionKeySpecSecret,
@@ -134,7 +135,7 @@ pub struct OnionKeyStatus {
 impl OnionKey {
     #[must_use]
     pub fn auto_generate(&self) -> bool {
-        self.spec.auto_generate.unwrap_or(false)
+        self.spec.auto_generate
     }
 
     #[must_use]

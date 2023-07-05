@@ -8,6 +8,7 @@
     "apiextensions",
     "apimachinery",
     "apiserver",
+    "autoscaler",
     "crds",
     "csprng",
     "dalek",

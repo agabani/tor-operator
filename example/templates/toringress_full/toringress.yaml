@@ -18,6 +18,13 @@ spec:
       name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-6
     deployment:
       name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-7
+      resources:
+        limits:
+          cpu: 200m
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
     name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-8
     onion_key:
       name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-9

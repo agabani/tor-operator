@@ -12,4 +12,6 @@ pub const TOR_AGABANI_CO_UK_CONFIG_HASH_KEY: &str = "tor.agabani.co.uk/config-ha
 
 pub const TOR_AGABANI_CO_UK_OWNED_BY_KEY: &str = "tor.agabani.co.uk/owned-by";
 
+pub const TOR_AGABANI_CO_UK_PART_OF_KEY: &str = "tor.agabani.co.uk/part-of";
+
 pub const TOR_AGABANI_CO_UK_TORRC_HASH_KEY: &str = "tor.agabani.co.uk/torrc-hash";

@@ -55,6 +55,7 @@ spec:
               A user can have the Tor Operator create a new random Onion Key by using the auto generate feature controlled by `.auto_generate`.
             properties:
               auto_generate:
+                default: false
                 description: |-
                   Auto generate a random onion key. default: false.
 
@@ -71,7 +72,6 @@ spec:
                   If the Onion Key's public key is missing, malformed, or does not match the secret key, the Tor Operator will deterministically recreate the public key from the secret key.
 
                   If the Onion Key's hostname is missing, malformed, or does not match the public key, the Tor Operator will deterministically recreate the hostname from the public key.
-                nullable: true
                 title: Auto Generate
                 type: boolean
               secret:

@@ -8,6 +8,7 @@ use super::{
         APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
         APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
         APP_KUBERNETES_IO_NAME_KEY, APP_KUBERNETES_IO_NAME_VALUE, TOR_AGABANI_CO_UK_OWNED_BY_KEY,
+        TOR_AGABANI_CO_UK_PART_OF_KEY,
     },
     resource::Resource,
     Labels, SelectorLabels,
@@ -86,8 +87,27 @@ pub trait Object: kube::ResourceExt<DynamicType = ()> {
                 TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
                 self.try_uid()?.to_string(),
             ),
+            (
+                TOR_AGABANI_CO_UK_PART_OF_KEY.into(),
+                if let Some(part_of) = self.labels().get(TOR_AGABANI_CO_UK_PART_OF_KEY) {
+                    part_of.to_string()
+                } else {
+                    self.try_uid()?.to_string()
+                },
+            ),
         ])
         .into())
+    }
+
+    fn try_label_selector<O: Object>(&self) -> Result<String>
+    where
+        Self: Resource,
+    {
+        Ok(format!(
+            "{APP_KUBERNETES_IO_COMPONENT_KEY}={},{TOR_AGABANI_CO_UK_PART_OF_KEY}={}",
+            O::APP_KUBERNETES_IO_COMPONENT_VALUE,
+            self.try_uid()?
+        ))
     }
 
     fn try_selector_labels(&self) -> Result<SelectorLabels>

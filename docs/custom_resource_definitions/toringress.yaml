@@ -113,6 +113,37 @@ spec:
                           Default: name of the Tor Ingress
                         nullable: true
                         type: string
+                      resources:
+                        description: Resources of the Deployment.
+                        nullable: true
+                        properties:
+                          limits:
+                            description: Limits of the Resources.
+                            nullable: true
+                            properties:
+                              cpu:
+                                description: CPU quantity of the Limits.
+                                nullable: true
+                                type: string
+                              memory:
+                                description: Memory quantity of the Limits.
+                                nullable: true
+                                type: string
+                            type: object
+                          requests:
+                            description: Requests of the Resources.
+                            nullable: true
+                            properties:
+                              cpu:
+                                description: CPU quantity of the Requests.
+                                nullable: true
+                                type: string
+                              memory:
+                                description: Memory quantity of the Requests.
+                                nullable: true
+                                type: string
+                            type: object
+                        type: object
                     type: object
                   name_prefix:
                     description: |-
@@ -162,12 +193,9 @@ spec:
                       type: object
                     type: array
                   replicas:
-                    description: |-
-                      Number of replicas.
-
-                      Default: 3
+                    default: 3
+                    description: Number of replicas.
                     format: int32
-                    nullable: true
                     type: integer
                 required:
                 - ports
@@ -186,6 +214,10 @@ spec:
 
                   The hostname is only populated once `state` is "running".
                 nullable: true
+                type: string
+              label_selector:
+                default: ''
+                description: Label selector the Horizontal Pod Autoscaler will use to collect metrics.
                 type: string
               replicas:
                 description: Number of replicas.
@@ -211,6 +243,7 @@ spec:
     storage: true
     subresources:
       scale:
+        labelSelectorPath: .status.label_selector
         specReplicasPath: .spec.onion_service.replicas
         statusReplicasPath: .status.replicas
       status: {}
