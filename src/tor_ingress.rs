@@ -28,8 +28,10 @@ use crate::{
     onion_key::{OnionKey, OnionKeySpec, OnionKeySpecSecret},
     onion_service::{
         OnionService, OnionServiceSpec, OnionServiceSpecConfigMap, OnionServiceSpecDeployment,
-        OnionServiceSpecHiddenServicePort, OnionServiceSpecOnionBalance,
-        OnionServiceSpecOnionBalanceOnionKey, OnionServiceSpecOnionKey,
+        OnionServiceSpecDeploymentResources, OnionServiceSpecDeploymentResourcesLimits,
+        OnionServiceSpecDeploymentResourcesRequests, OnionServiceSpecHiddenServicePort,
+        OnionServiceSpecOnionBalance, OnionServiceSpecOnionBalanceOnionKey,
+        OnionServiceSpecOnionKey,
     },
     Result,
 };
@@ -56,7 +58,7 @@ use crate::{
     printcolumn = r#"{"name":"Replicas", "type":"number", "description":"Number of replicas", "jsonPath":".status.replicas"}"#,
     printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.state"}"#,
     printcolumn = r#"{"name":"Age", "type":"date", "jsonPath":".metadata.creationTimestamp"}"#,
-    scale = r#"{"specReplicasPath":".spec.onion_service.replicas", "statusReplicasPath":".status.replicas"}"#,
+    scale = r#"{"specReplicasPath":".spec.onion_service.replicas", "statusReplicasPath":".status.replicas", "labelSelectorPath":".status.label_selector"}"#,
     status = "TorIngressStatus",
     version = "v1"
 )]
@@ -132,9 +134,12 @@ pub struct TorIngressSpecOnionService {
     pub ports: Vec<TorIngressSpecOnionServicePort>,
 
     /// Number of replicas.
-    ///
-    /// Default: 3
-    pub replicas: Option<i32>,
+    #[serde(default = "default_onion_service_replicas")]
+    pub replicas: i32,
+}
+
+fn default_onion_service_replicas() -> i32 {
+    3
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -153,6 +158,39 @@ pub struct TorIngressSpecOnionServiceDeployment {
     ///
     /// Default: name of the Tor Ingress
     pub name_prefix: Option<String>,
+
+    /// Resources of the Deployment.
+    pub resources: Option<TorIngressSpecOnionServiceDeploymentResources>,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+pub struct TorIngressSpecOnionServiceDeploymentResources {
+    /// Limits of the Resources.
+    pub limits: Option<TorIngressSpecOnionServiceDeploymentResourcesLimits>,
+
+    /// Requests of the Resources.
+    pub requests: Option<TorIngressSpecOnionServiceDeploymentResourcesRequests>,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+pub struct TorIngressSpecOnionServiceDeploymentResourcesLimits {
+    /// CPU quantity of the Limits.
+    pub cpu: Option<String>,
+
+    /// Memory quantity of the Limits.
+    pub memory: Option<String>,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+pub struct TorIngressSpecOnionServiceDeploymentResourcesRequests {
+    /// CPU quantity of the Requests.
+    pub cpu: Option<String>,
+
+    /// Memory quantity of the Requests.
+    pub memory: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -193,6 +231,10 @@ pub struct TorIngressStatus {
     ///
     /// The hostname is only populated once `state` is "running".
     pub hostname: Option<String>,
+
+    /// Label selector the Horizontal Pod Autoscaler will use to collect metrics.
+    #[serde(default)]
+    pub label_selector: String,
 
     /// Number of replicas.
     pub replicas: i32,
@@ -279,6 +321,54 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_service_deployment_resources_limits_cpu(&self) -> Option<&str> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.resources.as_ref())
+            .and_then(|f| f.limits.as_ref())
+            .and_then(|f| f.cpu.as_ref())
+            .map(String::as_str)
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_resources_limits_memory(&self) -> Option<&str> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.resources.as_ref())
+            .and_then(|f| f.limits.as_ref())
+            .and_then(|f| f.memory.as_ref())
+            .map(String::as_str)
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_resources_requests_cpu(&self) -> Option<&str> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.resources.as_ref())
+            .and_then(|f| f.requests.as_ref())
+            .and_then(|f| f.cpu.as_ref())
+            .map(String::as_str)
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_resources_requests_memory(&self) -> Option<&str> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.resources.as_ref())
+            .and_then(|f| f.requests.as_ref())
+            .and_then(|f| f.memory.as_ref())
+            .map(String::as_str)
+    }
+
+    #[must_use]
     pub fn onion_service_name_prefix(&self) -> ResourceName {
         self.spec
             .onion_service
@@ -328,7 +418,7 @@ impl TorIngress {
 
     #[must_use]
     pub fn onion_service_replicas(&self) -> i32 {
-        self.spec.onion_service.replicas.unwrap_or(3)
+        self.spec.onion_service.replicas
     }
 }
 
@@ -622,6 +712,7 @@ async fn reconcile_tor_ingress(
             },
             replicas: object.onion_service_replicas(),
             state: state.to_string(),
+            label_selector: object.try_label_selector::<OnionService>()?,
         },
     )
     .await
@@ -685,7 +776,7 @@ fn generate_onion_service_onion_key(
             ..Default::default()
         },
         spec: OnionKeySpec {
-            auto_generate: Some(true),
+            auto_generate: true,
             secret: OnionKeySpecSecret {
                 name: object.onion_service_onion_key_secret_name(instance),
             },
@@ -714,6 +805,24 @@ fn generate_onion_service(
             }),
             deployment: Some(OnionServiceSpecDeployment {
                 name: Some(object.onion_service_deployment_name(instance)),
+                resources: Some(OnionServiceSpecDeploymentResources {
+                    limits: Some(OnionServiceSpecDeploymentResourcesLimits {
+                        cpu: object
+                            .onion_service_deployment_resources_limits_cpu()
+                            .map(Into::into),
+                        memory: object
+                            .onion_service_deployment_resources_limits_memory()
+                            .map(Into::into),
+                    }),
+                    requests: Some(OnionServiceSpecDeploymentResourcesRequests {
+                        cpu: object
+                            .onion_service_deployment_resources_requests_cpu()
+                            .map(Into::into),
+                        memory: object
+                            .onion_service_deployment_resources_requests_memory()
+                            .map(Into::into),
+                    }),
+                }),
             }),
             onion_balance: Some(OnionServiceSpecOnionBalance {
                 onion_key: OnionServiceSpecOnionBalanceOnionKey {

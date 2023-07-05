@@ -4,19 +4,21 @@
 
 ### Added
 
-- Tor Ingress custom resource definition scale subresource.
+- Onion Service and Tor Ingress configurable resources.
+- Tor Ingress Custom Resource Definition scale subresource.
+- Tor Ingress Horizontal Pod Autoscaler support.
 
 ## [0.0.2] - 2023-07-05
 
 ### Added
 
-- Onion Balance, Onion Key, Onion Service and Tor Ingress custom resource definition additional printer columns.
+- Onion Balance, Onion Key, Onion Service and Tor Ingress Custom Resource Definition additional printer columns.
 
 ## [0.0.1] - 2023-07-04
 
 ### Added
 
-- Onion Balance, Onion Key, Onion Service and Tor Ingress custom resource definition.
+- Onion Balance, Onion Key, Onion Service and Tor Ingress Custom Resource Definition.
 - Onion Balance, Onion Key, Onion Service and Tor Ingress controller.
 - Tor Operator binary. (aarch64-macos, x86_64-linux, x86_64-macos, x86_64-windows)
 - Tor Operator container image. (linux/amd64, linux/arm64)

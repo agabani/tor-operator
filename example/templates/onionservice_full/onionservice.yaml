@@ -9,6 +9,13 @@ spec:
     name: onion-service-{{ include "example.fullname" . }}-full
   deployment:
     name: onion-service-{{ include "example.fullname" . }}-full
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
   onion_key:
     name: onion-service-{{ include "example.fullname" . }}-full
   ports:

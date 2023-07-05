@@ -1,0 +1,18 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: TorIngress
+metadata:
+  name: tor-ingress-{{ include "example.fullname" . }}-hpa
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  onion_balance:
+    onion_key:
+      name: tor-ingress-{{ include "example.fullname" . }}-hpa
+  onion_service:
+    deployment:
+      resources:
+        requests:
+          cpu: 100m
+    ports:
+      - target: example:80
+        virtport: 80
