@@ -55,6 +55,10 @@ use crate::{
     group = "tor.agabani.co.uk",
     kind = "OnionKey",
     namespaced,
+    printcolumn = r#"{"name":"Hostname", "type":"string", "description":"The hostname of the onion key", "jsonPath":".status.hostname"}"#,
+    printcolumn = r#"{"name":"Auto Generated", "type":"boolean", "description":"Auto generated onion key", "jsonPath":".spec.auto_generate"}"#,
+    printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.state"}"#,
+    printcolumn = r#"{"name":"Age", "type":"date", "jsonPath":".metadata.creationTimestamp"}"#,
     status = "OnionKeyStatus",
     version = "v1"
 )]
@@ -106,6 +110,9 @@ pub struct OnionKeyStatus {
     ///
     /// The hostname is only populated once `state` is "valid".
     pub hostname: Option<String>,
+
+    /// Auto generated onion key.
+    pub auto_generated: bool,
 
     /// Human readable description of state.
     ///
@@ -300,6 +307,7 @@ async fn reconcile_onion_key(
                 SecretState::Valid(hostname) => Some(hostname.to_string()),
                 _ => None,
             },
+            auto_generated: object.auto_generate(),
             state: state.to_string(),
         },
     )

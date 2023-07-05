@@ -12,7 +12,22 @@ spec:
     singular: onionservice
   scope: Namespaced
   versions:
-  - additionalPrinterColumns: []
+  - additionalPrinterColumns:
+    - description: The hostname of the onion service
+      jsonPath: .status.hostname
+      name: Hostname
+      type: string
+    - description: The hostname of the onion balance
+      jsonPath: .spec.onion_balance.onion_key.hostname
+      name: Onion Balance Hostname
+      type: string
+    - description: Human readable description of state
+      jsonPath: .status.state
+      name: State
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1
     schema:
       openAPIV3Schema:
@@ -109,6 +124,13 @@ spec:
           status:
             nullable: true
             properties:
+              hostname:
+                description: |-
+                  Onion key hostname.
+
+                  The hostname is only populated once `state` is "running".
+                nullable: true
+                type: string
               state:
                 description: |-
                   Human readable description of state.

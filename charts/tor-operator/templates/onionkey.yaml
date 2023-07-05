@@ -19,7 +19,22 @@ spec:
     singular: onionkey
   scope: Namespaced
   versions:
-  - additionalPrinterColumns: []
+  - additionalPrinterColumns:
+    - description: The hostname of the onion key
+      jsonPath: .status.hostname
+      name: Hostname
+      type: string
+    - description: Auto generated onion key
+      jsonPath: .spec.auto_generate
+      name: Auto Generated
+      type: boolean
+    - description: Human readable description of state
+      jsonPath: .status.state
+      name: State
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1
     schema:
       openAPIV3Schema:
@@ -78,6 +93,9 @@ spec:
           status:
             nullable: true
             properties:
+              auto_generated:
+                description: Auto generated onion key.
+                type: boolean
               hostname:
                 description: |-
                   Onion key hostname.
@@ -94,6 +112,7 @@ spec:
                   - secret not found - secret key not found - secret key malformed: (reason) - public key not found - public key malformed: (reason) - public key mismatch - hostname not found - hostname malformed: (reason) - hostname mismatch - valid
                 type: string
             required:
+            - auto_generated
             - state
             type: object
         required:

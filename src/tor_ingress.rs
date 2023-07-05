@@ -52,6 +52,10 @@ use crate::{
     group = "tor.agabani.co.uk",
     kind = "TorIngress",
     namespaced,
+    printcolumn = r#"{"name":"Hostname", "type":"string", "description":"The hostname of the tor ingress", "jsonPath":".status.hostname"}"#,
+    printcolumn = r#"{"name":"Replicas", "type":"number", "description":"Number of replicas", "jsonPath":".status.replicas"}"#,
+    printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.state"}"#,
+    printcolumn = r#"{"name":"Age", "type":"date", "jsonPath":".metadata.creationTimestamp"}"#,
     status = "TorIngressStatus",
     version = "v1"
 )]
@@ -184,6 +188,14 @@ pub struct TorIngressSpecOnionServicePort {
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressStatus {
+    /// Onion key hostname.
+    ///
+    /// The hostname is only populated once `state` is "running".
+    pub hostname: Option<String>,
+
+    /// Number of replicas.
+    pub replicas: i32,
+
     /// Human readable description of state.
     ///
     /// Possible values:
@@ -602,6 +614,12 @@ async fn reconcile_tor_ingress(
     api.update_status(
         object,
         TorIngressStatus {
+            hostname: if let State::Running((onion_key, _)) = state {
+                onion_key.hostname().map(Into::into)
+            } else {
+                None
+            },
+            replicas: object.onion_service_replicas(),
             state: state.to_string(),
         },
     )

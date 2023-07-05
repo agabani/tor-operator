@@ -19,7 +19,22 @@ spec:
     singular: toringress
   scope: Namespaced
   versions:
-  - additionalPrinterColumns: []
+  - additionalPrinterColumns:
+    - description: The hostname of the tor ingress
+      jsonPath: .status.hostname
+      name: Hostname
+      type: string
+    - description: Number of replicas
+      jsonPath: .status.replicas
+      name: Replicas
+      type: number
+    - description: Human readable description of state
+      jsonPath: .status.state
+      name: State
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1
     schema:
       openAPIV3Schema:
@@ -172,6 +187,17 @@ spec:
           status:
             nullable: true
             properties:
+              hostname:
+                description: |-
+                  Onion key hostname.
+
+                  The hostname is only populated once `state` is "running".
+                nullable: true
+                type: string
+              replicas:
+                description: Number of replicas.
+                format: int32
+                type: integer
               state:
                 description: |-
                   Human readable description of state.
@@ -181,6 +207,7 @@ spec:
                   - onion balance onion key not found - onion balance onion key hostname not found - onion service onion key hostname not found - running
                 type: string
             required:
+            - replicas
             - state
             type: object
         required:

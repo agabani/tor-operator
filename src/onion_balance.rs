@@ -49,6 +49,10 @@ use crate::{
     group = "tor.agabani.co.uk",
     kind = "OnionBalance",
     namespaced,
+    printcolumn = r#"{"name":"Hostname", "type":"string", "description":"The hostname of the onion balance", "jsonPath":".status.hostname"}"#,
+    printcolumn = r#"{"name":"Onion Services", "type":"number", "description":"The hostname of onion services", "jsonPath":".status.onion_services"}"#,
+    printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.state"}"#,
+    printcolumn = r#"{"name":"Age", "type":"date", "jsonPath":".metadata.creationTimestamp"}"#,
     status = "OnionBalanceStatus",
     version = "v1"
 )]
@@ -110,6 +114,14 @@ pub struct OnionBalanceSpecOnionServiceOnionKey {
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionBalanceStatus {
+    /// Onion key hostname.
+    ///
+    /// The hostname is only populated once `state` is "running".
+    pub hostname: Option<String>,
+
+    /// Number of onion services.
+    pub onion_services: i32,
+
     /// Human readable description of state.
     ///
     /// Possible values:
@@ -406,6 +418,12 @@ async fn reconcile_onion_balance(
     api.update_status(
         object,
         OnionBalanceStatus {
+            hostname: if let State::Running(onion_key) = state {
+                onion_key.hostname().map(Into::into)
+            } else {
+                None
+            },
+            onion_services: i32::try_from(object.spec.onion_services.len()).unwrap(),
             state: state.to_string(),
         },
     )
