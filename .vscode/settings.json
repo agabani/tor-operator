@@ -3,6 +3,7 @@
     "justfile": "makefile"
   },
   "cSpell.words": [
+    "aarch",
     "agabani",
     "apiextensions",
     "apimachinery",
@@ -29,6 +30,7 @@
     "rustls",
     "schemars",
     "serde",
+    "subresource",
     "toringress",
     "torrc",
     "virtport"
