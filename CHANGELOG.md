@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Tor Ingress custom resource definition scale subresource.
+
 ## [0.0.2] - 2023-07-05
 
 ### Added

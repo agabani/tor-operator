@@ -210,4 +210,7 @@ spec:
     served: true
     storage: true
     subresources:
+      scale:
+        specReplicasPath: .spec.onion_service.replicas
+        statusReplicasPath: .status.replicas
       status: {}

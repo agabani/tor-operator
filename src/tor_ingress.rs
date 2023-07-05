@@ -56,6 +56,7 @@ use crate::{
     printcolumn = r#"{"name":"Replicas", "type":"number", "description":"Number of replicas", "jsonPath":".status.replicas"}"#,
     printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.state"}"#,
     printcolumn = r#"{"name":"Age", "type":"date", "jsonPath":".metadata.creationTimestamp"}"#,
+    scale = r#"{"specReplicasPath":".spec.onion_service.replicas", "statusReplicasPath":".status.replicas"}"#,
     status = "TorIngressStatus",
     version = "v1"
 )]
