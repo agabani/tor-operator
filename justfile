@@ -82,6 +82,10 @@ docker-run-tor-operator: docker-build-tor-operator
 # generate
 generate: cli-crd-generate cli-markdown-generate license
 
+# github runner-create
+github-runner-create:
+  @multipass launch --name github-runner --cpus=12 --memory=16G --disk=80G --cloud-init .multipass/github-runner/cloud-config.yaml
+
 # kube clean
 kube-clean:
   @tilt down
