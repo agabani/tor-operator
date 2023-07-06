@@ -1,10 +1,12 @@
 # Tor Operator
 
-Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onion_balance/), [Onion Keys](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onion_key/) and [Onion Services](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onion_service/) to provide a highly available, load balanced and fault tolerate [Tor Ingress](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/tor_ingress/).
+Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionbalance/), [Onion Keys](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionkey/) and [Onion Services](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionservice/) to provide a highly available, load balanced and fault tolerate [Tor Ingress](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/toringress/).
 
 ## Documentation
 
 [https://agabani.github.io/tor-operator/docs/](https://agabani.github.io/tor-operator/docs/)
+
+<!--getting-started-start-->
 
 ## Installation
 
@@ -59,13 +61,15 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
         metadata:
           name: tor-ingress-example
         spec:
-          onion_balance:
-            onion_key:
+          onionBalance:
+            onionKey:
               name: tor-ingress-example
-          onion_service:
+          onionService:
             ports:
               - target: example:80
                 virtport: 80
             replicas: 3
 
     `kubectl apply -f toringress.yaml`
+
+<!--getting-started-end-->

@@ -5,10 +5,10 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  onion_balance:
-    onion_key:
+  onionBalance:
+    onionKey:
       hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
-  onion_key:
+  onionKey:
     name: onion-service-{{ include "example.fullname" . }}-onion-balance
   ports:
     - target: example:80

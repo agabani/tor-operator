@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  config_map:
+  configMap:
     name: onion-service-{{ include "example.fullname" . }}-full
   deployment:
     containers:
@@ -18,7 +18,7 @@ spec:
             cpu: 100m
             memory: 128Mi
     name: onion-service-{{ include "example.fullname" . }}-full
-  onion_key:
+  onionKey:
     name: onion-service-{{ include "example.fullname" . }}-full
   ports:
     - target: example:80

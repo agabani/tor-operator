@@ -5,6 +5,6 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  auto_generate: true
+  autoGenerate: true
   secret:
     name: tor-ingress-{{ include "example.fullname" . }}

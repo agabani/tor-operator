@@ -1,16 +1,16 @@
-# Onion Service
+# OnionService
 
-An Onion Service is an abstraction of a Tor Onion Service.
+An OnionService is an abstraction of a Tor Onion Service.
 
 A Tor Onion Service is a service that can only be accessed over Tor.
-Running a Tor Onion Service gives your users all teh security of HTTPS with
+Running a Tor Onion Service gives your users all the security of HTTPS with
 the added privacy benefits of Tor.
 
 ## Examples
 
 ### Basic
 
-The Tor Operator will create an Onion Service using an auto generated Onion Key.
+The Tor Operator will create an OnionService using an auto generated OnionKey.
 
 ```
 #onionkey.yaml
@@ -22,9 +22,9 @@ The Tor Operator will create an Onion Service using an auto generated Onion Key.
 {% include "../../example/templates/onionservice/onionservice.yaml" %}
 ```
 
-### Onion Balance
+### OnionBalance
 
-The Tor Operator will create an Onion Service registered with an Onion Balance using an auto generated Onion Key.
+The Tor Operator will create an OnionService registered with an OnionBalance using an auto generated OnionKey.
 
 ```
 #onionkey.yaml
@@ -38,7 +38,7 @@ The Tor Operator will create an Onion Service registered with an Onion Balance u
 
 ### Full
 
-The Tor Operator will create an Onion Service registered with an Onion Balance using an auto generated Onion Key.
+The Tor Operator will create an OnionService registered with an OnionBalance using an auto generated OnionKey.
 
 ```
 #onionkey.yaml
@@ -69,8 +69,8 @@ Status:
 
 Possible values for `State`:
 
-- `onion key not found`
-- `onion key hostname not found`
+- `OnionKey not found`
+- `OnionKey hostname not found`
 - `running`
 
 ## OpenAPI Spec

@@ -35,26 +35,27 @@ use crate::{
  * Custom Resource Definition
  * ============================================================================
  */
+/// # `OnionService`
+///
+/// An `OnionService` is an abstraction of a Tor Onion Service.
+///
+/// A Tor Onion Service is a service that can only be accessed over Tor.
+/// Running a Tor Onion Service gives your users all the security of HTTPS with
+/// the added privacy benefits of Tor.
 #[allow(clippy::module_name_repetitions)]
 #[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[kube(
     group = "tor.agabani.co.uk",
     kind = "OnionService",
     namespaced,
-    printcolumn = r#"{"name":"Hostname", "type":"string", "description":"The hostname of the onion service", "jsonPath":".status.hostname"}"#,
-    printcolumn = r#"{"name":"Onion Balance Hostname", "type":"string", "description":"The hostname of the onion balance", "jsonPath":".spec.onion_balance.onion_key.hostname"}"#,
+    printcolumn = r#"{"name":"Hostname", "type":"string", "description":"The hostname of the OnionService", "jsonPath":".status.hostname"}"#,
+    printcolumn = r#"{"name":"OnionBalance Hostname", "type":"string", "description":"The hostname of the OnionBalance", "jsonPath":".spec.onionBalance.onionKey.hostname"}"#,
     printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.state"}"#,
     printcolumn = r#"{"name":"Age", "type":"date", "jsonPath":".metadata.creationTimestamp"}"#,
     status = "OnionServiceStatus",
     version = "v1"
 )]
-/// # Onion Service
-///
-/// An Onion Service is an abstraction of a Tor Onion Service.
-///
-/// A Tor Onion Service is a service that can only be accessed over Tor.
-/// Running a Tor Onion Service gives your users all teh security of HTTPS with
-/// the added privacy benefits of Tor.
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpec {
     /// Config Map settings.
     pub config_map: Option<OnionServiceSpecConfigMap>,
@@ -62,12 +63,12 @@ pub struct OnionServiceSpec {
     /// Deployment settings.
     pub deployment: Option<OnionServiceSpecDeployment>,
 
-    /// Onion Balance part the Onion Service belongs to.
+    /// OnionBalance the OnionService belongs to.
     ///
     /// Default: nil / none / null / undefined.
     pub onion_balance: Option<OnionServiceSpecOnionBalance>,
 
-    /// Onion Key settings.
+    /// OnionKey settings.
     pub onion_key: OnionServiceSpecOnionKey,
 
     /// Onion Service Hidden Service ports.
@@ -76,27 +77,30 @@ pub struct OnionServiceSpec {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecConfigMap {
     /// Name of the Config Map.
     ///
-    /// Default: name of the Onion Service
+    /// Default: name of the OnionService
     pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeployment {
     /// Containers of the Deployment.
     pub containers: Option<OnionServiceSpecDeploymentContainers>,
 
     /// Name of the Deployment.
     ///
-    /// Default: name of the Onion Service
+    /// Default: name of the OnionService
     pub name: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeploymentContainers {
     /// Tor container.
     pub tor: Option<OnionServiceSpecDeploymentContainersTor>,
@@ -104,6 +108,7 @@ pub struct OnionServiceSpecDeploymentContainers {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeploymentContainersTor {
     /// Resources of the container.
     pub resources: Option<DeploymentContainerResources>,
@@ -111,15 +116,17 @@ pub struct OnionServiceSpecDeploymentContainersTor {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecOnionBalance {
-    /// Onion Key reference of the Onion Balance.
+    /// OnionKey reference of the OnionBalance.
     pub onion_key: OnionServiceSpecOnionBalanceOnionKey,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecOnionBalanceOnionKey {
-    /// Hostname value of the Onion Key.
+    /// Hostname value of the OnionKey.
     ///
     /// Example: "abcdefg.onion"
     pub hostname: String,
@@ -127,13 +134,15 @@ pub struct OnionServiceSpecOnionBalanceOnionKey {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecOnionKey {
-    /// Name of the Onion Key.
+    /// Name of the OnionKey.
     pub name: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecHiddenServicePort {
     /// The target any incoming traffic will be redirect to.
     ///
@@ -148,8 +157,9 @@ pub struct OnionServiceSpecHiddenServicePort {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct OnionServiceStatus {
-    /// Onion key hostname.
+    /// OnionKey hostname.
     ///
     /// The hostname is only populated once `state` is "running".
     pub hostname: Option<String>,
@@ -158,8 +168,8 @@ pub struct OnionServiceStatus {
     ///
     /// Possible values:
     ///
-    /// - onion key not found
-    /// - onion key hostname not found
+    /// - OnionKey not found
+    /// - OnionKey hostname not found
     /// - running
     pub state: String,
 }
@@ -331,8 +341,8 @@ enum State {
 impl std::fmt::Display for State {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            State::OnionKeyNotFound => write!(f, "onion key not found"),
-            State::OnionKeyHostnameNotFound => write!(f, "onion key hostname not found"),
+            State::OnionKeyNotFound => write!(f, "OnionKey not found"),
+            State::OnionKeyHostnameNotFound => write!(f, "OnionKey hostname not found"),
             State::Running(_) => write!(f, "running"),
         }
     }
@@ -359,7 +369,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     let labels = object.try_labels()?;
     let selector_labels = object.try_selector_labels()?;
 
-    // onion key
+    // OnionKey
     let state = reconcile_onion_key(
         &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
         &object,
@@ -391,7 +401,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
         .await?;
     }
 
-    // onion service
+    // OnionService
     reconcile_onion_service(
         &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
         &object,

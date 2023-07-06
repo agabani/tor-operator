@@ -4,8 +4,8 @@ metadata:
   name: onion-balance-{{ include "example.fullname" . }}
   labels: {{- include "example.labels" . | nindent 4 }}
 spec:
-  onion_key:
+  onionKey:
     name: onion-balance-{{ include "example.fullname" . }}
-  onion_services:
-    - onion_key:
+  onionServices:
+    - onionKey:
         hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
