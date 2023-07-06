@@ -8,6 +8,23 @@ spec:
   config_map:
     name: onion-balance-{{ include "example.fullname" . }}-full
   deployment:
+    containers:
+      onion_balance:
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      tor:
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
     name: onion-balance-{{ include "example.fullname" . }}-full
   onion_key:
     name: onion-balance-{{ include "example.fullname" . }}-full

@@ -22,8 +22,9 @@ use crate::{
     metrics::Metrics,
     onion_balance::{
         OnionBalance, OnionBalanceSpec, OnionBalanceSpecConfigMap, OnionBalanceSpecDeployment,
-        OnionBalanceSpecOnionKey, OnionBalanceSpecOnionService,
-        OnionBalanceSpecOnionServiceOnionKey,
+        OnionBalanceSpecDeploymentContainers, OnionBalanceSpecDeploymentContainersOnionBalance,
+        OnionBalanceSpecDeploymentContainersTor, OnionBalanceSpecOnionKey,
+        OnionBalanceSpecOnionService, OnionBalanceSpecOnionServiceOnionKey,
     },
     onion_key::{OnionKey, OnionKeySpec, OnionKeySpecSecret},
     onion_service::{
@@ -99,10 +100,37 @@ pub struct TorIngressSpecOnionBalanceConfigMap {
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct TorIngressSpecOnionBalanceDeployment {
+    /// Containers of the Deployment.
+    pub containers: Option<TorIngressSpecOnionBalanceDeploymentContainers>,
+
     /// Name of the Deployment.
     ///
     /// Default: name of the Tor Ingress
     pub name: Option<String>,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+pub struct TorIngressSpecOnionBalanceDeploymentContainers {
+    /// Onion Balance container.
+    pub onion_balance: Option<TorIngressSpecOnionBalanceDeploymentContainersOnionBalance>,
+
+    /// Tor container.
+    pub tor: Option<TorIngressSpecOnionBalanceDeploymentContainersTor>,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+pub struct TorIngressSpecOnionBalanceDeploymentContainersOnionBalance {
+    /// Resources of the container.
+    pub resources: Option<DeploymentContainerResources>,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+pub struct TorIngressSpecOnionBalanceDeploymentContainersTor {
+    /// Resources of the container.
+    pub resources: Option<DeploymentContainerResources>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -250,6 +278,32 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_balance_deployment_containers_onion_balance_resources(
+        &self,
+    ) -> Option<&DeploymentContainerResources> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.containers.as_ref())
+            .and_then(|f| f.onion_balance.as_ref())
+            .and_then(|f| f.resources.as_ref())
+    }
+
+    #[must_use]
+    pub fn onion_balance_deployment_containers_tor_resources(
+        &self,
+    ) -> Option<&DeploymentContainerResources> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.containers.as_ref())
+            .and_then(|f| f.tor.as_ref())
+            .and_then(|f| f.resources.as_ref())
+    }
+
+    #[must_use]
     pub fn onion_balance_deployment_name(&self) -> ResourceName {
         self.spec
             .onion_balance
@@ -299,12 +353,7 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_deployment_name(&self, instance: i32) -> String {
-        format!("{}-{instance}", self.onion_service_deployment_name_prefix())
-    }
-
-    #[must_use]
-    pub fn onion_service_deployment_container_tor_resources(
+    pub fn onion_service_deployment_containers_tor_resources(
         &self,
     ) -> Option<&DeploymentContainerResources> {
         self.spec
@@ -314,6 +363,11 @@ impl TorIngress {
             .and_then(|f| f.containers.as_ref())
             .and_then(|f| f.tor.as_ref())
             .and_then(|f| f.resources.as_ref())
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_name(&self, instance: i32) -> String {
+        format!("{}-{instance}", self.onion_service_deployment_name_prefix())
     }
 
     #[must_use]
@@ -688,6 +742,18 @@ fn generate_onion_balance(
                 name: Some(object.onion_balance_config_map_name().to_string()),
             }),
             deployment: Some(OnionBalanceSpecDeployment {
+                containers: Some(OnionBalanceSpecDeploymentContainers {
+                    onion_balance: Some(OnionBalanceSpecDeploymentContainersOnionBalance {
+                        resources: object
+                            .onion_balance_deployment_containers_onion_balance_resources()
+                            .cloned(),
+                    }),
+                    tor: Some(OnionBalanceSpecDeploymentContainersTor {
+                        resources: object
+                            .onion_balance_deployment_containers_tor_resources()
+                            .cloned(),
+                    }),
+                }),
                 name: Some(object.onion_balance_deployment_name().to_string()),
             }),
             onion_key: OnionBalanceSpecOnionKey {
@@ -755,7 +821,7 @@ fn generate_onion_service(
                 containers: Some(OnionServiceSpecDeploymentContainers {
                     tor: Some(OnionServiceSpecDeploymentContainersTor {
                         resources: object
-                            .onion_service_deployment_container_tor_resources()
+                            .onion_service_deployment_containers_tor_resources()
                             .cloned(),
                     }),
                 }),

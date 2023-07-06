@@ -180,22 +180,22 @@ impl OnionService {
     }
 
     #[must_use]
-    pub fn deployment_name(&self) -> ResourceName {
-        self.spec
-            .deployment
-            .as_ref()
-            .and_then(|f| f.name.as_ref())
-            .map_or_else(|| self.default_name(), Into::into)
-    }
-
-    #[must_use]
-    pub fn deployment_container_tor_resources(&self) -> Option<&DeploymentContainerResources> {
+    pub fn deployment_containers_tor_resources(&self) -> Option<&DeploymentContainerResources> {
         self.spec
             .deployment
             .as_ref()
             .and_then(|f| f.containers.as_ref())
             .and_then(|f| f.tor.as_ref())
             .and_then(|f| f.resources.as_ref())
+    }
+
+    #[must_use]
+    pub fn deployment_name(&self) -> ResourceName {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), Into::into)
     }
 
     #[must_use]
@@ -622,7 +622,7 @@ fn generate_deployment(
                             timeout_seconds: Some(1),
                             ..Default::default()
                         }),
-                        resources: object.deployment_container_tor_resources().map(Into::into),
+                        resources: object.deployment_containers_tor_resources().map(Into::into),
                         volume_mounts: Some(vec![
                             VolumeMount {
                                 mount_path: "/etc/secrets".into(),

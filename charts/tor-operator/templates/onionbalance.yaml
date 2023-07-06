@@ -62,6 +62,83 @@ spec:
                 description: Deployment settings.
                 nullable: true
                 properties:
+                  containers:
+                    description: Containers of the Deployment.
+                    nullable: true
+                    properties:
+                      onion_balance:
+                        description: Onion Balance container.
+                        nullable: true
+                        properties:
+                          resources:
+                            description: Resources of the container.
+                            nullable: true
+                            properties:
+                              limits:
+                                description: Limits of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                type: object
+                              requests:
+                                description: Requests of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      tor:
+                        description: Tor container.
+                        nullable: true
+                        properties:
+                          resources:
+                            description: Resources of the container.
+                            nullable: true
+                            properties:
+                              limits:
+                                description: Limits of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                type: object
+                              requests:
+                                description: Requests of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                    type: object
                   name:
                     description: |-
                       Name of the Deployment.
