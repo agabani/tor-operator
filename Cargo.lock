@@ -990,6 +990,7 @@ dependencies = [
  "chrono",
  "http",
  "percent-encoding",
+ "schemars",
  "serde",
  "serde-value",
  "serde_json",
