@@ -1,3 +1,4 @@
+mod annotation;
 mod annotations;
 mod api;
 mod conditions_ext;
@@ -6,6 +7,7 @@ mod constants;
 mod context;
 mod deployment_container_resources;
 mod error_policy;
+mod hostname;
 mod labels;
 mod ob_config;
 mod object;
@@ -17,6 +19,7 @@ mod selector_labels;
 mod subset;
 mod torrc;
 
+pub use annotation::Annotation;
 pub use annotations::Annotations;
 pub use api::Api;
 pub use conditions_ext::ConditionsExt;

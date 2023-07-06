@@ -1,8 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use futures::StreamExt;
 use k8s_openapi::{
@@ -614,7 +610,7 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 
     let namespace = object.try_namespace()?;
 
-    let annotations = generate_annotations();
+    let annotations = Annotations::new();
     let labels = object.try_labels()?;
 
     // OnionKey
@@ -774,7 +770,7 @@ async fn reconcile_tor_ingress(
                 .unwrap_or(&Vec::new())
                 .merge_from(&state.into()),
             hostname: if let State::Initialized((onion_key, _)) = state {
-                onion_key.hostname().map(Into::into)
+                onion_key.hostname().as_ref().map(ToString::to_string)
             } else {
                 None
             },
@@ -783,10 +779,6 @@ async fn reconcile_tor_ingress(
         },
     )
     .await
-}
-
-fn generate_annotations() -> Annotations {
-    Annotations::new(BTreeMap::from([]))
 }
 
 fn generate_onion_balance(
