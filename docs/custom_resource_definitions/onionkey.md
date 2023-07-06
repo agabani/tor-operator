@@ -45,6 +45,15 @@ The Tor Operator will auto generated a random OnionKey and store it in a `Secret
 {% include "../../example/templates/onionkey_auto_generate/onionkey.yaml" %}
 ```
 
+## Conditions
+
+{%
+  include "./onionkey.yaml"
+  start="Represents the latest available observations of a deployment's current state."
+  end="items:"
+  dedent=true
+%}
+
 ## Features
 
 ### Auto Generate
@@ -60,40 +69,6 @@ secret specified in `.secret.name`.
 - If the OnionKey's hostname is missing, malformed, or does not match
   the public key, the Tor Operator will deterministically recreate the
   hostname from the public key.
-
-### State
-
-State can be observed in the status.
-
-```
-kubectl describe onionkeys example
-```
-
-```
-# ...
-Spec:
-  auto_generate:  true
-  Secret:
-    Name:  example
-Status:
-  Hostname:  ********.onion
-  State:     valid
-Events:      <none>
-# ...
-```
-
-Possible values for `State`:
-
-- `secret not found`
-- `secret key not found`
-- `secret key malformed: (reason)`
-- `public key not found`
-- `public key malformed: (reason)`
-- `public key mismatch`
-- `hostname not found`
-- `hostname malformed: (reason)`
-- `hostname mismatch`
-- `valid`
 
 ## OpenAPI Spec
 

@@ -1,5 +1,6 @@
 mod annotations;
 mod api;
+mod conditions_ext;
 mod config_yaml;
 mod constants;
 mod context;
@@ -18,6 +19,7 @@ mod torrc;
 
 pub use annotations::Annotations;
 pub use api::Api;
+pub use conditions_ext::ConditionsExt;
 pub use config_yaml::ConfigYaml;
 pub use context::Context;
 pub use deployment_container_resources::{

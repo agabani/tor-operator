@@ -3,7 +3,10 @@ use std::{collections::BTreeMap, sync::Arc, time::Duration};
 use futures::StreamExt;
 use k8s_openapi::{
     api::core::v1::Secret,
-    apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition, ByteString,
+    apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
+    apimachinery::pkg::apis::meta::v1::{Condition, Time},
+    chrono::Utc,
+    ByteString,
 };
 use kube::{
     core::ObjectMeta,
@@ -16,8 +19,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     crypto::{self, Hostname},
     kubernetes::{
-        self, error_policy, Annotations, Api, Labels, Object, Resource as KubernetesResource,
-        ResourceName, Subset,
+        self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
+        Resource as KubernetesResource, ResourceName, Subset,
     },
     metrics::Metrics,
     Result,
@@ -50,7 +53,7 @@ use crate::{
 /// A user can have the Tor Operator create a new random Tor Onion Key by using the
 /// auto generate feature controlled by `.auto_generate`.
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[kube(
     group = "tor.agabani.co.uk",
     kind = "OnionKey",
@@ -96,7 +99,7 @@ pub struct OnionKeySpec {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionKeySpecSecret {
     /// Name of the secret.
@@ -107,32 +110,28 @@ pub struct OnionKeySpecSecret {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionKeyStatus {
-    /// OnionKey hostname.
-    ///
-    /// The hostname is only populated once `state` is "valid".
-    pub hostname: Option<String>,
-
     /// Auto generated OnionKey.
     pub auto_generated: bool,
 
-    /// Human readable description of state.
+    /// Represents the latest available observations of a deployment's current state.
     ///
-    /// Possible values:
+    /// ### Ready
     ///
-    ///  - secret not found
-    ///  - secret key not found
-    ///  - secret key malformed: (reason)
-    ///  - public key not found
-    ///  - public key malformed: (reason)
-    ///  - public key mismatch
-    ///  - hostname not found
-    ///  - hostname malformed: (reason)
-    ///  - hostname mismatch
-    ///  - valid
-    pub state: String,
+    /// `SecretNotFound`,
+    /// `SecretKeyNotFound`, `SecretKeyMalformed`,
+    /// `PublicKeyNotFound`, `PublicKeyMalformed`, `PublicKeyMismatch`,
+    /// `HostnameNotFound`, `HostnameMalformed`, `HostnameMismatch`,
+    /// `Ready`
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conditions: Vec<Condition>,
+
+    /// OnionKey hostname.
+    ///
+    /// The hostname is only populated once `state` is ready.
+    pub hostname: Option<String>,
 }
 
 impl OnionKey {
@@ -152,6 +151,11 @@ impl OnionKey {
     #[must_use]
     pub fn secret_name(&self) -> ResourceName {
         (&self.spec.secret.name).into()
+    }
+
+    #[must_use]
+    pub fn status_conditions(&self) -> Option<&Vec<Condition>> {
+        self.status.as_ref().map(|f| f.conditions.as_ref())
     }
 }
 
@@ -240,6 +244,63 @@ impl kubernetes::Context for Context {
 
 /*
  * ============================================================================
+ * State
+ * ============================================================================
+ */
+enum State {
+    SecretNotFound,
+    SecretKeyNotFound,
+    SecretKeyMalformed(crypto::Error),
+    PublicKeyNotFound,
+    PublicKeyMalformed(crypto::Error),
+    PublicKeyMismatch,
+    HostnameNotFound,
+    HostnameMalformed(crypto::Error),
+    HostnameMismatch,
+    Ready(Hostname),
+}
+
+impl From<&State> for Vec<Condition> {
+    fn from(value: &State) -> Self {
+        vec![Condition {
+            last_transition_time: Time(Utc::now()),
+            message: match value {
+                State::SecretNotFound => "The secret was not found.".into(),
+                State::SecretKeyNotFound => "The secret key was not found.".into(),
+                State::SecretKeyMalformed(e) => format!("The secret key is malformed: {e}."),
+                State::PublicKeyNotFound => "The public key was not found.".into(),
+                State::PublicKeyMalformed(e) => format!("The public key is malformed: {e}."),
+                State::PublicKeyMismatch => "The public key does not match the secret key.".into(),
+                State::HostnameNotFound => "The hostname was not found.".into(),
+                State::HostnameMalformed(e) => format!("The hostname is malformed: {e}."),
+                State::HostnameMismatch => "The hostname does not much the public key.".into(),
+                State::Ready(_) => "The OnionKey is ready.".into(),
+            },
+            observed_generation: None,
+            reason: match value {
+                State::SecretNotFound => "SecretNotFound".into(),
+                State::SecretKeyNotFound => "SecretKeyNotFound".into(),
+                State::SecretKeyMalformed(_) => "SecretKeyMalformed".into(),
+                State::PublicKeyNotFound => "PublicKeyNotFound".into(),
+                State::PublicKeyMalformed(_) => "PublicKeyMalformed".into(),
+                State::PublicKeyMismatch => "PublicKeyMismatch".into(),
+                State::HostnameNotFound => "HostnameNotFound".into(),
+                State::HostnameMalformed(_) => "HostnameMalformed".into(),
+                State::HostnameMismatch => "HostnameMismatch".into(),
+                State::Ready(_) => "Ready".into(),
+            },
+            status: if let State::Ready(_) = value {
+                "True".into()
+            } else {
+                "False".into()
+            },
+            type_: "Ready".into(),
+        }]
+    }
+}
+
+/*
+ * ============================================================================
  * Reconciler
  * ============================================================================
  */
@@ -255,7 +316,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
     let annotations = generate_annotations();
     let labels = object.try_labels()?;
 
-    // secret
+    // Secret
     let state = reconcile_secret(
         &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
         &object,
@@ -275,7 +336,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
     tracing::info!("reconciled");
 
     match state {
-        SecretState::Valid(_) => Ok(Action::requeue(Duration::from_secs(3600))),
+        State::Ready(_) => Ok(Action::requeue(Duration::from_secs(3600))),
         _ => Ok(Action::requeue(Duration::from_secs(5))),
     }
 }
@@ -285,13 +346,13 @@ async fn reconcile_secret(
     object: &OnionKey,
     annotations: &Annotations,
     labels: &Labels,
-) -> Result<SecretState> {
+) -> Result<State> {
     let secret = api.get_opt(&object.secret_name()).await?;
 
     let (state, secret) = generate_secret(object, &secret, annotations, labels);
 
     if let Some(secret) = secret {
-        if let SecretState::Valid(_) = state {
+        if let State::Ready(_) = state {
             api.sync(object, [((), secret)].into()).await?;
         }
     }
@@ -299,20 +360,19 @@ async fn reconcile_secret(
     Ok(state)
 }
 
-async fn reconcile_onion_key(
-    api: &Api<OnionKey>,
-    object: &OnionKey,
-    state: &SecretState,
-) -> Result<()> {
+async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionKey, state: &State) -> Result<()> {
     api.update_status(
         object,
         OnionKeyStatus {
             hostname: match &state {
-                SecretState::Valid(hostname) => Some(hostname.to_string()),
+                State::Ready(hostname) => Some(hostname.to_string()),
                 _ => None,
             },
             auto_generated: object.auto_generate(),
-            state: state.to_string(),
+            conditions: object
+                .status_conditions()
+                .unwrap_or(&Vec::new())
+                .merge_from(&state.into()),
         },
     )
     .await
@@ -322,36 +382,6 @@ fn generate_annotations() -> Annotations {
     Annotations::new(BTreeMap::from([]))
 }
 
-enum SecretState {
-    SecretNotFound,
-    SecretKeyNotFound,
-    SecretKeyMalformed(crypto::Error),
-    PublicKeyNotFound,
-    PublicKeyMalformed(crypto::Error),
-    PublicKeyMismatch,
-    HostnameNotFound,
-    HostnameMalformed(crypto::Error),
-    HostnameMismatch,
-    Valid(Hostname),
-}
-
-impl std::fmt::Display for SecretState {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            SecretState::SecretNotFound => write!(f, "secret not found"),
-            SecretState::SecretKeyNotFound => write!(f, "secret key not found"),
-            SecretState::SecretKeyMalformed(e) => write!(f, "secret key malformed: {e}"),
-            SecretState::PublicKeyNotFound => write!(f, "public key not found"),
-            SecretState::PublicKeyMalformed(e) => write!(f, "public key malformed: {e}"),
-            SecretState::PublicKeyMismatch => write!(f, "public key mismatch"),
-            SecretState::HostnameNotFound => write!(f, "hostname not found"),
-            SecretState::HostnameMalformed(e) => write!(f, "hostname malformed: {e}"),
-            SecretState::HostnameMismatch => write!(f, "hostname mismatch"),
-            SecretState::Valid(_) => write!(f, "valid"),
-        }
-    }
-}
-
 /// only returns a secret if a change needs to be made...
 #[allow(clippy::too_many_lines)]
 fn generate_secret(
@@ -359,7 +389,7 @@ fn generate_secret(
     secret: &Option<Secret>,
     annotations: &Annotations,
     labels: &Labels,
-) -> (SecretState, Option<Secret>) {
+) -> (State, Option<Secret>) {
     fn generate(
         object: &OnionKey,
         annotations: &Annotations,
@@ -400,7 +430,7 @@ fn generate_secret(
 
     let Some(secret) = secret else {
         if !auto_generate {
-            return (SecretState::SecretNotFound, None);
+            return (State::SecretNotFound, None);
         }
 
         tracing::info!("generating secret key");
@@ -421,24 +451,23 @@ fn generate_secret(
             &hostname
         );
 
-        return (SecretState::Valid(hostname), Some(secret));
+        return (State::Ready(hostname), Some(secret));
     };
 
     let secret_key = secret
         .data
         .as_ref()
-        .ok_or(SecretState::SecretKeyNotFound)
+        .ok_or(State::SecretKeyNotFound)
         .and_then(|f| {
             f.get("hs_ed25519_secret_key")
-                .ok_or(SecretState::SecretKeyNotFound)
+                .ok_or(State::SecretKeyNotFound)
         })
         .and_then(|f| {
-            crypto::HiddenServiceSecretKey::try_from_bytes(&f.0)
-                .map_err(SecretState::SecretKeyMalformed)
+            crypto::HiddenServiceSecretKey::try_from_bytes(&f.0).map_err(State::SecretKeyMalformed)
         })
         .and_then(|f| {
             crypto::ExpandedSecretKey::try_from_hidden_service_secret_key(&f)
-                .map_err(SecretState::SecretKeyMalformed)
+                .map_err(State::SecretKeyMalformed)
         });
 
     let secret_key = match secret_key {
@@ -466,31 +495,30 @@ fn generate_secret(
                 &hostname,
             );
 
-            return (SecretState::Valid(hostname), Some(secret));
+            return (State::Ready(hostname), Some(secret));
         }
     };
 
     let public_key = secret
         .data
         .as_ref()
-        .ok_or(SecretState::PublicKeyNotFound)
+        .ok_or(State::PublicKeyNotFound)
         .and_then(|f| {
             f.get("hs_ed25519_public_key")
-                .ok_or(SecretState::PublicKeyNotFound)
+                .ok_or(State::PublicKeyNotFound)
         })
         .and_then(|f| {
-            crypto::HiddenServicePublicKey::try_from_bytes(&f.0)
-                .map_err(SecretState::PublicKeyMalformed)
+            crypto::HiddenServicePublicKey::try_from_bytes(&f.0).map_err(State::PublicKeyMalformed)
         })
         .and_then(|f| {
             crypto::PublicKey::try_from_hidden_service_public_key(&f)
-                .map_err(SecretState::PublicKeyMalformed)
+                .map_err(State::PublicKeyMalformed)
         })
         .and_then(|f| {
             if f == secret_key.public_key() {
                 Ok(f)
             } else {
-                Err(SecretState::PublicKeyMismatch)
+                Err(State::PublicKeyMismatch)
             }
         });
 
@@ -516,23 +544,21 @@ fn generate_secret(
                 &hostname,
             );
 
-            return (SecretState::Valid(hostname), Some(secret));
+            return (State::Ready(hostname), Some(secret));
         }
     };
 
     let hostname = secret
         .data
         .as_ref()
-        .ok_or(SecretState::HostnameNotFound)
-        .and_then(|f| f.get("hostname").ok_or(SecretState::HostnameNotFound))
-        .and_then(|f| {
-            crypto::Hostname::try_from_bytes(&f.0).map_err(SecretState::HostnameMalformed)
-        })
+        .ok_or(State::HostnameNotFound)
+        .and_then(|f| f.get("hostname").ok_or(State::HostnameNotFound))
+        .and_then(|f| crypto::Hostname::try_from_bytes(&f.0).map_err(State::HostnameMalformed))
         .and_then(|f| {
             if f == public_key.hostname() {
                 Ok(f)
             } else {
-                Err(SecretState::HostnameMismatch)
+                Err(State::HostnameMismatch)
             }
         });
 
@@ -555,7 +581,7 @@ fn generate_secret(
                 &hostname,
             );
 
-            return (SecretState::Valid(hostname), Some(secret));
+            return (State::Ready(hostname), Some(secret));
         }
     };
 
@@ -571,8 +597,8 @@ fn generate_secret(
             &hostname,
         );
 
-        return (SecretState::Valid(hostname), Some(secret));
+        return (State::Ready(hostname), Some(secret));
     }
 
-    (SecretState::Valid(hostname), None)
+    (State::Ready(hostname), None)
 }

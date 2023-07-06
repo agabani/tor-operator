@@ -55,29 +55,14 @@ The Tor Operator will create a load balanced OnionService using an auto generate
 {% include "../../example/templates/toringress_full/toringress.yaml" %}
 ```
 
-## Features
+## Conditions
 
-### State
-
-State can be observed in the status.
-
-```
-kubectl describe toringresses example
-```
-
-```
-# ...
-Status:
-  State:     running
-# ...
-```
-
-Possible values for `State`:
-
-- `OnionBalance OnionKey not found`
-- `OnionBalance OnionKey hostname not found`
-- `OnionService OnionKey hostname not found`
-- `running`
+{%
+  include "./toringress.yaml"
+  start="Represents the latest available observations of a deployment's current state."
+  end="items:"
+  dedent=true
+%}
 
 ## OpenAPI Spec
 

@@ -9,6 +9,7 @@
     "apimachinery",
     "apiserver",
     "autoscaler",
+    "chrono",
     "crds",
     "csprng",
     "dalek",

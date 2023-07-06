@@ -10,7 +10,8 @@ use k8s_openapi::{
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
-    apimachinery::pkg::apis::meta::v1::LabelSelector,
+    apimachinery::pkg::apis::meta::v1::{Condition, LabelSelector, Time},
+    chrono::Utc,
 };
 use kube::{
     core::ObjectMeta,
@@ -22,8 +23,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, DeploymentContainerResources, Labels, OBConfig,
-        Object, Resource as KubernetesResource, ResourceName, SelectorLabels, Subset, Torrc,
+        self, error_policy, Annotations, Api, ConditionsExt, DeploymentContainerResources, Labels,
+        OBConfig, Object, Resource as KubernetesResource, ResourceName, SelectorLabels, Subset,
+        Torrc,
     },
     metrics::Metrics,
     onion_key::OnionKey,
@@ -43,7 +45,7 @@ use crate::{
 /// Running a Tor Onion Service gives your users all the security of HTTPS with
 /// the added privacy benefits of Tor.
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[kube(
     group = "tor.agabani.co.uk",
     kind = "OnionService",
@@ -76,7 +78,7 @@ pub struct OnionServiceSpec {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecConfigMap {
     /// Name of the Config Map.
@@ -86,7 +88,7 @@ pub struct OnionServiceSpecConfigMap {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeployment {
     /// Containers of the Deployment.
@@ -99,7 +101,7 @@ pub struct OnionServiceSpecDeployment {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeploymentContainers {
     /// Tor container.
@@ -107,7 +109,7 @@ pub struct OnionServiceSpecDeploymentContainers {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeploymentContainersTor {
     /// Resources of the container.
@@ -115,7 +117,7 @@ pub struct OnionServiceSpecDeploymentContainersTor {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecOnionBalance {
     /// OnionKey reference of the OnionBalance.
@@ -123,7 +125,7 @@ pub struct OnionServiceSpecOnionBalance {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecOnionBalanceOnionKey {
     /// Hostname value of the OnionKey.
@@ -133,7 +135,7 @@ pub struct OnionServiceSpecOnionBalanceOnionKey {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecOnionKey {
     /// Name of the OnionKey.
@@ -141,7 +143,7 @@ pub struct OnionServiceSpecOnionKey {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecHiddenServicePort {
     /// The target any incoming traffic will be redirect to.
@@ -156,22 +158,25 @@ pub struct OnionServiceSpecHiddenServicePort {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceStatus {
+    /// Represents the latest available observations of a deployment's current state.
+    ///
+    /// ### Initialized
+    ///
+    /// `Initialized`
+    ///
+    /// ### OnionKey
+    ///
+    /// `NotFound`, `HostnameNotFound`, `Ready`
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conditions: Vec<Condition>,
+
     /// OnionKey hostname.
     ///
     /// The hostname is only populated once `state` is "running".
     pub hostname: Option<String>,
-
-    /// Human readable description of state.
-    ///
-    /// Possible values:
-    ///
-    /// - OnionKey not found
-    /// - OnionKey hostname not found
-    /// - running
-    pub state: String,
 }
 
 impl OnionService {
@@ -229,6 +234,11 @@ impl OnionService {
     #[must_use]
     pub fn ports(&self) -> &[OnionServiceSpecHiddenServicePort] {
         &self.spec.ports
+    }
+
+    #[must_use]
+    pub fn status_conditions(&self) -> Option<&Vec<Condition>> {
+        self.status.as_ref().map(|f| f.conditions.as_ref())
     }
 }
 
@@ -335,15 +345,46 @@ impl kubernetes::Context for Context {
 enum State {
     OnionKeyNotFound,
     OnionKeyHostnameNotFound,
-    Running(OnionKey),
+    Initialized(OnionKey),
 }
 
-impl std::fmt::Display for State {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            State::OnionKeyNotFound => write!(f, "OnionKey not found"),
-            State::OnionKeyHostnameNotFound => write!(f, "OnionKey hostname not found"),
-            State::Running(_) => write!(f, "running"),
+impl From<&State> for Vec<Condition> {
+    fn from(value: &State) -> Self {
+        match value {
+            State::OnionKeyNotFound => vec![Condition {
+                last_transition_time: Time(Utc::now()),
+                message: "The OnionKey was not found.".into(),
+                observed_generation: None,
+                reason: "NotFound".into(),
+                status: "False".into(),
+                type_: "OnionKey".into(),
+            }],
+            State::OnionKeyHostnameNotFound => vec![Condition {
+                last_transition_time: Time(Utc::now()),
+                message: "The OnionKey does not have a hostname.".into(),
+                observed_generation: None,
+                reason: "HostnameNotFound".into(),
+                status: "False".into(),
+                type_: "OnionKey".into(),
+            }],
+            State::Initialized(_) => vec![
+                Condition {
+                    last_transition_time: Time(Utc::now()),
+                    message: "The OnionKey is ready.".into(),
+                    observed_generation: None,
+                    reason: "Ready".into(),
+                    status: "True".into(),
+                    type_: "OnionKey".into(),
+                },
+                Condition {
+                    last_transition_time: Time(Utc::now()),
+                    message: "The OnionService is initialized.".into(),
+                    observed_generation: None,
+                    reason: "Initialized".into(),
+                    status: "True".into(),
+                    type_: "Initialized".into(),
+                },
+            ],
         }
     }
 }
@@ -376,8 +417,8 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     )
     .await?;
 
-    if let State::Running(onion_key) = &state {
-        // config map
+    if let State::Initialized(onion_key) = &state {
+        // ConfigMap
         reconcile_config_map(
             &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
             &object,
@@ -388,7 +429,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
         )
         .await?;
 
-        // deployment
+        // Deployment
         reconcile_deployment(
             &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
             &ctx.config,
@@ -412,7 +453,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     tracing::info!("reconciled");
 
     match state {
-        State::Running(_) => Ok(Action::requeue(Duration::from_secs(3600))),
+        State::Initialized(_) => Ok(Action::requeue(Duration::from_secs(3600))),
         _ => Ok(Action::requeue(Duration::from_secs(5))),
     }
 }
@@ -428,7 +469,7 @@ async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionService) -> Resu
         return Ok(State::OnionKeyHostnameNotFound);
     }
 
-    Ok(State::Running(onion_key))
+    Ok(State::Initialized(onion_key))
 }
 
 async fn reconcile_config_map(
@@ -487,12 +528,15 @@ async fn reconcile_onion_service(
     api.update_status(
         object,
         OnionServiceStatus {
-            hostname: if let State::Running(onion_key) = state {
+            conditions: object
+                .status_conditions()
+                .unwrap_or(&Vec::new())
+                .merge_from(&state.into()),
+            hostname: if let State::Initialized(onion_key) = state {
                 onion_key.hostname().map(Into::into)
             } else {
                 None
             },
-            state: state.to_string(),
         },
     )
     .await
