@@ -9,6 +9,23 @@ spec:
     config_map:
       name: tor-ingress-{{ include "example.fullname" . }}-full-2
     deployment:
+      containers:
+        onion_balance:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        tor:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
       name: tor-ingress-{{ include "example.fullname" . }}-full-3
     name: tor-ingress-{{ include "example.fullname" . }}-full-4
     onion_key:
@@ -17,14 +34,16 @@ spec:
     config_map:
       name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-6
     deployment:
+      containers:
+        tor:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
       name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-7
-      resources:
-        limits:
-          cpu: 200m
-          memory: 256Mi
-        requests:
-          cpu: 100m
-          memory: 128Mi
     name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-8
     onion_key:
       name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-9

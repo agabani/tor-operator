@@ -4,7 +4,7 @@
 
 ### Added
 
-- Onion Service and Tor Ingress configurable resources.
+- Onion Balance, Onion Service and Tor Ingress configurable resources.
 - Tor Ingress Custom Resource Definition scale subresource.
 - Tor Ingress Horizontal Pod Autoscaler support.
 

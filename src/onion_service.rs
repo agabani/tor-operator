@@ -6,11 +6,11 @@ use k8s_openapi::{
         apps::v1::{Deployment, DeploymentSpec},
         core::v1::{
             ConfigMap, ConfigMapVolumeSource, Container, ExecAction, KeyToPath, PodSpec,
-            PodTemplateSpec, Probe, ResourceRequirements, SecretVolumeSource, Volume, VolumeMount,
+            PodTemplateSpec, Probe, SecretVolumeSource, Volume, VolumeMount,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
-    apimachinery::pkg::{api::resource::Quantity, apis::meta::v1::LabelSelector},
+    apimachinery::pkg::apis::meta::v1::LabelSelector,
 };
 use kube::{
     core::ObjectMeta,
@@ -22,8 +22,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, Labels, OBConfig, Object,
-        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset, Torrc,
+        self, error_policy, Annotations, Api, DeploymentContainerResources, Labels, OBConfig,
+        Object, Resource as KubernetesResource, ResourceName, SelectorLabels, Subset, Torrc,
     },
     metrics::Metrics,
     onion_key::OnionKey,
@@ -86,43 +86,27 @@ pub struct OnionServiceSpecConfigMap {
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 pub struct OnionServiceSpecDeployment {
+    /// Containers of the Deployment.
+    pub containers: Option<OnionServiceSpecDeploymentContainers>,
+
     /// Name of the Deployment.
     ///
     /// Default: name of the Onion Service
     pub name: Option<String>,
-
-    /// Resources of the Deployment.
-    pub resources: Option<OnionServiceSpecDeploymentResources>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
-pub struct OnionServiceSpecDeploymentResources {
-    /// Limits of the Resources.
-    pub limits: Option<OnionServiceSpecDeploymentResourcesLimits>,
-
-    /// Requests of the Resources.
-    pub requests: Option<OnionServiceSpecDeploymentResourcesRequests>,
+pub struct OnionServiceSpecDeploymentContainers {
+    /// Tor container.
+    pub tor: Option<OnionServiceSpecDeploymentContainersTor>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
-pub struct OnionServiceSpecDeploymentResourcesLimits {
-    /// CPU quantity of the Limits.
-    pub cpu: Option<String>,
-
-    /// Memory quantity of the Limits.
-    pub memory: Option<String>,
-}
-
-#[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
-pub struct OnionServiceSpecDeploymentResourcesRequests {
-    /// CPU quantity of the Requests.
-    pub cpu: Option<String>,
-
-    /// Memory quantity of the Requests.
-    pub memory: Option<String>,
+pub struct OnionServiceSpecDeploymentContainersTor {
+    /// Resources of the container.
+    pub resources: Option<DeploymentContainerResources>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -196,56 +180,22 @@ impl OnionService {
     }
 
     #[must_use]
+    pub fn deployment_containers_tor_resources(&self) -> Option<&DeploymentContainerResources> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.containers.as_ref())
+            .and_then(|f| f.tor.as_ref())
+            .and_then(|f| f.resources.as_ref())
+    }
+
+    #[must_use]
     pub fn deployment_name(&self) -> ResourceName {
         self.spec
             .deployment
             .as_ref()
             .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), Into::into)
-    }
-
-    #[must_use]
-    pub fn deployment_resources_limits_cpu(&self) -> Option<&str> {
-        self.spec
-            .deployment
-            .as_ref()
-            .and_then(|f| f.resources.as_ref())
-            .and_then(|f| f.limits.as_ref())
-            .and_then(|f| f.cpu.as_ref())
-            .map(String::as_str)
-    }
-
-    #[must_use]
-    pub fn deployment_resources_limits_memory(&self) -> Option<&str> {
-        self.spec
-            .deployment
-            .as_ref()
-            .and_then(|f| f.resources.as_ref())
-            .and_then(|f| f.limits.as_ref())
-            .and_then(|f| f.memory.as_ref())
-            .map(String::as_str)
-    }
-
-    #[must_use]
-    pub fn deployment_resources_requests_cpu(&self) -> Option<&str> {
-        self.spec
-            .deployment
-            .as_ref()
-            .and_then(|f| f.resources.as_ref())
-            .and_then(|f| f.requests.as_ref())
-            .and_then(|f| f.cpu.as_ref())
-            .map(String::as_str)
-    }
-
-    #[must_use]
-    pub fn deployment_resources_requests_memory(&self) -> Option<&str> {
-        self.spec
-            .deployment
-            .as_ref()
-            .and_then(|f| f.resources.as_ref())
-            .and_then(|f| f.requests.as_ref())
-            .and_then(|f| f.memory.as_ref())
-            .map(String::as_str)
     }
 
     #[must_use]
@@ -672,29 +622,7 @@ fn generate_deployment(
                             timeout_seconds: Some(1),
                             ..Default::default()
                         }),
-                        resources: Some(ResourceRequirements {
-                            limits: Some({
-                                let mut map = BTreeMap::new();
-                                if let Some(quantity) = object.deployment_resources_limits_cpu() {
-                                    map.insert("cpu".into(), Quantity(quantity.into()));
-                                }
-                                if let Some(quantity) = object.deployment_resources_limits_memory() {
-                                    map.insert("memory".into(), Quantity(quantity.into()));
-                                }
-                                map
-                            }),
-                            requests: Some({
-                                let mut map = BTreeMap::new();
-                                if let Some(quantity) = object.deployment_resources_requests_cpu() {
-                                    map.insert("cpu".into(), Quantity(quantity.into()));
-                                }
-                                if let Some(quantity) = object.deployment_resources_requests_memory() {
-                                    map.insert("memory".into(), Quantity(quantity.into()));
-                                }
-                                map
-                            }),
-                            ..Default::default()
-                         }),
+                        resources: object.deployment_containers_tor_resources().map(Into::into),
                         volume_mounts: Some(vec![
                             VolumeMount {
                                 mount_path: "/etc/secrets".into(),

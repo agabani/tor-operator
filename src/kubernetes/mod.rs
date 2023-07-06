@@ -3,6 +3,7 @@ mod api;
 mod config_yaml;
 mod constants;
 mod context;
+mod deployment_container_resources;
 mod error_policy;
 mod labels;
 mod ob_config;
@@ -19,6 +20,10 @@ pub use annotations::Annotations;
 pub use api::Api;
 pub use config_yaml::ConfigYaml;
 pub use context::Context;
+pub use deployment_container_resources::{
+    DeploymentContainerResources, DeploymentContainerResourcesLimits,
+    DeploymentContainerResourcesRequests,
+};
 pub use error_policy::error_policy;
 pub use labels::Labels;
 pub use ob_config::OBConfig;
