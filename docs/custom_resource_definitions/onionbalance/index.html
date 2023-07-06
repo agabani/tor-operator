@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onion_balance/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionbalance/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Onion Balance - Tor Operator</title>
+    <title>OnionBalance - Tor Operator</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Onion Balance";
-        var mkdocs_page_input_path = "custom_resource_definitions/onion_balance.md";
-        var mkdocs_page_url = "/tor-operator/docs/custom_resource_definitions/onion_balance/";
+        var mkdocs_page_name = "OnionBalance";
+        var mkdocs_page_input_path = "custom_resource_definitions/onionbalance.md";
+        var mkdocs_page_url = "/tor-operator/docs/custom_resource_definitions/onionbalance/";
       </script>
     
     <script src="../../js/jquery-3.6.0.min.js" defer></script>
@@ -45,6 +45,10 @@
                 </li>
               </ul>
               <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../changelog/">Changelog</a>
+                </li>
+              </ul>
+              <ul>
                 <li class="toctree-l1"><a class="reference internal" href="../../cli/">CLI</a>
                 </li>
               </ul>
@@ -58,7 +62,7 @@
               </ul>
               <p class="caption"><span class="caption-text">Custom Resource Definitions</span></p>
               <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Onion Balance</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">OnionBalance</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
         <ul>
@@ -78,11 +82,11 @@
     </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../onion_key/">Onion Key</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionkey/">OnionKey</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../onion_service/">Onion Service</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionservice/">OnionService</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../tor_ingress/">Tor Ingress</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../toringress/">TorIngress</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Observability</span></p>
@@ -119,9 +123,9 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
           <li>Custom Resource Definitions &raquo;</li>
-      <li>Onion Balance</li>
+      <li>OnionBalance</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/agabani/tor-operator/edit/master/docs/custom_resource_definitions/onion_balance.md" class="icon icon-github"> Edit on GitHub</a>
+          <a href="https://github.com/agabani/tor-operator/edit/master/docs/custom_resource_definitions/onionbalance.md" class="icon icon-github"> Edit on GitHub</a>
     </li>
   </ul>
   <hr/>
@@ -129,15 +133,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="onion-balance">Onion Balance</h1>
-<p>An Onion Balance is an abstraction of a Tor Onion Balance.</p>
+                <h1 id="onionbalance">OnionBalance</h1>
+<p>An OnionBalance is an abstraction of a Tor Onion Balance.</p>
 <p>Tor Onion Balance is the best way to load balance Tor Onion Services. The
 load of introduction and rendezvous requests gets distributed across
 multiple hosts while also increasing resiliency by eliminating single
 points of failure.</p>
 <h2 id="examples">Examples</h2>
 <h3 id="basic">Basic</h3>
-<p>The Tor Operator will create an Onion Balance using an auto generated Onion Key load load balancing a list of Onion Services.</p>
+<p>The Tor Operator will create an OnionBalance using an auto generated OnionKey load balancing a list of OnionServices.</p>
 <pre><code>#onionkey.yaml
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
@@ -146,7 +150,7 @@ metadata:
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  auto_generate: true
+  autoGenerate: true
   secret:
     name: onion-balance-{{ include &quot;example.fullname&quot; . }}
 
@@ -158,15 +162,15 @@ metadata:
   name: onion-balance-{{ include &quot;example.fullname&quot; . }}
   labels: {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  onion_key:
+  onionKey:
     name: onion-balance-{{ include &quot;example.fullname&quot; . }}
-  onion_services:
-    - onion_key:
+  onionServices:
+    - onionKey:
         hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
 
 </code></pre>
 <h3 id="full">Full</h3>
-<p>The Tor Operator will create an Onion Balance using an auto generated Onion Key load load balancing a list of Onion Services.</p>
+<p>The Tor Operator will create an OnionBalance using an auto generated OnionKey load balancing a list of OnionServices.</p>
 <pre><code>#onionkey.yaml
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
@@ -174,7 +178,7 @@ metadata:
   name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
   labels: {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  auto_generate: true
+  autoGenerate: true
   secret:
     name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
 
@@ -187,14 +191,31 @@ metadata:
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  config_map:
+  configMap:
     name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
   deployment:
+    containers:
+      onionBalance:
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      tor:
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
     name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  onion_key:
+  onionKey:
     name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  onion_services:
-    - onion_key:
+  onionServices:
+    - onionKey:
         hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
 
 </code></pre>
@@ -210,8 +231,8 @@ Status:
 </code></pre>
 <p>Possible values for <code>State</code>:</p>
 <ul>
-<li><code>onion key not found</code></li>
-<li><code>onion key hostname not found</code></li>
+<li><code>OnionKey not found</code></li>
+<li><code>OnionKey hostname not found</code></li>
 <li><code>running</code></li>
 </ul>
 <h2 id="openapi-spec">OpenAPI Spec</h2>
@@ -230,13 +251,13 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: The hostname of the onion balance
+    - description: The hostname of the OnionBalance
       jsonPath: .status.hostname
       name: Hostname
       type: string
-    - description: The hostname of onion services
-      jsonPath: .status.onion_services
-      name: Onion Services
+    - description: The hostname of OnionServices
+      jsonPath: .status.onionServices
+      name: OnionServices
       type: number
     - description: Human readable description of state
       jsonPath: .status.state
@@ -252,11 +273,11 @@ spec:
         properties:
           spec:
             description: |-
-              An Onion Balance is an abstraction of a Tor Onion Balance.
+              An `OnionBalance` is an abstraction of a Tor Onion Balance.
 
               Tor Onion Balance is the best way to load balance Tor Onion Services. The load of introduction and rendezvous requests gets distributed across multiple hosts while also increasing resiliency by eliminating single points of failure.
             properties:
-              config_map:
+              configMap:
                 description: Config Map settings.
                 nullable: true
                 properties:
@@ -264,7 +285,7 @@ spec:
                     description: |-
                       Name of the Config Map.
 
-                      Default: name of the Onion Balance
+                      Default: name of the OnionBalance
                     nullable: true
                     type: string
                 type: object
@@ -272,33 +293,110 @@ spec:
                 description: Deployment settings.
                 nullable: true
                 properties:
+                  containers:
+                    description: Containers of the Deployment.
+                    nullable: true
+                    properties:
+                      onionBalance:
+                        description: Onion Balance container.
+                        nullable: true
+                        properties:
+                          resources:
+                            description: Resources of the container.
+                            nullable: true
+                            properties:
+                              limits:
+                                description: Limits of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                type: object
+                              requests:
+                                description: Requests of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      tor:
+                        description: Tor container.
+                        nullable: true
+                        properties:
+                          resources:
+                            description: Resources of the container.
+                            nullable: true
+                            properties:
+                              limits:
+                                description: Limits of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                type: object
+                              requests:
+                                description: Requests of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                    type: object
                   name:
                     description: |-
                       Name of the Deployment.
 
-                      Default: name of the Onion Balance
+                      Default: name of the OnionBalance
                     nullable: true
                     type: string
                 type: object
-              onion_key:
-                description: Onion Key settings.
+              onionKey:
+                description: OnionKey settings.
                 properties:
                   name:
-                    description: Name of the Onion Key.
+                    description: Name of the OnionKey.
                     type: string
                 required:
                 - name
                 type: object
-              onion_services:
-                description: Onion Service part of the Onion Balance load balancing.
+              onionServices:
+                description: OnionService part of the OnionBalance load balancing.
                 items:
                   properties:
-                    onion_key:
-                      description: Onion Key reference of the Onion Service.
+                    onionKey:
+                      description: OnionKey reference of the OnionService.
                       properties:
                         hostname:
                           description: |-
-                            Hostname value of the Onion Key.
+                            Hostname value of the OnionKey.
 
                             Example: &quot;abcdefg.onion&quot;
                           type: string
@@ -306,26 +404,26 @@ spec:
                       - hostname
                       type: object
                   required:
-                  - onion_key
+                  - onionKey
                   type: object
                 type: array
             required:
-            - onion_key
-            - onion_services
-            title: Onion Balance
+            - onionKey
+            - onionServices
+            title: '`OnionBalance`'
             type: object
           status:
             nullable: true
             properties:
               hostname:
                 description: |-
-                  Onion key hostname.
+                  OnionKey hostname.
 
                   The hostname is only populated once `state` is &quot;running&quot;.
                 nullable: true
                 type: string
-              onion_services:
-                description: Number of onion services.
+              onionServices:
+                description: Number of OnionServices.
                 format: int32
                 type: integer
               state:
@@ -334,10 +432,10 @@ spec:
 
                   Possible values:
 
-                  - onion key not found - onion key hostname not found - running
+                  - OnionKey not found - OnionKey hostname not found - running
                 type: string
             required:
-            - onion_services
+            - onionServices
             - state
             type: object
         required:
@@ -355,7 +453,7 @@ spec:
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
         <a href="../../helm/" class="btn btn-neutral float-left" title="Helm"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../onion_key/" class="btn btn-neutral float-right" title="Onion Key">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../onionkey/" class="btn btn-neutral float-right" title="OnionKey">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -385,7 +483,7 @@ spec:
       <span><a href="../../helm/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../onion_key/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../onionkey/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

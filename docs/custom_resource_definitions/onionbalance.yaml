@@ -13,13 +13,13 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: The hostname of the onion balance
+    - description: The hostname of the OnionBalance
       jsonPath: .status.hostname
       name: Hostname
       type: string
-    - description: The hostname of onion services
-      jsonPath: .status.onion_services
-      name: Onion Services
+    - description: The hostname of OnionServices
+      jsonPath: .status.onionServices
+      name: OnionServices
       type: number
     - description: Human readable description of state
       jsonPath: .status.state
@@ -35,11 +35,11 @@ spec:
         properties:
           spec:
             description: |-
-              An Onion Balance is an abstraction of a Tor Onion Balance.
+              An `OnionBalance` is an abstraction of a Tor Onion Balance.
 
               Tor Onion Balance is the best way to load balance Tor Onion Services. The load of introduction and rendezvous requests gets distributed across multiple hosts while also increasing resiliency by eliminating single points of failure.
             properties:
-              config_map:
+              configMap:
                 description: Config Map settings.
                 nullable: true
                 properties:
@@ -47,7 +47,7 @@ spec:
                     description: |-
                       Name of the Config Map.
 
-                      Default: name of the Onion Balance
+                      Default: name of the OnionBalance
                     nullable: true
                     type: string
                 type: object
@@ -55,33 +55,110 @@ spec:
                 description: Deployment settings.
                 nullable: true
                 properties:
+                  containers:
+                    description: Containers of the Deployment.
+                    nullable: true
+                    properties:
+                      onionBalance:
+                        description: Onion Balance container.
+                        nullable: true
+                        properties:
+                          resources:
+                            description: Resources of the container.
+                            nullable: true
+                            properties:
+                              limits:
+                                description: Limits of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                type: object
+                              requests:
+                                description: Requests of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                      tor:
+                        description: Tor container.
+                        nullable: true
+                        properties:
+                          resources:
+                            description: Resources of the container.
+                            nullable: true
+                            properties:
+                              limits:
+                                description: Limits of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Limits.
+                                    nullable: true
+                                    type: string
+                                type: object
+                              requests:
+                                description: Requests of the Resources.
+                                nullable: true
+                                properties:
+                                  cpu:
+                                    description: CPU quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                  memory:
+                                    description: Memory quantity of the Requests.
+                                    nullable: true
+                                    type: string
+                                type: object
+                            type: object
+                        type: object
+                    type: object
                   name:
                     description: |-
                       Name of the Deployment.
 
-                      Default: name of the Onion Balance
+                      Default: name of the OnionBalance
                     nullable: true
                     type: string
                 type: object
-              onion_key:
-                description: Onion Key settings.
+              onionKey:
+                description: OnionKey settings.
                 properties:
                   name:
-                    description: Name of the Onion Key.
+                    description: Name of the OnionKey.
                     type: string
                 required:
                 - name
                 type: object
-              onion_services:
-                description: Onion Service part of the Onion Balance load balancing.
+              onionServices:
+                description: OnionService part of the OnionBalance load balancing.
                 items:
                   properties:
-                    onion_key:
-                      description: Onion Key reference of the Onion Service.
+                    onionKey:
+                      description: OnionKey reference of the OnionService.
                       properties:
                         hostname:
                           description: |-
-                            Hostname value of the Onion Key.
+                            Hostname value of the OnionKey.
 
                             Example: "abcdefg.onion"
                           type: string
@@ -89,26 +166,26 @@ spec:
                       - hostname
                       type: object
                   required:
-                  - onion_key
+                  - onionKey
                   type: object
                 type: array
             required:
-            - onion_key
-            - onion_services
-            title: Onion Balance
+            - onionKey
+            - onionServices
+            title: '`OnionBalance`'
             type: object
           status:
             nullable: true
             properties:
               hostname:
                 description: |-
-                  Onion key hostname.
+                  OnionKey hostname.
 
                   The hostname is only populated once `state` is "running".
                 nullable: true
                 type: string
-              onion_services:
-                description: Number of onion services.
+              onionServices:
+                description: Number of OnionServices.
                 format: int32
                 type: integer
               state:
@@ -117,10 +194,10 @@ spec:
 
                   Possible values:
 
-                  - onion key not found - onion key hostname not found - running
+                  - OnionKey not found - OnionKey hostname not found - running
                 type: string
             required:
-            - onion_services
+            - onionServices
             - state
             type: object
         required:

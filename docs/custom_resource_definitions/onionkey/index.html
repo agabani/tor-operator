@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onion_key/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionkey/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Onion Key - Tor Operator</title>
+    <title>OnionKey - Tor Operator</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Onion Key";
-        var mkdocs_page_input_path = "custom_resource_definitions/onion_key.md";
-        var mkdocs_page_url = "/tor-operator/docs/custom_resource_definitions/onion_key/";
+        var mkdocs_page_name = "OnionKey";
+        var mkdocs_page_input_path = "custom_resource_definitions/onionkey.md";
+        var mkdocs_page_url = "/tor-operator/docs/custom_resource_definitions/onionkey/";
       </script>
     
     <script src="../../js/jquery-3.6.0.min.js" defer></script>
@@ -45,6 +45,10 @@
                 </li>
               </ul>
               <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../changelog/">Changelog</a>
+                </li>
+              </ul>
+              <ul>
                 <li class="toctree-l1"><a class="reference internal" href="../../cli/">CLI</a>
                 </li>
               </ul>
@@ -58,9 +62,9 @@
               </ul>
               <p class="caption"><span class="caption-text">Custom Resource Definitions</span></p>
               <ul class="current">
-                  <li class="toctree-l1"><a class="reference internal" href="../onion_balance/">Onion Balance</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionbalance/">OnionBalance</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Onion Key</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">OnionKey</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
         <ul>
@@ -82,9 +86,9 @@
     </li>
     </ul>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../onion_service/">Onion Service</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionservice/">OnionService</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../tor_ingress/">Tor Ingress</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../toringress/">TorIngress</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Observability</span></p>
@@ -121,9 +125,9 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
           <li>Custom Resource Definitions &raquo;</li>
-      <li>Onion Key</li>
+      <li>OnionKey</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/agabani/tor-operator/edit/master/docs/custom_resource_definitions/onion_key.md" class="icon icon-github"> Edit on GitHub</a>
+          <a href="https://github.com/agabani/tor-operator/edit/master/docs/custom_resource_definitions/onionkey.md" class="icon icon-github"> Edit on GitHub</a>
     </li>
   </ul>
   <hr/>
@@ -131,15 +135,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="onion-key">Onion Key</h1>
-<p>An Onion Key is an abstraction of a Tor Onion Key.</p>
+                <h1 id="onionkey">OnionKey</h1>
+<p>An OnionKey is an abstraction of a Tor Onion Key.</p>
 <p>A Tor Onion Key consists of the following files:</p>
 <ul>
 <li><code>hostname</code></li>
 <li><code>hs_ed25519_public_key</code></li>
 <li><code>hs_ed25519_public_key</code></li>
 </ul>
-<p>A user can import their existing Tor Onion keys by creating a secret.</p>
+<p>A user can import their existing Tor Onion Key by creating a secret.</p>
 <pre><code> kubectl create secret generic tor-ingress-example \
    --from-file=hostname=./hostname \
    --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \
@@ -177,7 +181,7 @@ spec:
 
 </code></pre>
 <h3 id="auto-generate">Auto Generate</h3>
-<p>The Tor Operator will auto generated a random Onion Key and store it in a <code>Secret</code> on your behalf.</p>
+<p>The Tor Operator will auto generated a random OnionKey and store it in a <code>Secret</code> on your behalf.</p>
 <pre><code>#onionkey.yaml
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
@@ -186,22 +190,22 @@ metadata:
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  auto_generate: true
+  autoGenerate: true
   secret:
     name: onion-key-{{ include &quot;example.fullname&quot; . }}-auto-generate
 
 </code></pre>
 <h2 id="features">Features</h2>
 <h3 id="auto-generate_1">Auto Generate</h3>
-<p>The Tor Operator will generate a random Onion Key and save it in the
+<p>The Tor Operator will generate a random OnionKey and save it in the
 secret specified in <code>.secret.name</code>.</p>
 <ul>
-<li>If the Onion Key's secret key is missing or malformed, the Tor Operator
+<li>If the OnionKey's secret key is missing or malformed, the Tor Operator
   will recreate the secret key.</li>
-<li>If the Onion Key's public key is missing, malformed, or does not match
+<li>If the OnionKey's public key is missing, malformed, or does not match
   the secret key, the Tor Operator will deterministically recreate the
   public key from the secret key.</li>
-<li>If the Onion Key's hostname is missing, malformed, or does not match
+<li>If the OnionKey's hostname is missing, malformed, or does not match
   the public key, the Tor Operator will deterministically recreate the
   hostname from the public key.</li>
 </ul>
@@ -249,12 +253,12 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: The hostname of the onion key
+    - description: The hostname of the OnionKey
       jsonPath: .status.hostname
       name: Hostname
       type: string
-    - description: Auto generated onion key
-      jsonPath: .spec.auto_generate
+    - description: Auto generated OnionKey
+      jsonPath: .status.autoGenerated
       name: Auto Generated
       type: boolean
     - description: Human readable description of state
@@ -271,21 +275,22 @@ spec:
         properties:
           spec:
             description: |-
-              An Onion Key is an abstraction of a Tor Onion Key.
+              An `OnionKey` is an abstraction of a Tor Onion Key.
 
               A Tor Onion Key consists of the following files:
 
               - `hostname` - `hs_ed25519_public_key` - `hs_ed25519_public_key`
 
-              A user can import their existing Tor Onion keys by creating a secret.
+              A user can import their existing Tor Onion Key by creating a secret.
 
               ```ignore kubectl create secret generic tor-ingress-example \ --from-file=hostname=./hostname \ --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \ --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key ```
 
-              A user can have the Tor Operator create a new random Onion Key by using the auto generate feature controlled by `.auto_generate`.
+              A user can have the Tor Operator create a new random Tor Onion Key by using the auto generate feature controlled by `.auto_generate`.
             properties:
-              auto_generate:
+              autoGenerate:
+                default: false
                 description: |-
-                  Auto generate a random onion key. default: false.
+                  Auto generate a random Onion Key. default: false.
 
                   ## Auto Generate: False
 
@@ -295,12 +300,11 @@ spec:
 
                   The Tor Operator will generate a random Onion Key and save it in the secret specified in `.secret.name`.
 
-                  If the Onion Key's secret key is missing or malformed, the Tor Operator will recreate the secret key.
+                  If the OnionKey's secret key is missing or malformed, the Tor Operator will recreate the secret key.
 
-                  If the Onion Key's public key is missing, malformed, or does not match the secret key, the Tor Operator will deterministically recreate the public key from the secret key.
+                  If the OnionKey's public key is missing, malformed, or does not match the secret key, the Tor Operator will deterministically recreate the public key from the secret key.
 
-                  If the Onion Key's hostname is missing, malformed, or does not match the public key, the Tor Operator will deterministically recreate the hostname from the public key.
-                nullable: true
+                  If the OnionKey's hostname is missing, malformed, or does not match the public key, the Tor Operator will deterministically recreate the hostname from the public key.
                 title: Auto Generate
                 type: boolean
               secret:
@@ -317,17 +321,17 @@ spec:
                 type: object
             required:
             - secret
-            title: Onion Key
+            title: '`OnionKey`'
             type: object
           status:
             nullable: true
             properties:
-              auto_generated:
-                description: Auto generated onion key.
+              autoGenerated:
+                description: Auto generated OnionKey.
                 type: boolean
               hostname:
                 description: |-
-                  Onion key hostname.
+                  OnionKey hostname.
 
                   The hostname is only populated once `state` is &quot;valid&quot;.
                 nullable: true
@@ -341,7 +345,7 @@ spec:
                   - secret not found - secret key not found - secret key malformed: (reason) - public key not found - public key malformed: (reason) - public key mismatch - hostname not found - hostname malformed: (reason) - hostname mismatch - valid
                 type: string
             required:
-            - auto_generated
+            - autoGenerated
             - state
             type: object
         required:
@@ -358,8 +362,8 @@ spec:
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../onion_balance/" class="btn btn-neutral float-left" title="Onion Balance"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../onion_service/" class="btn btn-neutral float-right" title="Onion Service">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../onionbalance/" class="btn btn-neutral float-left" title="OnionBalance"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../onionservice/" class="btn btn-neutral float-right" title="OnionService">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -386,10 +390,10 @@ spec:
         </span>
     
     
-      <span><a href="../onion_balance/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../onionbalance/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../onion_service/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../onionservice/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

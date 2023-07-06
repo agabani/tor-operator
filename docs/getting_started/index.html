@@ -51,6 +51,10 @@
                 </li>
               </ul>
               <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../changelog/">Changelog</a>
+                </li>
+              </ul>
+              <ul>
                 <li class="toctree-l1"><a class="reference internal" href="../cli/">CLI</a>
                 </li>
               </ul>
@@ -64,13 +68,13 @@
               </ul>
               <p class="caption"><span class="caption-text">Custom Resource Definitions</span></p>
               <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/onion_balance/">Onion Balance</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/onionbalance/">OnionBalance</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/onion_key/">Onion Key</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/onionkey/">OnionKey</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/onion_service/">Onion Service</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/onionservice/">OnionService</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/tor_ingress/">Tor Ingress</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/toringress/">TorIngress</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Observability</span></p>
@@ -117,6 +121,8 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="getting-started">Getting Started</h1>
+<!-- BEGIN INCLUDE ../README.md '&lt;!--getting-started-start--&gt;' '&lt;!--getting-started-end--&gt;' -->
+
 <h2 id="installation">Installation</h2>
 <ol>
 <li>
@@ -142,7 +148,7 @@
 <li><code>hs_ed25519_public_key</code></li>
 </ul>
 <p>or generate a new Onion Key using:</p>
-<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag 0.0.2
+<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag 0.0.3
 tor-operator onion-key generate
 </code></pre>
 </li>
@@ -175,10 +181,10 @@ kind: TorIngress
 metadata:
   name: tor-ingress-example
 spec:
-  onion_balance:
-    onion_key:
+  onionBalance:
+    onionKey:
       name: tor-ingress-example
-  onion_service:
+  onionService:
     ports:
       - target: example:80
         virtport: 80
@@ -187,12 +193,13 @@ spec:
 <p><code>kubectl apply -f toringress.yaml</code></p>
 </li>
 </ol>
+<!-- END INCLUDE -->
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
         <a href=".." class="btn btn-neutral float-left" title="Tor Operator"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../cli/" class="btn btn-neutral float-right" title="CLI">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../changelog/" class="btn btn-neutral float-right" title="Changelog">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -222,7 +229,7 @@ spec:
       <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../cli/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../changelog/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

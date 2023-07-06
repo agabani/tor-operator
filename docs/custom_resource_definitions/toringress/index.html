@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/custom_resource_definitions/tor_ingress/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/custom_resource_definitions/toringress/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Tor Ingress - Tor Operator</title>
+    <title>TorIngress - Tor Operator</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Tor Ingress";
-        var mkdocs_page_input_path = "custom_resource_definitions/tor_ingress.md";
-        var mkdocs_page_url = "/tor-operator/docs/custom_resource_definitions/tor_ingress/";
+        var mkdocs_page_name = "TorIngress";
+        var mkdocs_page_input_path = "custom_resource_definitions/toringress.md";
+        var mkdocs_page_url = "/tor-operator/docs/custom_resource_definitions/toringress/";
       </script>
     
     <script src="../../js/jquery-3.6.0.min.js" defer></script>
@@ -45,6 +45,10 @@
                 </li>
               </ul>
               <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../changelog/">Changelog</a>
+                </li>
+              </ul>
+              <ul>
                 <li class="toctree-l1"><a class="reference internal" href="../../cli/">CLI</a>
                 </li>
               </ul>
@@ -58,17 +62,19 @@
               </ul>
               <p class="caption"><span class="caption-text">Custom Resource Definitions</span></p>
               <ul class="current">
-                  <li class="toctree-l1"><a class="reference internal" href="../onion_balance/">Onion Balance</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionbalance/">OnionBalance</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../onion_key/">Onion Key</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionkey/">OnionKey</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../onion_service/">Onion Service</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionservice/">OnionService</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Tor Ingress</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">TorIngress</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#horizontal-pod-autoscaler">Horizontal Pod Autoscaler</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#full">Full</a>
     </li>
@@ -119,9 +125,9 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
           <li>Custom Resource Definitions &raquo;</li>
-      <li>Tor Ingress</li>
+      <li>TorIngress</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/agabani/tor-operator/edit/master/docs/custom_resource_definitions/tor_ingress.md" class="icon icon-github"> Edit on GitHub</a>
+          <a href="https://github.com/agabani/tor-operator/edit/master/docs/custom_resource_definitions/toringress.md" class="icon icon-github"> Edit on GitHub</a>
     </li>
   </ul>
   <hr/>
@@ -129,13 +135,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="tor-ingress">Tor Ingress</h1>
-<p>A Tor Ingress is collection of Onion Services load balanced by a Onion Balance.</p>
-<p>The user must provide the Onion Key for the Onion Balance.</p>
-<p>The Tor Operator wil auto generate random Onion Keys for the Onion Services.</p>
+                <h1 id="toringress">TorIngress</h1>
+<p>A TorIngress is collection of OnionServices load balanced by a OnionBalance.</p>
+<p>The user must provide the OnionKey for the OnionBalance.</p>
+<p>The Tor Operator wil auto generate random OnionKeys for the OnionServices.</p>
 <h2 id="examples">Examples</h2>
 <h3 id="basic">Basic</h3>
-<p>The Tor Operator will create a load balanced Onion Service using an auto generated Onion Key for the Onion Balance instance.</p>
+<p>The Tor Operator will create a load balanced OnionService using an auto generated OnionKey for the OnionBalance instance.</p>
 <pre><code>#onionkey.yaml
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
@@ -144,7 +150,7 @@ metadata:
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  auto_generate: true
+  autoGenerate: true
   secret:
     name: tor-ingress-{{ include &quot;example.fullname&quot; . }}
 
@@ -157,17 +163,71 @@ metadata:
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  onion_balance:
-    onion_key:
+  onionBalance:
+    onionKey:
       name: tor-ingress-{{ include &quot;example.fullname&quot; . }}
-  onion_service:
+  onionService:
     ports:
       - target: example:80
         virtport: 80
 
 </code></pre>
+<h3 id="horizontal-pod-autoscaler">Horizontal Pod Autoscaler</h3>
+<p>The Tor Operator will create a load balanced OnionService using an auto generated OnionKey for the OnionBalance instance managed by a Horizontal Pod Autoscaler.</p>
+<pre><code>#onionkey.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionKey
+metadata:
+  name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-hpa
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  autoGenerate: true
+  secret:
+    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-hpa
+
+</code></pre>
+<pre><code>#toringress.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: TorIngress
+metadata:
+  name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-hpa
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  onionBalance:
+    onionKey:
+      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-hpa
+  onionService:
+    deployment:
+      containers:
+        tor:
+          resources:
+            requests:
+              cpu: 100m
+    ports:
+      - target: example:80
+        virtport: 80
+
+</code></pre>
+<pre><code>#hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-hpa
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  maxReplicas: 4
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: tor.agabani.co.uk/v1
+    kind: TorIngress
+    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-hpa
+
+</code></pre>
 <h3 id="full">Full</h3>
-<p>The Tor Operator will create a load balanced Onion Service using an auto generated Onion Key for the Onion Balance instance.</p>
+<p>The Tor Operator will create a load balanced OnionService using an auto generated OnionKey for the OnionBalance instance.</p>
 <pre><code>#onionkey.yaml
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
@@ -176,7 +236,7 @@ metadata:
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  auto_generate: true
+  autoGenerate: true
   secret:
     name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-1
 
@@ -189,24 +249,50 @@ metadata:
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  onion_balance:
-    config_map:
+  onionBalance:
+    configMap:
       name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-2
     deployment:
+      containers:
+        onionBalance:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        tor:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
       name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-3
     name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-4
-    onion_key:
+    onionKey:
       name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-0
-  onion_service:
-    config_map:
-      name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-6
+  onionService:
+    configMap:
+      namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-6
     deployment:
-      name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-7
-    name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-8
-    onion_key:
-      name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-9
+      containers:
+        tor:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-7
+    namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-8
+    onionKey:
+      namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-9
       secret:
-        name_prefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-10
+        namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-10
     ports:
       - target: example:80
         virtport: 80
@@ -225,9 +311,9 @@ Status:
 </code></pre>
 <p>Possible values for <code>State</code>:</p>
 <ul>
-<li><code>onion balance onion key not found</code></li>
-<li><code>onion balance onion key hostname not found</code></li>
-<li><code>onion service onion key hostname not found</code></li>
+<li><code>OnionBalance OnionKey not found</code></li>
+<li><code>OnionBalance OnionKey hostname not found</code></li>
+<li><code>OnionService OnionKey hostname not found</code></li>
 <li><code>running</code></li>
 </ul>
 <h2 id="openapi-spec">OpenAPI Spec</h2>
@@ -268,16 +354,16 @@ spec:
         properties:
           spec:
             description: |-
-              A Tor Ingress is collection of Onion Services load balanced by a Onion Balance.
+              A `TorIngress` is collection of `OnionServices` load balanced by a `OnionBalance`.
 
-              The user must provide the Onion Key for the Onion Balance.
+              The user must provide the `OnionKey` for the `OnionBalance`.
 
-              The Tor Operator will auto generate random Onion Keys for the Onion Services.
+              The Tor Operator will auto generate random `OnionKeys` for the `OnionServices`.
             properties:
-              onion_balance:
-                description: Onion Balance settings.
+              onionBalance:
+                description: OnionBalance settings.
                 properties:
-                  config_map:
+                  configMap:
                     description: Config Map settings.
                     nullable: true
                     properties:
@@ -285,7 +371,7 @@ spec:
                         description: |-
                           Name of the Config Map.
 
-                          Default: name of the Tor Ingress
+                          Default: name of the TorIngress
                         nullable: true
                         type: string
                     type: object
@@ -293,45 +379,122 @@ spec:
                     description: Deployment settings.
                     nullable: true
                     properties:
+                      containers:
+                        description: Containers of the Deployment.
+                        nullable: true
+                        properties:
+                          onionBalance:
+                            description: Onion Balance container.
+                            nullable: true
+                            properties:
+                              resources:
+                                description: Resources of the container.
+                                nullable: true
+                                properties:
+                                  limits:
+                                    description: Limits of the Resources.
+                                    nullable: true
+                                    properties:
+                                      cpu:
+                                        description: CPU quantity of the Limits.
+                                        nullable: true
+                                        type: string
+                                      memory:
+                                        description: Memory quantity of the Limits.
+                                        nullable: true
+                                        type: string
+                                    type: object
+                                  requests:
+                                    description: Requests of the Resources.
+                                    nullable: true
+                                    properties:
+                                      cpu:
+                                        description: CPU quantity of the Requests.
+                                        nullable: true
+                                        type: string
+                                      memory:
+                                        description: Memory quantity of the Requests.
+                                        nullable: true
+                                        type: string
+                                    type: object
+                                type: object
+                            type: object
+                          tor:
+                            description: Tor container.
+                            nullable: true
+                            properties:
+                              resources:
+                                description: Resources of the container.
+                                nullable: true
+                                properties:
+                                  limits:
+                                    description: Limits of the Resources.
+                                    nullable: true
+                                    properties:
+                                      cpu:
+                                        description: CPU quantity of the Limits.
+                                        nullable: true
+                                        type: string
+                                      memory:
+                                        description: Memory quantity of the Limits.
+                                        nullable: true
+                                        type: string
+                                    type: object
+                                  requests:
+                                    description: Requests of the Resources.
+                                    nullable: true
+                                    properties:
+                                      cpu:
+                                        description: CPU quantity of the Requests.
+                                        nullable: true
+                                        type: string
+                                      memory:
+                                        description: Memory quantity of the Requests.
+                                        nullable: true
+                                        type: string
+                                    type: object
+                                type: object
+                            type: object
+                        type: object
                       name:
                         description: |-
                           Name of the Deployment.
 
-                          Default: name of the Tor Ingress
+                          Default: name of the TorIngress
                         nullable: true
                         type: string
                     type: object
                   name:
                     description: |-
-                      Name of the Onion Balance.
+                      Name of the OnionBalance.
 
-                      Default: name of the Tor Ingress
+                      Default: name of the TorIngress
                     nullable: true
                     type: string
-                  onion_key:
-                    description: Onion Key settings.
+                  onionKey:
+                    description: OnionKey settings.
                     properties:
                       name:
-                        description: Name of the Onion Key.
+                        description: Name of the OnionKey.
                         type: string
                     required:
                     - name
                     type: object
                 required:
-                - onion_key
+                - onionKey
                 type: object
-              onion_service:
-                description: Onion Service settings.
+              onionService:
+                description: OnionService settings.
                 properties:
-                  config_map:
+                  configMap:
                     description: Config Map settings.
                     nullable: true
                     properties:
-                      name_prefix:
+                      namePrefix:
                         description: |-
                           Name prefix of the Config Map.
 
-                          Default: name of the Tor Ingress
+                          Default: name of the TorIngress
                         nullable: true
                         type: string
                     type: object
@@ -339,41 +502,82 @@ spec:
                     description: Deployment settings.
                     nullable: true
                     properties:
-                      name_prefix:
+                      containers:
+                        description: Containers of the Deployment.
+                        nullable: true
+                        properties:
+                          tor:
+                            description: Tor container.
+                            nullable: true
+                            properties:
+                              resources:
+                                description: Resources of the container.
+                                nullable: true
+                                properties:
+                                  limits:
+                                    description: Limits of the Resources.
+                                    nullable: true
+                                    properties:
+                                      cpu:
+                                        description: CPU quantity of the Limits.
+                                        nullable: true
+                                        type: string
+                                      memory:
+                                        description: Memory quantity of the Limits.
+                                        nullable: true
+                                        type: string
+                                    type: object
+                                  requests:
+                                    description: Requests of the Resources.
+                                    nullable: true
+                                    properties:
+                                      cpu:
+                                        description: CPU quantity of the Requests.
+                                        nullable: true
+                                        type: string
+                                      memory:
+                                        description: Memory quantity of the Requests.
+                                        nullable: true
+                                        type: string
+                                    type: object
+                                type: object
+                            type: object
+                        type: object
+                      namePrefix:
                         description: |-
                           Name prefix of the Deployment.
 
-                          Default: name of the Tor Ingress
+                          Default: name of the TorIngress
                         nullable: true
                         type: string
                     type: object
-                  name_prefix:
+                  namePrefix:
                     description: |-
-                      Name prefix of the Onion Service.
+                      Name prefix of the OnionService.
 
-                      Default: name of the Tor Ingress
+                      Default: name of the TorIngress
                     nullable: true
                     type: string
-                  onion_key:
-                    description: Onion Key settings.
+                  onionKey:
+                    description: OnionKey settings.
                     nullable: true
                     properties:
-                      name_prefix:
+                      namePrefix:
                         description: |-
-                          Name prefix of the Onion Key.
+                          Name prefix of the OnionKey.
 
-                          Default: name of the Tor Ingress
+                          Default: name of the TorIngress
                         nullable: true
                         type: string
                       secret:
                         description: Secret settings.
                         nullable: true
                         properties:
-                          name_prefix:
+                          namePrefix:
                             description: |-
                               Name prefix of the Secret.
 
-                              Default: name of the Tor Ingress
+                              Default: name of the TorIngress
                             nullable: true
                             type: string
                         type: object
@@ -395,30 +599,31 @@ spec:
                       type: object
                     type: array
                   replicas:
-                    description: |-
-                      Number of replicas.
-
-                      Default: 3
+                    default: 3
+                    description: Number of replicas.
                     format: int32
-                    nullable: true
                     type: integer
                 required:
                 - ports
                 type: object
             required:
-            - onion_balance
-            - onion_service
-            title: Tor Ingress
+            - onionBalance
+            - onionService
+            title: '`TorIngress`'
             type: object
           status:
             nullable: true
             properties:
               hostname:
                 description: |-
-                  Onion key hostname.
+                  OnionKey hostname.
 
                   The hostname is only populated once `state` is &quot;running&quot;.
                 nullable: true
+                type: string
+              labelSelector:
+                default: ''
+                description: Label selector the Horizontal Pod Autoscaler will use to collect metrics.
                 type: string
               replicas:
                 description: Number of replicas.
@@ -430,7 +635,7 @@ spec:
 
                   Possible values:
 
-                  - onion balance onion key not found - onion balance onion key hostname not found - onion service onion key hostname not found - running
+                  - OnionBalance OnionKey not found - OnionBalance OnionKey hostname not found - OnionService OnionKey hostname not found - running
                 type: string
             required:
             - replicas
@@ -443,6 +648,10 @@ spec:
     served: true
     storage: true
     subresources:
+      scale:
+        labelSelectorPath: .status.labelSelector
+        specReplicasPath: .spec.onionService.replicas
+        statusReplicasPath: .status.replicas
       status: {}
 
 </code></pre>
@@ -450,7 +659,7 @@ spec:
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../onion_service/" class="btn btn-neutral float-left" title="Onion Service"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../onionservice/" class="btn btn-neutral float-left" title="OnionService"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../../observability/logs/" class="btn btn-neutral float-right" title="Logs">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
@@ -478,7 +687,7 @@ spec:
         </span>
     
     
-      <span><a href="../onion_service/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../onionservice/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
       <span><a href="../../observability/logs/" style="color: #fcfcfc">Next &raquo;</a></span>
