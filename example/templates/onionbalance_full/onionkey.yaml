@@ -4,6 +4,6 @@ metadata:
   name: onion-balance-{{ include "example.fullname" . }}-full
   labels: {{- include "example.labels" . | nindent 4 }}
 spec:
-  auto_generate: true
+  autoGenerate: true
   secret:
     name: onion-balance-{{ include "example.fullname" . }}-full

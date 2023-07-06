@@ -1,6 +1,6 @@
-# Onion Balance
+# OnionBalance
 
-An Onion Balance is an abstraction of a Tor Onion Balance.
+An OnionBalance is an abstraction of a Tor Onion Balance.
 
 Tor Onion Balance is the best way to load balance Tor Onion Services. The
 load of introduction and rendezvous requests gets distributed across
@@ -11,7 +11,7 @@ points of failure.
 
 ### Basic
 
-The Tor Operator will create an Onion Balance using an auto generated Onion Key load load balancing a list of Onion Services.
+The Tor Operator will create an OnionBalance using an auto generated OnionKey load balancing a list of OnionServices.
 
 ```
 #onionkey.yaml
@@ -25,7 +25,7 @@ The Tor Operator will create an Onion Balance using an auto generated Onion Key 
 
 ### Full
 
-The Tor Operator will create an Onion Balance using an auto generated Onion Key load load balancing a list of Onion Services.
+The Tor Operator will create an OnionBalance using an auto generated OnionKey load balancing a list of OnionServices.
 
 ```
 #onionkey.yaml
@@ -56,8 +56,8 @@ Status:
 
 Possible values for `State`:
 
-- `onion key not found`
-- `onion key hostname not found`
+- `OnionKey not found`
+- `OnionKey hostname not found`
 - `running`
 
 ## OpenAPI Spec

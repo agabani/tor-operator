@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  onion_key:
+  onionKey:
     name: onion-service-{{ include "example.fullname" . }}
   ports:
     - target: example:80

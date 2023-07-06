@@ -1,16 +1,16 @@
-# Tor Ingress
+# TorIngress
 
-A Tor Ingress is collection of Onion Services load balanced by a Onion Balance.
+A TorIngress is collection of OnionServices load balanced by a OnionBalance.
 
-The user must provide the Onion Key for the Onion Balance.
+The user must provide the OnionKey for the OnionBalance.
 
-The Tor Operator wil auto generate random Onion Keys for the Onion Services.
+The Tor Operator wil auto generate random OnionKeys for the OnionServices.
 
 ## Examples
 
 ### Basic
 
-The Tor Operator will create a load balanced Onion Service using an auto generated Onion Key for the Onion Balance instance.
+The Tor Operator will create a load balanced OnionService using an auto generated OnionKey for the OnionBalance instance.
 
 ```
 #onionkey.yaml
@@ -24,7 +24,7 @@ The Tor Operator will create a load balanced Onion Service using an auto generat
 
 ### Horizontal Pod Autoscaler
 
-The Tor Operator will create a load balanced Onion Service using an auto generated Onion Key for the Onion Balance instance managed by a Horizontal Pod Autoscaler.
+The Tor Operator will create a load balanced OnionService using an auto generated OnionKey for the OnionBalance instance managed by a Horizontal Pod Autoscaler.
 
 ```
 #onionkey.yaml
@@ -43,7 +43,7 @@ The Tor Operator will create a load balanced Onion Service using an auto generat
 
 ### Full
 
-The Tor Operator will create a load balanced Onion Service using an auto generated Onion Key for the Onion Balance instance.
+The Tor Operator will create a load balanced OnionService using an auto generated OnionKey for the OnionBalance instance.
 
 ```
 #onionkey.yaml
@@ -74,9 +74,9 @@ Status:
 
 Possible values for `State`:
 
-- `onion balance onion key not found`
-- `onion balance onion key hostname not found`
-- `onion service onion key hostname not found`
+- `OnionBalance OnionKey not found`
+- `OnionBalance OnionKey hostname not found`
+- `OnionService OnionKey hostname not found`
 - `running`
 
 ## OpenAPI Spec

@@ -13,13 +13,13 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: The hostname of the onion service
+    - description: The hostname of the OnionService
       jsonPath: .status.hostname
       name: Hostname
       type: string
-    - description: The hostname of the onion balance
-      jsonPath: .spec.onion_balance.onion_key.hostname
-      name: Onion Balance Hostname
+    - description: The hostname of the OnionBalance
+      jsonPath: .spec.onionBalance.onionKey.hostname
+      name: OnionBalance Hostname
       type: string
     - description: Human readable description of state
       jsonPath: .status.state
@@ -35,11 +35,11 @@ spec:
         properties:
           spec:
             description: |-
-              An Onion Service is an abstraction of a Tor Onion Service.
+              An `OnionService` is an abstraction of a Tor Onion Service.
 
-              A Tor Onion Service is a service that can only be accessed over Tor. Running a Tor Onion Service gives your users all teh security of HTTPS with the added privacy benefits of Tor.
+              A Tor Onion Service is a service that can only be accessed over Tor. Running a Tor Onion Service gives your users all the security of HTTPS with the added privacy benefits of Tor.
             properties:
-              config_map:
+              configMap:
                 description: Config Map settings.
                 nullable: true
                 properties:
@@ -47,7 +47,7 @@ spec:
                     description: |-
                       Name of the Config Map.
 
-                      Default: name of the Onion Service
+                      Default: name of the OnionService
                     nullable: true
                     type: string
                 type: object
@@ -100,23 +100,23 @@ spec:
                     description: |-
                       Name of the Deployment.
 
-                      Default: name of the Onion Service
+                      Default: name of the OnionService
                     nullable: true
                     type: string
                 type: object
-              onion_balance:
+              onionBalance:
                 description: |-
-                  Onion Balance part the Onion Service belongs to.
+                  OnionBalance the OnionService belongs to.
 
                   Default: nil / none / null / undefined.
                 nullable: true
                 properties:
-                  onion_key:
-                    description: Onion Key reference of the Onion Balance.
+                  onionKey:
+                    description: OnionKey reference of the OnionBalance.
                     properties:
                       hostname:
                         description: |-
-                          Hostname value of the Onion Key.
+                          Hostname value of the OnionKey.
 
                           Example: "abcdefg.onion"
                         type: string
@@ -124,13 +124,13 @@ spec:
                     - hostname
                     type: object
                 required:
-                - onion_key
+                - onionKey
                 type: object
-              onion_key:
-                description: Onion Key settings.
+              onionKey:
+                description: OnionKey settings.
                 properties:
                   name:
-                    description: Name of the Onion Key.
+                    description: Name of the OnionKey.
                     type: string
                 required:
                 - name
@@ -158,16 +158,16 @@ spec:
                   type: object
                 type: array
             required:
-            - onion_key
+            - onionKey
             - ports
-            title: Onion Service
+            title: '`OnionService`'
             type: object
           status:
             nullable: true
             properties:
               hostname:
                 description: |-
-                  Onion key hostname.
+                  OnionKey hostname.
 
                   The hostname is only populated once `state` is "running".
                 nullable: true
@@ -178,7 +178,7 @@ spec:
 
                   Possible values:
 
-                  - onion key not found - onion key hostname not found - running
+                  - OnionKey not found - OnionKey hostname not found - running
                 type: string
             required:
             - state

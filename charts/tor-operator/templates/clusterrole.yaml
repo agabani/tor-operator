@@ -10,7 +10,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 rules:
-  # used by Onion Balance
+  # used by OnionBalance
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["create", "delete", "get", "list", "patch", "watch"]
@@ -23,7 +23,7 @@ rules:
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionbalances/status"]
     verbs: ["patch"]
-  # used by Onion Keys
+  # used by OnionKeys
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["create", "delete", "get", "list", "patch", "watch"]
@@ -33,7 +33,7 @@ rules:
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionkeys/status"]
     verbs: ["patch"]
-  # used by Onion Service
+  # used by OnionService
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["create", "delete", "get", "list", "patch", "watch"]
@@ -46,7 +46,7 @@ rules:
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionservices/status"]
     verbs: ["patch"]
-  # used by Tor Ingress
+  # used by TorIngress
   - apiGroups: ["tor.agabani.co.uk"]
     resources: ["onionbalances", "onionkeys", "onionservices"]
     verbs: ["create", "delete", "get", "list", "patch", "watch"]

@@ -5,11 +5,11 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  config_map:
+  configMap:
     name: onion-balance-{{ include "example.fullname" . }}-full
   deployment:
     containers:
-      onion_balance:
+      onionBalance:
         resources:
           limits:
             cpu: 200m
@@ -26,8 +26,8 @@ spec:
             cpu: 100m
             memory: 128Mi
     name: onion-balance-{{ include "example.fullname" . }}-full
-  onion_key:
+  onionKey:
     name: onion-balance-{{ include "example.fullname" . }}-full
-  onion_services:
-    - onion_key:
+  onionServices:
+    - onionKey:
         hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion

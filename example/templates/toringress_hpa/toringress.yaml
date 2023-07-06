@@ -5,10 +5,10 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  onion_balance:
-    onion_key:
+  onionBalance:
+    onionKey:
       name: tor-ingress-{{ include "example.fullname" . }}-hpa
-  onion_service:
+  onionService:
     deployment:
       containers:
         tor:

@@ -1,6 +1,6 @@
-# Onion Key
+# OnionKey
 
-An Onion Key is an abstraction of a Tor Onion Key.
+An OnionKey is an abstraction of a Tor Onion Key.
 
 A Tor Onion Key consists of the following files:
 
@@ -8,7 +8,7 @@ A Tor Onion Key consists of the following files:
 - `hs_ed25519_public_key`
 - `hs_ed25519_public_key`
 
-A user can import their existing Tor Onion keys by creating a secret.
+A user can import their existing Tor Onion Key by creating a secret.
 
 ```
  kubectl create secret generic tor-ingress-example \
@@ -38,7 +38,7 @@ The Tor Operator will use the Onion Key provided in the `Secret`.
 
 ### Auto Generate
 
-The Tor Operator will auto generated a random Onion Key and store it in a `Secret` on your behalf.
+The Tor Operator will auto generated a random OnionKey and store it in a `Secret` on your behalf.
 
 ```
 #onionkey.yaml
@@ -49,15 +49,15 @@ The Tor Operator will auto generated a random Onion Key and store it in a `Secre
 
 ### Auto Generate
 
-The Tor Operator will generate a random Onion Key and save it in the
+The Tor Operator will generate a random OnionKey and save it in the
 secret specified in `.secret.name`.
 
-- If the Onion Key's secret key is missing or malformed, the Tor Operator
+- If the OnionKey's secret key is missing or malformed, the Tor Operator
   will recreate the secret key.
-- If the Onion Key's public key is missing, malformed, or does not match
+- If the OnionKey's public key is missing, malformed, or does not match
   the secret key, the Tor Operator will deterministically recreate the
   public key from the secret key.
-- If the Onion Key's hostname is missing, malformed, or does not match
+- If the OnionKey's hostname is missing, malformed, or does not match
   the public key, the Tor Operator will deterministically recreate the
   hostname from the public key.
 

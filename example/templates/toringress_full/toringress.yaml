@@ -5,12 +5,12 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  onion_balance:
-    config_map:
+  onionBalance:
+    configMap:
       name: tor-ingress-{{ include "example.fullname" . }}-full-2
     deployment:
       containers:
-        onion_balance:
+        onionBalance:
           resources:
             limits:
               cpu: 200m
@@ -28,11 +28,11 @@ spec:
               memory: 128Mi
       name: tor-ingress-{{ include "example.fullname" . }}-full-3
     name: tor-ingress-{{ include "example.fullname" . }}-full-4
-    onion_key:
+    onionKey:
       name: tor-ingress-{{ include "example.fullname" . }}-full-0
-  onion_service:
-    config_map:
-      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-6
+  onionService:
+    configMap:
+      namePrefix: tor-ingress-{{ include "example.fullname" . }}-full-6
     deployment:
       containers:
         tor:
@@ -43,12 +43,12 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
-      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-7
-    name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-8
-    onion_key:
-      name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-9
+      namePrefix: tor-ingress-{{ include "example.fullname" . }}-full-7
+    namePrefix: tor-ingress-{{ include "example.fullname" . }}-full-8
+    onionKey:
+      namePrefix: tor-ingress-{{ include "example.fullname" . }}-full-9
       secret:
-        name_prefix: tor-ingress-{{ include "example.fullname" . }}-full-10
+        namePrefix: tor-ingress-{{ include "example.fullname" . }}-full-10
     ports:
       - target: example:80
         virtport: 80

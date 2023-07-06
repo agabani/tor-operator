@@ -6,10 +6,10 @@ nav:
   - Container Images: "container_images.md"
   - Helm: "helm.md"
   - Custom Resource Definitions:
-      - Onion Balance: "custom_resource_definitions/onion_balance.md"
-      - Onion Key: "custom_resource_definitions/onion_key.md"
-      - Onion Service: "custom_resource_definitions/onion_service.md"
-      - Tor Ingress: "custom_resource_definitions/tor_ingress.md"
+      - OnionBalance: "custom_resource_definitions/onionbalance.md"
+      - OnionKey: "custom_resource_definitions/onionkey.md"
+      - OnionService: "custom_resource_definitions/onionservice.md"
+      - TorIngress: "custom_resource_definitions/toringress.md"
   - Observability:
       - Logs: "observability/logs.md"
       - Metrics: "observability/metrics.md"

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct DeploymentContainerResources {
     /// Limits of the Resources.
     pub limits: Option<DeploymentContainerResourcesLimits>,
@@ -18,6 +19,7 @@ pub struct DeploymentContainerResources {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct DeploymentContainerResourcesLimits {
     /// CPU quantity of the Limits.
     pub cpu: Option<String>,
@@ -28,6 +30,7 @@ pub struct DeploymentContainerResourcesLimits {
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct DeploymentContainerResourcesRequests {
     /// CPU quantity of the Requests.
     pub cpu: Option<String>,
