@@ -5,7 +5,6 @@ mod conditions_ext;
 mod config_yaml;
 mod constants;
 mod context;
-mod deployment_container_resources;
 mod error_policy;
 mod hostname;
 mod labels;
@@ -25,10 +24,6 @@ pub use api::Api;
 pub use conditions_ext::ConditionsExt;
 pub use config_yaml::ConfigYaml;
 pub use context::Context;
-pub use deployment_container_resources::{
-    DeploymentContainerResources, DeploymentContainerResourcesLimits,
-    DeploymentContainerResourcesRequests,
-};
 pub use error_policy::error_policy;
 pub use labels::Labels;
 pub use ob_config::OBConfig;

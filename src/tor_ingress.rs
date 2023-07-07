@@ -2,9 +2,12 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use futures::StreamExt;
 use k8s_openapi::{
-    api::autoscaling::v2::{
-        CrossVersionObjectReference, HorizontalPodAutoscaler, HorizontalPodAutoscalerBehavior,
-        HorizontalPodAutoscalerSpec, MetricSpec,
+    api::{
+        autoscaling::v2::{
+            CrossVersionObjectReference, HorizontalPodAutoscaler, HorizontalPodAutoscalerBehavior,
+            HorizontalPodAutoscalerSpec, MetricSpec,
+        },
+        core::v1::ResourceRequirements,
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
     apimachinery::pkg::apis::meta::v1::{Condition, Time},
@@ -20,8 +23,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, DeploymentContainerResources, Labels,
-        Object, Resource as KubernetesResource, ResourceName,
+        self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
+        Resource as KubernetesResource, ResourceName,
     },
     metrics::Metrics,
     onion_balance::{
@@ -158,7 +161,7 @@ pub struct TorIngressSpecOnionBalanceDeploymentContainers {
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceDeploymentContainersOnionBalance {
     /// Resources of the container.
-    pub resources: Option<DeploymentContainerResources>,
+    pub resources: Option<ResourceRequirements>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -166,7 +169,7 @@ pub struct TorIngressSpecOnionBalanceDeploymentContainersOnionBalance {
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceDeploymentContainersTor {
     /// Resources of the container.
-    pub resources: Option<DeploymentContainerResources>,
+    pub resources: Option<ResourceRequirements>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -243,7 +246,7 @@ pub struct TorIngressSpecOnionServiceDeploymentContainers {
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceDeploymentContainersTor {
     /// Resources of the container.
-    pub resources: Option<DeploymentContainerResources>,
+    pub resources: Option<ResourceRequirements>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -337,7 +340,7 @@ impl TorIngress {
     #[must_use]
     pub fn onion_balance_deployment_containers_onion_balance_resources(
         &self,
-    ) -> Option<&DeploymentContainerResources> {
+    ) -> Option<&ResourceRequirements> {
         self.spec
             .onion_balance
             .deployment
@@ -350,7 +353,7 @@ impl TorIngress {
     #[must_use]
     pub fn onion_balance_deployment_containers_tor_resources(
         &self,
-    ) -> Option<&DeploymentContainerResources> {
+    ) -> Option<&ResourceRequirements> {
         self.spec
             .onion_balance
             .deployment
@@ -412,7 +415,7 @@ impl TorIngress {
     #[must_use]
     pub fn onion_service_deployment_containers_tor_resources(
         &self,
-    ) -> Option<&DeploymentContainerResources> {
+    ) -> Option<&ResourceRequirements> {
         self.spec
             .onion_service
             .deployment

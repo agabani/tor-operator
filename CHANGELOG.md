@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Exposed full container resource management configuration.
+
 ## [0.0.4] - 2023-07-07
 
 ### Added
@@ -47,8 +51,8 @@
 - Third party Tor v0.4.7.13 container image. (linux/amd64, linux/arm64)
 
 <!-- next-url -->
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.4...HEAD
 
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.4...HEAD
 [0.0.4]: https://github.com/agabani/tor-operator/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/agabani/tor-operator/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/agabani/tor-operator/compare/v0.0.1...v0.0.2
