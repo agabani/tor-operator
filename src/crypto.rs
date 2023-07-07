@@ -280,6 +280,12 @@ impl From<PublicKey> for Hostname {
     }
 }
 
+impl From<Hostname> for String {
+    fn from(value: Hostname) -> Self {
+        value.0
+    }
+}
+
 impl std::fmt::Display for Hostname {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)

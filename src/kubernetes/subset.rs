@@ -37,6 +37,12 @@ impl Subset for kube::core::ObjectMeta {
     }
 }
 
+impl Subset for k8s_openapi::api::autoscaling::v2::HorizontalPodAutoscalerSpec {
+    fn is_subset(&self, superset: &Self) -> bool {
+        self == superset
+    }
+}
+
 impl Subset for k8s_openapi::api::apps::v1::DeploymentSpec {
     fn is_subset(&self, superset: &Self) -> bool {
         if self.replicas != superset.replicas {

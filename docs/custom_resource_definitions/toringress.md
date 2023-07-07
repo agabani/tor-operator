@@ -22,9 +22,9 @@ The Tor Operator will create a load balanced OnionService using an auto generate
 {% include "../../example/templates/toringress/toringress.yaml" %}
 ```
 
-### Horizontal Pod Autoscaler
+### HorizontalPodAutoscaler
 
-The Tor Operator will create a load balanced OnionService using an auto generated OnionKey for the OnionBalance instance managed by a Horizontal Pod Autoscaler.
+The Tor Operator will create a load balanced OnionService using an auto generated OnionKey for the OnionBalance instance managed by a HorizontalPodAutoscaler.
 
 ```
 #onionkey.yaml
@@ -36,9 +36,23 @@ The Tor Operator will create a load balanced OnionService using an auto generate
 {% include "../../example/templates/toringress_hpa/toringress.yaml" %}
 ```
 
+### External HorizontalPodAutoscaler
+
+The Tor Operator will create a load balanced OnionService using an auto generated OnionKey for the OnionBalance instance managed by an external HorizontalPodAutoscaler.
+
+```
+#onionkey.yaml
+{% include "../../example/templates/toringress_hpa_external/onionkey.yaml" %}
+```
+
+```
+#toringress.yaml
+{% include "../../example/templates/toringress_hpa_external/toringress.yaml" %}
+```
+
 ```
 #hpa.yaml
-{% include "../../example/templates/toringress_hpa/hpa.yaml" %}
+{% include "../../example/templates/toringress_hpa_external/hpa.yaml" %}
 ```
 
 ### Full

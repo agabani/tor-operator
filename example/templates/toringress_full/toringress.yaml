@@ -5,6 +5,12 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
+  horizontalPodAutoscaler:
+    # behavior:
+    name: tor-ingress-{{ include "example.fullname" . }}-full-11
+    maxReplicas: 4
+    minReplicas: 2
+    # metrics:
   onionBalance:
     configMap:
       name: tor-ingress-{{ include "example.fullname" . }}-full-2

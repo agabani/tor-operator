@@ -61,14 +61,22 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
         metadata:
           name: tor-ingress-example
         spec:
+          horizontalPodAutoscaler:
+            maxReplicas: 6
+            minReplicas: 3
           onionBalance:
             onionKey:
               name: tor-ingress-example
           onionService:
+            deployment:
+              containers:
+                tor:
+                  resources:
+                    requests:
+                      cpu: 100m
             ports:
               - target: example:80
                 virtport: 80
-            replicas: 3
 
     `kubectl apply -f toringress.yaml`
 

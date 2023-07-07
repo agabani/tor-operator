@@ -574,7 +574,7 @@ fn generate_config_map(
 ) -> ConfigMap {
     ConfigMap {
         metadata: ObjectMeta {
-            name: Some(object.config_map_name().to_string()),
+            name: Some(object.config_map_name().into()),
             annotations: Some(annotations.into()),
             labels: Some(labels.into()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
@@ -598,7 +598,7 @@ fn generate_deployment(
 ) -> Deployment {
     Deployment {
         metadata: ObjectMeta {
-            name: Some(object.deployment_name().to_string()),
+            name: Some(object.deployment_name().into()),
             annotations: Some(annotations.into()),
             labels: Some(labels.into()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
@@ -734,7 +734,7 @@ fn generate_deployment(
                                     },
                                 ]),
                                 optional: Some(false),
-                                secret_name: Some(onion_key.secret_name().to_string()),
+                                secret_name: Some(onion_key.secret_name().into()),
                             }),
                             ..Default::default()
                         },
@@ -747,7 +747,7 @@ fn generate_deployment(
                                     mode: Some(0o400),
                                     path: "config.yaml".into(),
                                 }]),
-                                name: Some(object.config_map_name().to_string()),
+                                name: Some(object.config_map_name().into()),
                                 optional: Some(false),
                             }),
                             ..Default::default()
@@ -761,7 +761,7 @@ fn generate_deployment(
                                     mode: Some(0o400),
                                     path: "torrc".into(),
                                 }]),
-                                name: Some(object.config_map_name().to_string()),
+                                name: Some(object.config_map_name().into()),
                                 optional: Some(false),
                             }),
                             ..Default::default()

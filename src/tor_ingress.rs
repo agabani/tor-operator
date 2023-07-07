@@ -2,6 +2,10 @@ use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use futures::StreamExt;
 use k8s_openapi::{
+    api::autoscaling::v2::{
+        CrossVersionObjectReference, HorizontalPodAutoscaler, HorizontalPodAutoscalerBehavior,
+        HorizontalPodAutoscalerSpec, MetricSpec,
+    },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
     apimachinery::pkg::apis::meta::v1::{Condition, Time},
     chrono::Utc,
@@ -64,11 +68,36 @@ use crate::{
 )]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpec {
+    /// HorizontalPodAutoscaler settings.
+    pub horizontal_pod_autoscaler: Option<TorIngressHorizontalPodAutoscaler>,
+
     /// OnionBalance settings.
     pub onion_balance: TorIngressSpecOnionBalance,
 
     /// OnionService settings.
     pub onion_service: TorIngressSpecOnionService,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct TorIngressHorizontalPodAutoscaler {
+    /// behavior configures the scaling behavior of the target in both Up and Down directions (scaleUp and scaleDown fields respectively). If not set, the default HPAScalingRules for scale up and scale down are used.
+    pub behavior: Option<HorizontalPodAutoscalerBehavior>,
+
+    /// Name of the HorizontalPodAutoscaler.
+    ///
+    /// Default: name of the TorIngress
+    pub name: Option<String>,
+
+    /// maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up. It cannot be less that minReplicas.
+    pub max_replicas: i32,
+
+    /// metrics contains the specifications for which to use to calculate the desired replica count (the maximum replica count across all metrics will be used).  The desired replica count is calculated multiplying the ratio between the target value and the current value by the current number of pods.  Ergo, metrics used must decrease as the pod count is increased, and vice-versa.  See the individual metric source types for more information about how each type of metric must respond. If not set, the default metric will be set to 80% average CPU utilization.
+    pub metrics: Option<Vec<MetricSpec>>,
+
+    /// minReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.  It defaults to 1 pod.  minReplicas is allowed to be 0 if the alpha feature gate HPAScaleToZero is enabled and at least one Object or External metric is configured.  Scaling is active as long as at least one metric value is available.
+    pub min_replicas: Option<i32>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -287,6 +316,15 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn horizontal_pod_autoscaler_name(&self) -> ResourceName {
+        self.spec
+            .horizontal_pod_autoscaler
+            .as_ref()
+            .and_then(|f| f.name.as_ref())
+            .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
     pub fn onion_balance_config_map_name(&self) -> ResourceName {
         self.spec
             .onion_balance
@@ -357,8 +395,8 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_config_map_name(&self, instance: i32) -> String {
-        format!("{}-{instance}", self.onion_service_config_map_name_prefix())
+    pub fn onion_service_config_map_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_config_map_name_prefix()).into()
     }
 
     #[must_use]
@@ -385,8 +423,8 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_deployment_name(&self, instance: i32) -> String {
-        format!("{}-{instance}", self.onion_service_deployment_name_prefix())
+    pub fn onion_service_deployment_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_deployment_name_prefix()).into()
     }
 
     #[must_use]
@@ -399,8 +437,8 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_name(&self, instance: i32) -> String {
-        format!("{}-{instance}", self.onion_service_name_prefix())
+    pub fn onion_service_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_name_prefix()).into()
     }
 
     #[must_use]
@@ -414,8 +452,8 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_onion_key_name(&self, instance: i32) -> String {
-        format!("{}-{instance}", self.onion_service_onion_key_name_prefix())
+    pub fn onion_service_onion_key_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_onion_key_name_prefix()).into()
     }
 
     #[must_use]
@@ -430,11 +468,12 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_onion_key_secret_name(&self, instance: i32) -> String {
+    pub fn onion_service_onion_key_secret_name(&self, instance: i32) -> ResourceName {
         format!(
             "{}-{instance}",
             self.onion_service_onion_key_secret_name_prefix()
         )
+        .into()
     }
 
     #[must_use]
@@ -485,11 +524,16 @@ pub struct Config {}
  */
 pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
     Metrics::kubernetes_api_usage_count::<TorIngress>("watch");
+    Metrics::kubernetes_api_usage_count::<HorizontalPodAutoscaler>("watch");
     Metrics::kubernetes_api_usage_count::<OnionBalance>("watch");
     Metrics::kubernetes_api_usage_count::<OnionKey>("watch");
     Metrics::kubernetes_api_usage_count::<OnionService>("watch");
     Controller::new(
         kube::Api::<TorIngress>::all(client.clone()),
+        WatcherConfig::default(),
+    )
+    .owns(
+        kube::Api::<HorizontalPodAutoscaler>::all(client.clone()),
         WatcherConfig::default(),
     )
     .owns(
@@ -642,6 +686,15 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
             onion_service_onion_keys,
         )
         .await?;
+
+        // HorizontalPodAutoscaler
+        reconcile_horizontal_pod_autoscaler(
+            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &object,
+            &annotations,
+            &labels,
+        )
+        .await?;
     }
 
     // TorIngress
@@ -757,6 +810,25 @@ async fn reconcile_onion_balance(
     .map(|_| ())
 }
 
+async fn reconcile_horizontal_pod_autoscaler(
+    api: &Api<HorizontalPodAutoscaler>,
+    object: &TorIngress,
+    annotations: &Annotations,
+    labels: &Labels,
+) -> Result<()> {
+    let resources: HashMap<(), _> = if let Some(horizontal_pod_autoscaler) =
+        generate_horizontal_pod_autoscaler(object, annotations, labels)
+    {
+        let mut map = HashMap::with_capacity(1);
+        map.insert((), horizontal_pod_autoscaler);
+        map
+    } else {
+        HashMap::new()
+    };
+
+    api.sync(object, resources).await.map(|_| ())
+}
+
 async fn reconcile_tor_ingress(
     api: &Api<TorIngress>,
     object: &TorIngress,
@@ -789,14 +861,14 @@ fn generate_onion_balance(
 ) -> OnionBalance {
     OnionBalance {
         metadata: ObjectMeta {
-            name: Some(object.onion_balance_name().to_string()),
+            name: Some(object.onion_balance_name().into()),
             annotations: Some(annotations.into()),
             labels: Some(labels.into()),
             ..Default::default()
         },
         spec: OnionBalanceSpec {
             config_map: Some(OnionBalanceSpecConfigMap {
-                name: Some(object.onion_balance_config_map_name().to_string()),
+                name: Some(object.onion_balance_config_map_name().into()),
             }),
             deployment: Some(OnionBalanceSpecDeployment {
                 containers: Some(OnionBalanceSpecDeploymentContainers {
@@ -811,10 +883,10 @@ fn generate_onion_balance(
                             .cloned(),
                     }),
                 }),
-                name: Some(object.onion_balance_deployment_name().to_string()),
+                name: Some(object.onion_balance_deployment_name().into()),
             }),
             onion_key: OnionBalanceSpecOnionKey {
-                name: object.onion_balance_onion_key_name().to_string(),
+                name: object.onion_balance_onion_key_name().into(),
             },
             onion_services: (0..onion_service_onion_keys.len())
                 .map(|instance| OnionBalanceSpecOnionService {
@@ -823,7 +895,7 @@ fn generate_onion_balance(
                             .get(&i32::try_from(instance).unwrap())
                             .and_then(OnionKey::hostname)
                             .unwrap()
-                            .to_string(),
+                            .into(),
                     },
                 })
                 .collect(),
@@ -840,7 +912,7 @@ fn generate_onion_service_onion_key(
 ) -> OnionKey {
     OnionKey {
         metadata: ObjectMeta {
-            name: Some(object.onion_service_onion_key_name(instance)),
+            name: Some(object.onion_service_onion_key_name(instance).into()),
             annotations: Some(annotations.into()),
             labels: Some(labels.into()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
@@ -849,7 +921,7 @@ fn generate_onion_service_onion_key(
         spec: OnionKeySpec {
             auto_generate: true,
             secret: OnionKeySpecSecret {
-                name: object.onion_service_onion_key_secret_name(instance),
+                name: object.onion_service_onion_key_secret_name(instance).into(),
             },
         },
         status: None,
@@ -865,14 +937,14 @@ fn generate_onion_service(
 ) -> OnionService {
     OnionService {
         metadata: ObjectMeta {
-            name: Some(object.onion_service_name(instance)),
+            name: Some(object.onion_service_name(instance).into()),
             annotations: Some(annotations.into()),
             labels: Some(labels.into()),
             ..Default::default()
         },
         spec: OnionServiceSpec {
             config_map: Some(OnionServiceSpecConfigMap {
-                name: Some(object.onion_service_config_map_name(instance)),
+                name: Some(object.onion_service_config_map_name(instance).into()),
             }),
             deployment: Some(OnionServiceSpecDeployment {
                 containers: Some(OnionServiceSpecDeploymentContainers {
@@ -882,15 +954,15 @@ fn generate_onion_service(
                             .cloned(),
                     }),
                 }),
-                name: Some(object.onion_service_deployment_name(instance)),
+                name: Some(object.onion_service_deployment_name(instance).into()),
             }),
             onion_balance: Some(OnionServiceSpecOnionBalance {
                 onion_key: OnionServiceSpecOnionBalanceOnionKey {
-                    hostname: onion_balance_onion_key.hostname().unwrap().to_string(),
+                    hostname: onion_balance_onion_key.hostname().unwrap().into(),
                 },
             }),
             onion_key: OnionServiceSpecOnionKey {
-                name: object.onion_service_onion_key_name(instance),
+                name: object.onion_service_onion_key_name(instance).into(),
             },
             ports: object
                 .spec
@@ -905,4 +977,35 @@ fn generate_onion_service(
         },
         status: None,
     }
+}
+
+fn generate_horizontal_pod_autoscaler(
+    object: &TorIngress,
+    annotations: &Annotations,
+    labels: &Labels,
+) -> Option<HorizontalPodAutoscaler> {
+    object
+        .spec
+        .horizontal_pod_autoscaler
+        .as_ref()
+        .map(|horizontal_pod_autoscaler| HorizontalPodAutoscaler {
+            metadata: ObjectMeta {
+                name: Some(object.horizontal_pod_autoscaler_name().into()),
+                annotations: Some(annotations.into()),
+                labels: Some(labels.into()),
+                ..Default::default()
+            },
+            spec: Some(HorizontalPodAutoscalerSpec {
+                behavior: horizontal_pod_autoscaler.behavior.clone(),
+                max_replicas: horizontal_pod_autoscaler.max_replicas,
+                metrics: horizontal_pod_autoscaler.metrics.clone(),
+                min_replicas: horizontal_pod_autoscaler.min_replicas,
+                scale_target_ref: CrossVersionObjectReference {
+                    api_version: Some(TorIngress::api_version(&()).into()),
+                    kind: TorIngress::kind(&()).into(),
+                    name: object.try_name().unwrap().into(),
+                },
+            }),
+            ..Default::default()
+        })
 }

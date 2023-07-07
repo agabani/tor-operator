@@ -46,7 +46,7 @@ pub trait Object: kube::ResourceExt<DynamicType = ()> {
         self.try_uid().map(|uid| {
             (
                 TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
-                uid.to_string(),
+                uid.into(),
                 self.controller_owner_ref(&()).unwrap(),
             )
         })
@@ -73,7 +73,7 @@ pub trait Object: kube::ResourceExt<DynamicType = ()> {
             ),
             (
                 APP_KUBERNETES_IO_INSTANCE_KEY.into(),
-                self.try_name()?.to_string(),
+                self.try_name()?.into(),
             ),
             (
                 APP_KUBERNETES_IO_MANAGED_BY_KEY.into(),
@@ -85,14 +85,14 @@ pub trait Object: kube::ResourceExt<DynamicType = ()> {
             ),
             (
                 TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
-                self.try_uid()?.to_string(),
+                self.try_uid()?.into(),
             ),
             (
                 TOR_AGABANI_CO_UK_PART_OF_KEY.into(),
                 if let Some(part_of) = self.labels().get(TOR_AGABANI_CO_UK_PART_OF_KEY) {
                     part_of.to_string()
                 } else {
-                    self.try_uid()?.to_string()
+                    self.try_uid()?.into()
                 },
             ),
         ])
@@ -121,7 +121,7 @@ pub trait Object: kube::ResourceExt<DynamicType = ()> {
             ),
             (
                 APP_KUBERNETES_IO_INSTANCE_KEY.into(),
-                self.try_name()?.to_string(),
+                self.try_name()?.into(),
             ),
             (
                 APP_KUBERNETES_IO_NAME_KEY.into(),

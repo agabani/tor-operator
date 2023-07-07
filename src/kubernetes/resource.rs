@@ -63,6 +63,14 @@ impl Resource for k8s_openapi::api::apps::v1::Deployment {
     }
 }
 
+impl Resource for k8s_openapi::api::autoscaling::v2::HorizontalPodAutoscaler {
+    type Spec = k8s_openapi::api::autoscaling::v2::HorizontalPodAutoscalerSpec;
+
+    fn spec(&self) -> &Self::Spec {
+        self.spec.as_ref().unwrap()
+    }
+}
+
 impl Resource for k8s_openapi::api::core::v1::Secret {
     type Spec = std::collections::BTreeMap<String, k8s_openapi::ByteString>;
 

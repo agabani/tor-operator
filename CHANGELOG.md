@@ -4,6 +4,7 @@
 
 ### Added
 
+- TorIngress HorizontalPodAutoscaler spec.
 - OnionBalance, OnionKey, OnionService and TorIngress status conditions.
 - Recreate Pods when ConfigYaml, Hostname, OBConfig or Torrc changes.
 
@@ -17,7 +18,7 @@
 
 - OnionBalance, OnionService and TorIngress configurable resources.
 - TorIngress Custom Resource Definition scale subresource.
-- TorIngress Horizontal Pod Autoscaler support.
+- TorIngress HorizontalPodAutoscaler support.
 
 ### Changed
 
