@@ -141,11 +141,12 @@ impl OnionKey {
     }
 
     #[must_use]
-    pub fn hostname(&self) -> Option<&str> {
+    pub fn hostname(&self) -> Option<Hostname> {
         self.status
             .as_ref()
             .and_then(|status| status.hostname.as_ref())
-            .map(String::as_str)
+            .map(Clone::clone)
+            .map(Hostname::new)
     }
 
     #[must_use]
@@ -313,7 +314,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
 
     let namespace = object.try_namespace()?;
 
-    let annotations = generate_annotations();
+    let annotations = Annotations::new();
     let labels = object.try_labels()?;
 
     // Secret
@@ -376,10 +377,6 @@ async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionKey, state: &Sta
         },
     )
     .await
-}
-
-fn generate_annotations() -> Annotations {
-    Annotations::new(BTreeMap::from([]))
 }
 
 /// only returns a secret if a change needs to be made...

@@ -231,6 +231,11 @@ impl From<&ExpandedSecretKey> for HiddenServiceSecretKey {
 pub struct Hostname(String);
 
 impl Hostname {
+    #[must_use]
+    pub fn new(value: String) -> Self {
+        Self(value)
+    }
+
     /// # Errors
     ///
     /// Returns error if malformed.
@@ -260,6 +265,12 @@ impl Hostname {
     #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.0.as_bytes()
+    }
+}
+
+impl AsRef<str> for Hostname {
+    fn as_ref(&self) -> &str {
+        self.0.as_str()
     }
 }
 

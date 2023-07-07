@@ -1,10 +1,26 @@
 use std::{collections::BTreeMap, ops::Deref};
 
+use super::Annotation;
+
+#[derive(Default)]
 pub struct Annotations(BTreeMap<String, String>);
 
 impl Annotations {
-    pub fn new(value: BTreeMap<String, String>) -> Self {
-        Self(value)
+    pub fn new() -> Self {
+        Self(BTreeMap::new())
+    }
+
+    pub fn add<A: Annotation>(mut self, annotation: &A) -> Self {
+        let (key, value) = annotation.to_tuple();
+        self.0.insert(key, value);
+        self
+    }
+
+    pub fn add_opt<A: Annotation>(mut self, annotation: &Option<A>) -> Self {
+        if let Some((key, value)) = annotation.as_ref().map(Annotation::to_tuple) {
+            self.0.insert(key, value);
+        }
+        self
     }
 }
 

@@ -406,7 +406,6 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     let ob_config = generate_ob_config(&object);
     let torrc = generate_torrc(&object);
 
-    let annotations = generate_annotations(&torrc);
     let labels = object.try_labels()?;
     let selector_labels = object.try_selector_labels()?;
 
@@ -418,6 +417,11 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
     .await?;
 
     if let State::Initialized(onion_key) = &state {
+        let annotations = Annotations::new()
+            .add_opt(&onion_key.hostname())
+            .add_opt(&ob_config)
+            .add(&torrc);
+
         // ConfigMap
         reconcile_config_map(
             &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
@@ -533,17 +537,13 @@ async fn reconcile_onion_service(
                 .unwrap_or(&Vec::new())
                 .merge_from(&state.into()),
             hostname: if let State::Initialized(onion_key) = state {
-                onion_key.hostname().map(Into::into)
+                onion_key.hostname().as_ref().map(ToString::to_string)
             } else {
                 None
             },
         },
     )
     .await
-}
-
-fn generate_annotations(torrc: &Torrc) -> Annotations {
-    Annotations::new(BTreeMap::from([(torrc.to_annotation_tuple())]))
 }
 
 fn generate_ob_config(object: &OnionService) -> Option<OBConfig> {

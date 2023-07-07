@@ -5,6 +5,7 @@
 ### Added
 
 - OnionBalance, OnionKey, OnionService and TorIngress status conditions.
+- Recreate Pods when ConfigYaml, Hostname, OBConfig or Torrc changes.
 
 ### Removed
 
