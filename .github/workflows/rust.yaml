@@ -47,6 +47,8 @@ jobs:
   cargo-clippy:
     name: Cargo Clippy
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
     needs:
       - cargo-build
     steps:
