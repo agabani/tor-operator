@@ -78,9 +78,11 @@
     </li>
         </ul>
     </li>
-    <li class="toctree-l2"><a class="reference internal" href="#features">Features</a>
+    <li class="toctree-l2"><a class="reference internal" href="#conditions">Conditions</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#state">State</a>
+    <li class="toctree-l3"><a class="reference internal" href="#initialized">Initialized</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#onionkey">OnionKey</a>
     </li>
         </ul>
     </li>
@@ -247,22 +249,11 @@ spec:
       virtport: 80
 
 </code></pre>
-<h2 id="features">Features</h2>
-<h3 id="state">State</h3>
-<p>State can be observed in the status.</p>
-<pre><code>kubectl describe onionservices example
-</code></pre>
-<pre><code># ...
-Status:
-  State:     running
-# ...
-</code></pre>
-<p>Possible values for <code>State</code>:</p>
-<ul>
-<li><code>OnionKey not found</code></li>
-<li><code>OnionKey hostname not found</code></li>
-<li><code>running</code></li>
-</ul>
+<h2 id="conditions">Conditions</h2>
+<h3 id="initialized">Initialized</h3>
+<p><code>Initialized</code></p>
+<h3 id="onionkey">OnionKey</h3>
+<p><code>NotFound</code>, <code>HostnameNotFound</code>, <code>Ready</code></p>
 <h2 id="openapi-spec">OpenAPI Spec</h2>
 <pre><code>apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -431,6 +422,48 @@ spec:
           status:
             nullable: true
             properties:
+              conditions:
+                description: |-
+                  Represents the latest available observations of a deployment's current state.
+
+                  ### Initialized
+
+                  `Initialized`
+
+                  ### OnionKey
+
+                  `NotFound`, `HostnameNotFound`, `Ready`
+                items:
+                  description: Condition contains details for one aspect of the current state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: message is a human readable message indicating details about the transition. This may be an empty string.
+                      type: string
+                    observedGeneration:
+                      description: observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+                      format: int64
+                      type: integer
+                    reason:
+                      description: reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
               hostname:
                 description: |-
                   OnionKey hostname.
@@ -438,16 +471,6 @@ spec:
                   The hostname is only populated once `state` is &quot;running&quot;.
                 nullable: true
                 type: string
-              state:
-                description: |-
-                  Human readable description of state.
-
-                  Possible values:
-
-                  - OnionKey not found - OnionKey hostname not found - running
-                type: string
-            required:
-            - state
             type: object
         required:
         - spec

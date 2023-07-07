@@ -167,6 +167,9 @@ rules:
     resources: [&quot;onionservices/status&quot;]
     verbs: [&quot;patch&quot;]
   # used by TorIngress
+  - apiGroups: [&quot;autoscaling&quot;]
+    resources: [&quot;horizontalpodautoscalers&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;onionbalances&quot;, &quot;onionkeys&quot;, &quot;onionservices&quot;]
     verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
