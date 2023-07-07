@@ -1,16 +1,13 @@
 apiVersion: tor.agabani.co.uk/v1
 kind: TorIngress
 metadata:
-  name: tor-ingress-{{ include "example.fullname" . }}-hpa
+  name: tor-ingress-{{ include "example.fullname" . }}-hpa-external
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
-  horizontalPodAutoscaler:
-    maxReplicas: 4
-    minReplicas: 2
   onionBalance:
     onionKey:
-      name: tor-ingress-{{ include "example.fullname" . }}-hpa
+      name: tor-ingress-{{ include "example.fullname" . }}-hpa-external
   onionService:
     deployment:
       containers:
