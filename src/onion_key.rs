@@ -397,7 +397,7 @@ fn generate_secret(
     ) -> Secret {
         Secret {
             metadata: ObjectMeta {
-                name: Some(object.secret_name().to_string()),
+                name: Some(object.secret_name().into()),
                 annotations: Some(annotations.into()),
                 labels: Some(labels.into()),
                 owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),

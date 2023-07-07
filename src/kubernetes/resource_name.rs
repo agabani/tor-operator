@@ -37,3 +37,15 @@ impl From<&String> for ResourceName {
         ResourceName(value.clone())
     }
 }
+
+impl From<String> for ResourceName {
+    fn from(value: String) -> Self {
+        ResourceName(value)
+    }
+}
+
+impl From<ResourceName> for String {
+    fn from(value: ResourceName) -> Self {
+        value.0
+    }
+}

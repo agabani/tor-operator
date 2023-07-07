@@ -24,3 +24,9 @@ impl Display for ResourceUid {
         write!(f, "{}", self.0)
     }
 }
+
+impl From<ResourceUid> for String {
+    fn from(value: ResourceUid) -> Self {
+        value.0
+    }
+}

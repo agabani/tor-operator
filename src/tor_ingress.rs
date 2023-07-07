@@ -395,8 +395,8 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_config_map_name(&self, instance: i32) -> String {
-        format!("{}-{instance}", self.onion_service_config_map_name_prefix())
+    pub fn onion_service_config_map_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_config_map_name_prefix()).into()
     }
 
     #[must_use]
@@ -423,8 +423,8 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_deployment_name(&self, instance: i32) -> String {
-        format!("{}-{instance}", self.onion_service_deployment_name_prefix())
+    pub fn onion_service_deployment_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_deployment_name_prefix()).into()
     }
 
     #[must_use]
@@ -437,8 +437,8 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_name(&self, instance: i32) -> String {
-        format!("{}-{instance}", self.onion_service_name_prefix())
+    pub fn onion_service_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_name_prefix()).into()
     }
 
     #[must_use]
@@ -452,8 +452,8 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_onion_key_name(&self, instance: i32) -> String {
-        format!("{}-{instance}", self.onion_service_onion_key_name_prefix())
+    pub fn onion_service_onion_key_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_onion_key_name_prefix()).into()
     }
 
     #[must_use]
@@ -468,11 +468,12 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_onion_key_secret_name(&self, instance: i32) -> String {
+    pub fn onion_service_onion_key_secret_name(&self, instance: i32) -> ResourceName {
         format!(
             "{}-{instance}",
             self.onion_service_onion_key_secret_name_prefix()
         )
+        .into()
     }
 
     #[must_use]
@@ -860,14 +861,14 @@ fn generate_onion_balance(
 ) -> OnionBalance {
     OnionBalance {
         metadata: ObjectMeta {
-            name: Some(object.onion_balance_name().to_string()),
+            name: Some(object.onion_balance_name().into()),
             annotations: Some(annotations.into()),
             labels: Some(labels.into()),
             ..Default::default()
         },
         spec: OnionBalanceSpec {
             config_map: Some(OnionBalanceSpecConfigMap {
-                name: Some(object.onion_balance_config_map_name().to_string()),
+                name: Some(object.onion_balance_config_map_name().into()),
             }),
             deployment: Some(OnionBalanceSpecDeployment {
                 containers: Some(OnionBalanceSpecDeploymentContainers {
@@ -882,10 +883,10 @@ fn generate_onion_balance(
                             .cloned(),
                     }),
                 }),
-                name: Some(object.onion_balance_deployment_name().to_string()),
+                name: Some(object.onion_balance_deployment_name().into()),
             }),
             onion_key: OnionBalanceSpecOnionKey {
-                name: object.onion_balance_onion_key_name().to_string(),
+                name: object.onion_balance_onion_key_name().into(),
             },
             onion_services: (0..onion_service_onion_keys.len())
                 .map(|instance| OnionBalanceSpecOnionService {
@@ -894,7 +895,7 @@ fn generate_onion_balance(
                             .get(&i32::try_from(instance).unwrap())
                             .and_then(OnionKey::hostname)
                             .unwrap()
-                            .to_string(),
+                            .into(),
                     },
                 })
                 .collect(),
@@ -911,7 +912,7 @@ fn generate_onion_service_onion_key(
 ) -> OnionKey {
     OnionKey {
         metadata: ObjectMeta {
-            name: Some(object.onion_service_onion_key_name(instance)),
+            name: Some(object.onion_service_onion_key_name(instance).into()),
             annotations: Some(annotations.into()),
             labels: Some(labels.into()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
@@ -920,7 +921,7 @@ fn generate_onion_service_onion_key(
         spec: OnionKeySpec {
             auto_generate: true,
             secret: OnionKeySpecSecret {
-                name: object.onion_service_onion_key_secret_name(instance),
+                name: object.onion_service_onion_key_secret_name(instance).into(),
             },
         },
         status: None,
@@ -936,14 +937,14 @@ fn generate_onion_service(
 ) -> OnionService {
     OnionService {
         metadata: ObjectMeta {
-            name: Some(object.onion_service_name(instance)),
+            name: Some(object.onion_service_name(instance).into()),
             annotations: Some(annotations.into()),
             labels: Some(labels.into()),
             ..Default::default()
         },
         spec: OnionServiceSpec {
             config_map: Some(OnionServiceSpecConfigMap {
-                name: Some(object.onion_service_config_map_name(instance)),
+                name: Some(object.onion_service_config_map_name(instance).into()),
             }),
             deployment: Some(OnionServiceSpecDeployment {
                 containers: Some(OnionServiceSpecDeploymentContainers {
@@ -953,15 +954,15 @@ fn generate_onion_service(
                             .cloned(),
                     }),
                 }),
-                name: Some(object.onion_service_deployment_name(instance)),
+                name: Some(object.onion_service_deployment_name(instance).into()),
             }),
             onion_balance: Some(OnionServiceSpecOnionBalance {
                 onion_key: OnionServiceSpecOnionBalanceOnionKey {
-                    hostname: onion_balance_onion_key.hostname().unwrap().to_string(),
+                    hostname: onion_balance_onion_key.hostname().unwrap().into(),
                 },
             }),
             onion_key: OnionServiceSpecOnionKey {
-                name: object.onion_service_onion_key_name(instance),
+                name: object.onion_service_onion_key_name(instance).into(),
             },
             ports: object
                 .spec
@@ -989,7 +990,7 @@ fn generate_horizontal_pod_autoscaler(
         .as_ref()
         .map(|horizontal_pod_autoscaler| HorizontalPodAutoscaler {
             metadata: ObjectMeta {
-                name: Some(object.horizontal_pod_autoscaler_name().to_string()),
+                name: Some(object.horizontal_pod_autoscaler_name().into()),
                 annotations: Some(annotations.into()),
                 labels: Some(labels.into()),
                 ..Default::default()
@@ -1002,7 +1003,7 @@ fn generate_horizontal_pod_autoscaler(
                 scale_target_ref: CrossVersionObjectReference {
                     api_version: Some(TorIngress::api_version(&()).into()),
                     kind: TorIngress::kind(&()).into(),
-                    name: object.try_name().unwrap().to_string(),
+                    name: object.try_name().unwrap().into(),
                 },
             }),
             ..Default::default()
