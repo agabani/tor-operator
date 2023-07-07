@@ -6,7 +6,7 @@ use k8s_openapi::{
         apps::v1::{Deployment, DeploymentSpec},
         core::v1::{
             ConfigMap, ConfigMapVolumeSource, Container, ExecAction, KeyToPath, PodSpec,
-            PodTemplateSpec, Probe, SecretVolumeSource, Volume, VolumeMount,
+            PodTemplateSpec, Probe, ResourceRequirements, SecretVolumeSource, Volume, VolumeMount,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
@@ -23,9 +23,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, ConfigYaml,
-        DeploymentContainerResources, Labels, Object, Resource as KubernetesResource, ResourceName,
-        SelectorLabels, Subset, Torrc,
+        self, error_policy, Annotations, Api, ConditionsExt, ConfigYaml, Labels, Object,
+        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset, Torrc,
     },
     metrics::Metrics,
     onion_key::OnionKey,
@@ -112,7 +111,7 @@ pub struct OnionBalanceSpecDeploymentContainers {
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecDeploymentContainersOnionBalance {
     /// Resources of the container.
-    pub resources: Option<DeploymentContainerResources>,
+    pub resources: Option<ResourceRequirements>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -120,7 +119,7 @@ pub struct OnionBalanceSpecDeploymentContainersOnionBalance {
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecDeploymentContainersTor {
     /// Resources of the container.
-    pub resources: Option<DeploymentContainerResources>,
+    pub resources: Option<ResourceRequirements>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -190,9 +189,7 @@ impl OnionBalance {
     }
 
     #[must_use]
-    pub fn deployment_containers_onion_balance_resources(
-        &self,
-    ) -> Option<&DeploymentContainerResources> {
+    pub fn deployment_containers_onion_balance_resources(&self) -> Option<&ResourceRequirements> {
         self.spec
             .deployment
             .as_ref()
@@ -202,7 +199,7 @@ impl OnionBalance {
     }
 
     #[must_use]
-    pub fn deployment_containers_tor_resources(&self) -> Option<&DeploymentContainerResources> {
+    pub fn deployment_containers_tor_resources(&self) -> Option<&ResourceRequirements> {
         self.spec
             .deployment
             .as_ref()
@@ -633,7 +630,7 @@ fn generate_deployment(
                             image: Some(config.onion_balance_image.uri.clone()),
                             image_pull_policy: Some(config.onion_balance_image.pull_policy.clone()),
                             name: "onionbalance".into(),
-                            resources: object.deployment_containers_onion_balance_resources().map(Into::into),
+                            resources: object.deployment_containers_onion_balance_resources().cloned(),
                             volume_mounts: Some(vec![
                                 VolumeMount {
                                     mount_path: "/etc/secrets".into(),
@@ -693,7 +690,7 @@ fn generate_deployment(
                                 timeout_seconds: Some(1),
                                 ..Default::default()
                             }),
-                            resources: object.deployment_containers_tor_resources().map(Into::into),
+                            resources: object.deployment_containers_tor_resources().cloned(),
                             volume_mounts: Some(vec![
                                 VolumeMount {
                                     mount_path: "/etc/secrets".into(),

@@ -6,7 +6,7 @@ use k8s_openapi::{
         apps::v1::{Deployment, DeploymentSpec},
         core::v1::{
             ConfigMap, ConfigMapVolumeSource, Container, ExecAction, KeyToPath, PodSpec,
-            PodTemplateSpec, Probe, SecretVolumeSource, Volume, VolumeMount,
+            PodTemplateSpec, Probe, ResourceRequirements, SecretVolumeSource, Volume, VolumeMount,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
@@ -23,9 +23,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, DeploymentContainerResources, Labels,
-        OBConfig, Object, Resource as KubernetesResource, ResourceName, SelectorLabels, Subset,
-        Torrc,
+        self, error_policy, Annotations, Api, ConditionsExt, Labels, OBConfig, Object,
+        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset, Torrc,
     },
     metrics::Metrics,
     onion_key::OnionKey,
@@ -113,7 +112,7 @@ pub struct OnionServiceSpecDeploymentContainers {
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeploymentContainersTor {
     /// Resources of the container.
-    pub resources: Option<DeploymentContainerResources>,
+    pub resources: Option<ResourceRequirements>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -195,7 +194,7 @@ impl OnionService {
     }
 
     #[must_use]
-    pub fn deployment_containers_tor_resources(&self) -> Option<&DeploymentContainerResources> {
+    pub fn deployment_containers_tor_resources(&self) -> Option<&ResourceRequirements> {
         self.spec
             .deployment
             .as_ref()
@@ -676,7 +675,7 @@ fn generate_deployment(
                             timeout_seconds: Some(1),
                             ..Default::default()
                         }),
-                        resources: object.deployment_containers_tor_resources().map(Into::into),
+                        resources: object.deployment_containers_tor_resources().cloned(),
                         volume_mounts: Some(vec![
                             VolumeMount {
                                 mount_path: "/etc/secrets".into(),
