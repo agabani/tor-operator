@@ -23,11 +23,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, Labels, OBConfig, Object,
-        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset, Torrc,
+        self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
+        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset,
     },
     metrics::Metrics,
     onion_key::OnionKey,
+    tor::{Hostname, OBConfig, Torrc},
     Result,
 };
 
@@ -218,16 +219,17 @@ impl OnionService {
     }
 
     #[must_use]
-    pub fn onion_balance_onion_key_hostname(&self) -> Option<&str> {
+    pub fn onion_balance_onion_key_hostname(&self) -> Option<Hostname> {
         self.spec
             .onion_balance
             .as_ref()
-            .map(|onion_balance| onion_balance.onion_key.hostname.as_str())
+            .map(|onion_balance| onion_balance.onion_key.hostname.clone())
+            .map(Hostname::new)
     }
 
     #[must_use]
     pub fn onion_key_name(&self) -> ResourceName {
-        (&self.spec.onion_key.name).into()
+        ResourceName::from(&self.spec.onion_key.name)
     }
 
     #[must_use]
@@ -547,24 +549,19 @@ async fn reconcile_onion_service(
 
 fn generate_ob_config(object: &OnionService) -> Option<OBConfig> {
     object
-        .spec
-        .onion_balance
-        .as_ref()
-        .map(|f| OBConfig::new(format!("MasterOnionAddress {}", f.onion_key.hostname)))
+        .onion_balance_onion_key_hostname()
+        .map(|hostname| OBConfig::builder().master_onion_address(&hostname).build())
 }
 
 fn generate_torrc(object: &OnionService) -> Torrc {
-    let mut torrc = vec!["HiddenServiceDir /var/lib/tor/hidden_service".into()];
+    let mut torrc = Torrc::builder().hidden_service_dir("/var/lib/tor/hidden_service");
     if object.onion_balanced() {
-        torrc.push("HiddenServiceOnionbalanceInstance 1".into());
+        torrc = torrc.hidden_service_onion_balance_instance(true);
     }
-    for port in object.ports() {
-        torrc.push(format!(
-            "HiddenServicePort {} {}",
-            port.virtport, port.target
-        ));
-    }
-    Torrc::new(torrc.join("\n"))
+    torrc = object.ports().iter().fold(torrc, |torrc, port| {
+        torrc.hidden_service_port(port.virtport, &port.target)
+    });
+    torrc.build()
 }
 
 fn generate_config_map(
@@ -583,9 +580,9 @@ fn generate_config_map(
             ..Default::default()
         },
         data: Some({
-            let mut data = BTreeMap::from([("torrc".into(), torrc.into())]);
+            let mut data = BTreeMap::from([("torrc".into(), torrc.to_string())]);
             if let Some(ob_config) = ob_config {
-                data.insert("ob_config".into(), ob_config.into());
+                data.insert("ob_config".into(), ob_config.to_string());
             }
             data
         }),

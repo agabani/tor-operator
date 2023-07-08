@@ -1,13 +1,13 @@
 #![warn(clippy::pedantic)]
 
 pub mod cli;
-pub mod crypto;
 pub mod http_server;
 mod kubernetes;
 pub mod metrics;
 pub mod onion_balance;
 pub mod onion_key;
 pub mod onion_service;
+pub mod tor;
 pub mod tor_ingress;
 
 /*

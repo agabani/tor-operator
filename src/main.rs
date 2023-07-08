@@ -8,9 +8,11 @@ use tor_operator::{
         MarkdownCommands, MarkdownGenerateArgs, OnionKeyArgs, OnionKeyCommands,
         OnionKeyGenerateArgs,
     },
-    crypto, http_server,
+    http_server,
     metrics::Metrics,
-    onion_balance, onion_key, onion_service, tor_ingress,
+    onion_balance, onion_key, onion_service,
+    tor::{ExpandedSecretKey, HiddenServicePublicKey, HiddenServiceSecretKey, Hostname, PublicKey},
+    tor_ingress,
 };
 
 #[tokio::main]
@@ -154,26 +156,25 @@ fn markdown_generate(_cli: &CliArgs, _markdown: &MarkdownArgs, generate: &Markdo
 }
 
 fn onion_key_generate(_cli: &CliArgs, _onion_key: &OnionKeyArgs, _generate: &OnionKeyGenerateArgs) {
-    let expanded_secret_key = crypto::ExpandedSecretKey::generate();
-    let public_key = expanded_secret_key.public_key();
+    let expanded_secret_key = ExpandedSecretKey::generate();
+    let public_key = PublicKey::from(&expanded_secret_key);
 
-    let hostname = public_key.hostname();
-    let hidden_service_public_key = crypto::HiddenServicePublicKey::from_public_key(&public_key);
-    let hidden_service_secret_key =
-        crypto::HiddenServiceSecretKey::from_expanded_secret_key(&expanded_secret_key);
+    let hostname = Hostname::from(&public_key);
+    let hidden_service_public_key = HiddenServicePublicKey::from(&public_key);
+    let hidden_service_secret_key = HiddenServiceSecretKey::from(&expanded_secret_key);
 
     File::create("hostname")
         .unwrap()
-        .write_all(hostname.as_bytes())
+        .write_all(&Vec::<u8>::from(&hostname))
         .unwrap();
 
     File::create("hs_ed25519_public_key")
         .unwrap()
-        .write_all(&hidden_service_public_key.to_bytes())
+        .write_all(&Vec::<u8>::from(&hidden_service_public_key))
         .unwrap();
 
     File::create("hs_ed25519_secret_key")
         .unwrap()
-        .write_all(&hidden_service_secret_key.to_bytes())
+        .write_all(&Vec::<u8>::from(&hidden_service_secret_key))
         .unwrap();
 }
