@@ -26,7 +26,7 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
 
     - `hostname`
     - `hs_ed25519_public_key`
-    - `hs_ed25519_public_key`
+    - `hs_ed25519_secret_key`
 
     or generate a new Onion Key using:
 
