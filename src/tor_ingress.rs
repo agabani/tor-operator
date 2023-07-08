@@ -384,7 +384,7 @@ impl TorIngress {
 
     #[must_use]
     pub fn onion_balance_onion_key_name(&self) -> ResourceName {
-        (&self.spec.onion_balance.onion_key.name).into()
+        ResourceName::from(&self.spec.onion_balance.onion_key.name)
     }
 
     #[must_use]

@@ -17,12 +17,15 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    crypto::{self, Hostname},
     kubernetes::{
         self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
         Resource as KubernetesResource, ResourceName, Subset,
     },
     metrics::Metrics,
+    tor::{
+        self, ExpandedSecretKey, HiddenServicePublicKey, HiddenServiceSecretKey, Hostname,
+        PublicKey,
+    },
     Result,
 };
 
@@ -151,7 +154,7 @@ impl OnionKey {
 
     #[must_use]
     pub fn secret_name(&self) -> ResourceName {
-        (&self.spec.secret.name).into()
+        ResourceName::from(&self.spec.secret.name)
     }
 
     #[must_use]
@@ -251,12 +254,12 @@ impl kubernetes::Context for Context {
 enum State {
     SecretNotFound,
     SecretKeyNotFound,
-    SecretKeyMalformed(crypto::Error),
+    SecretKeyMalformed(tor::Error),
     PublicKeyNotFound,
-    PublicKeyMalformed(crypto::Error),
+    PublicKeyMalformed(tor::Error),
     PublicKeyMismatch,
     HostnameNotFound,
-    HostnameMalformed(crypto::Error),
+    HostnameMalformed(tor::Error),
     HostnameMismatch,
     Ready(Hostname),
 }
@@ -391,9 +394,9 @@ fn generate_secret(
         object: &OnionKey,
         annotations: &Annotations,
         labels: &Labels,
-        public_key: &crypto::PublicKey,
-        secret_key: &crypto::ExpandedSecretKey,
-        hostname: &crypto::Hostname,
+        public_key: &PublicKey,
+        secret_key: &ExpandedSecretKey,
+        hostname: &Hostname,
     ) -> Secret {
         Secret {
             metadata: ObjectMeta {
@@ -404,19 +407,14 @@ fn generate_secret(
                 ..Default::default()
             },
             data: Some(BTreeMap::from([
-                ("hostname".into(), ByteString(hostname.as_bytes().to_vec())),
+                ("hostname".into(), ByteString(Vec::<u8>::from(hostname))),
                 (
                     "hs_ed25519_public_key".into(),
-                    ByteString(
-                        crypto::HiddenServicePublicKey::from_public_key(public_key).to_bytes(),
-                    ),
+                    ByteString(Vec::<u8>::from(&HiddenServicePublicKey::from(public_key))),
                 ),
                 (
                     "hs_ed25519_secret_key".into(),
-                    ByteString(
-                        crypto::HiddenServiceSecretKey::from_expanded_secret_key(secret_key)
-                            .to_bytes(),
-                    ),
+                    ByteString(Vec::<u8>::from(&HiddenServiceSecretKey::from(secret_key))),
                 ),
             ])),
             ..Default::default()
@@ -431,13 +429,13 @@ fn generate_secret(
         }
 
         tracing::info!("generating secret key");
-        let secret_key = crypto::ExpandedSecretKey::generate();
+        let secret_key = ExpandedSecretKey::generate();
 
         tracing::info!("generating public key");
-        let public_key = secret_key.public_key();
+        let public_key = PublicKey::from(&secret_key);
 
         tracing::info!("generating hostname");
-        let hostname = public_key.hostname();
+        let hostname = Hostname::from(&public_key);
 
         let secret = generate(
             object,
@@ -459,13 +457,8 @@ fn generate_secret(
             f.get("hs_ed25519_secret_key")
                 .ok_or(State::SecretKeyNotFound)
         })
-        .and_then(|f| {
-            crypto::HiddenServiceSecretKey::try_from_bytes(&f.0).map_err(State::SecretKeyMalformed)
-        })
-        .and_then(|f| {
-            crypto::ExpandedSecretKey::try_from_hidden_service_secret_key(&f)
-                .map_err(State::SecretKeyMalformed)
-        });
+        .and_then(|f| HiddenServiceSecretKey::try_from(&f.0).map_err(State::SecretKeyMalformed))
+        .and_then(|f| ExpandedSecretKey::try_from(&f).map_err(State::SecretKeyMalformed));
 
     let secret_key = match secret_key {
         Ok(secret_key) => secret_key,
@@ -475,13 +468,13 @@ fn generate_secret(
             }
 
             tracing::info!("generating secret key");
-            let secret_key = crypto::ExpandedSecretKey::generate();
+            let secret_key = ExpandedSecretKey::generate();
 
             tracing::info!("generating public key");
-            let public_key = secret_key.public_key();
+            let public_key = PublicKey::from(&secret_key);
 
             tracing::info!("generating hostname");
-            let hostname = public_key.hostname();
+            let hostname = Hostname::from(&public_key);
 
             let secret = generate(
                 object,
@@ -504,15 +497,10 @@ fn generate_secret(
             f.get("hs_ed25519_public_key")
                 .ok_or(State::PublicKeyNotFound)
         })
+        .and_then(|f| HiddenServicePublicKey::try_from(&f.0).map_err(State::PublicKeyMalformed))
+        .and_then(|f| PublicKey::try_from(&f).map_err(State::PublicKeyMalformed))
         .and_then(|f| {
-            crypto::HiddenServicePublicKey::try_from_bytes(&f.0).map_err(State::PublicKeyMalformed)
-        })
-        .and_then(|f| {
-            crypto::PublicKey::try_from_hidden_service_public_key(&f)
-                .map_err(State::PublicKeyMalformed)
-        })
-        .and_then(|f| {
-            if f == secret_key.public_key() {
+            if f == PublicKey::from(&secret_key) {
                 Ok(f)
             } else {
                 Err(State::PublicKeyMismatch)
@@ -527,10 +515,10 @@ fn generate_secret(
             }
 
             tracing::info!("generating public key");
-            let public_key = secret_key.public_key();
+            let public_key = PublicKey::from(&secret_key);
 
             tracing::info!("generating hostname");
-            let hostname = public_key.hostname();
+            let hostname = Hostname::from(&public_key);
 
             let secret = generate(
                 object,
@@ -550,9 +538,9 @@ fn generate_secret(
         .as_ref()
         .ok_or(State::HostnameNotFound)
         .and_then(|f| f.get("hostname").ok_or(State::HostnameNotFound))
-        .and_then(|f| crypto::Hostname::try_from_bytes(&f.0).map_err(State::HostnameMalformed))
+        .and_then(|f| Hostname::try_from(&f.0).map_err(State::HostnameMalformed))
         .and_then(|f| {
-            if f == public_key.hostname() {
+            if f == Hostname::from(&public_key) {
                 Ok(f)
             } else {
                 Err(State::HostnameMismatch)
@@ -567,7 +555,7 @@ fn generate_secret(
             }
 
             tracing::info!("generating hostname");
-            let hostname = public_key.hostname();
+            let hostname = Hostname::from(&public_key);
 
             let secret = generate(
                 object,

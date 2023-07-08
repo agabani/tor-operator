@@ -23,11 +23,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, ConfigYaml, Labels, Object,
-        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset, Torrc,
+        self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
+        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset,
     },
     metrics::Metrics,
     onion_key::OnionKey,
+    tor::{ConfigYaml, ConfigYamlService, ConfigYamlServiceInstance, Torrc},
     Result,
 };
 
@@ -219,7 +220,7 @@ impl OnionBalance {
 
     #[must_use]
     pub fn onion_key_name(&self) -> ResourceName {
-        (&self.spec.onion_key.name).into()
+        ResourceName::from(&self.spec.onion_key.name)
     }
 
     #[must_use]
@@ -536,30 +537,27 @@ async fn reconcile_onion_balance(
 
 #[allow(unused_variables)]
 fn generate_torrc(object: &OnionBalance) -> Torrc {
-    Torrc::new(vec!["SocksPort 9050", "ControlPort 127.0.0.1:6666"].join("\n"))
+    Torrc::builder()
+        .socks_port(9050)
+        .control_port("127.0.0.1:6666")
+        .build()
 }
 
 fn generate_config_yaml(object: &OnionBalance) -> ConfigYaml {
-    ConfigYaml::new(
-        vec![
-            "services:".into(),
-            "- instances:".into(),
-            object
+    ConfigYaml {
+        services: vec![ConfigYamlService {
+            instances: object
                 .spec
                 .onion_services
                 .iter()
-                .map(|onion_service| {
-                    format!(
-                        "  - address: {}\n    name: {}",
-                        onion_service.onion_key.hostname, onion_service.onion_key.hostname
-                    )
+                .map(|service| ConfigYamlServiceInstance {
+                    address: service.onion_key.hostname.clone(),
+                    name: service.onion_key.hostname.clone(),
                 })
-                .collect::<Vec<_>>()
-                .join("\n"),
-            "  key: /var/lib/tor/hidden_service/hs_ed25519_secret_key".into(),
-        ]
-        .join("\n"),
-    )
+                .collect(),
+            key: "/var/lib/tor/hidden_service/hs_ed25519_secret_key".into(),
+        }],
+    }
 }
 
 fn generate_config_map(
@@ -578,8 +576,8 @@ fn generate_config_map(
             ..Default::default()
         },
         data: Some(BTreeMap::from([
-            ("torrc".into(), torrc.into()),
-            ("config.yaml".into(), config_yaml.into()),
+            ("torrc".into(), torrc.to_string()),
+            ("config.yaml".into(), config_yaml.to_string()),
         ])),
         ..Default::default()
     }

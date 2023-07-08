@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, ops::Deref};
+use std::{borrow::Cow, collections::BTreeMap, ops::Deref};
 
 use super::Annotation;
 
@@ -10,13 +10,21 @@ impl Annotations {
         Self(BTreeMap::new())
     }
 
-    pub fn add<A: Annotation>(mut self, annotation: &A) -> Self {
+    pub fn add<'a, A>(mut self, annotation: &'a A) -> Self
+    where
+        A: Annotation<'a>,
+        &'a A: 'a + Into<Cow<'a, str>>,
+    {
         let (key, value) = annotation.to_tuple();
         self.0.insert(key, value);
         self
     }
 
-    pub fn add_opt<A: Annotation>(mut self, annotation: &Option<A>) -> Self {
+    pub fn add_opt<'a, A>(mut self, annotation: &'a Option<A>) -> Self
+    where
+        A: Annotation<'a>,
+        &'a A: 'a + Into<Cow<'a, str>>,
+    {
         if let Some((key, value)) = annotation.as_ref().map(Annotation::to_tuple) {
             self.0.insert(key, value);
         }
