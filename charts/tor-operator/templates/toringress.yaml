@@ -52,6 +52,12 @@ spec:
                 description: HorizontalPodAutoscaler settings.
                 nullable: true
                 properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    nullable: true
+                    type: object
                   behavior:
                     description: behavior configures the scaling behavior of the target in both Up and Down directions (scaleUp and scaleDown fields respectively). If not set, the default HPAScalingRules for scale up and scale down are used.
                     nullable: true
@@ -126,6 +132,12 @@ spec:
                             format: int32
                             type: integer
                         type: object
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    nullable: true
                     type: object
                   maxReplicas:
                     description: maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up. It cannot be less that minReplicas.
@@ -436,10 +448,28 @@ spec:
               onionBalance:
                 description: OnionBalance settings.
                 properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    nullable: true
+                    type: object
                   configMap:
                     description: Config Map settings.
                     nullable: true
                     properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                        nullable: true
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                        nullable: true
+                        type: object
                       name:
                         description: |-
                           Name of the Config Map.
@@ -452,6 +482,12 @@ spec:
                     description: Deployment settings.
                     nullable: true
                     properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                        nullable: true
+                        type: object
                       containers:
                         description: Containers of the Deployment.
                         nullable: true
@@ -535,6 +571,12 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                        nullable: true
+                        type: object
                       name:
                         description: |-
                           Name of the Deployment.
@@ -542,6 +584,12 @@ spec:
                           Default: name of the TorIngress
                         nullable: true
                         type: string
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    nullable: true
                     type: object
                   name:
                     description: |-
@@ -553,6 +601,18 @@ spec:
                   onionKey:
                     description: OnionKey settings.
                     properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                        nullable: true
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                        nullable: true
+                        type: object
                       name:
                         description: Name of the OnionKey.
                         type: string
@@ -565,10 +625,28 @@ spec:
               onionService:
                 description: OnionService settings.
                 properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    nullable: true
+                    type: object
                   configMap:
                     description: Config Map settings.
                     nullable: true
                     properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                        nullable: true
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                        nullable: true
+                        type: object
                       namePrefix:
                         description: |-
                           Name prefix of the Config Map.
@@ -581,6 +659,12 @@ spec:
                     description: Deployment settings.
                     nullable: true
                     properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                        nullable: true
+                        type: object
                       containers:
                         description: Containers of the Deployment.
                         nullable: true
@@ -625,6 +709,12 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                        nullable: true
+                        type: object
                       namePrefix:
                         description: |-
                           Name prefix of the Deployment.
@@ -632,6 +722,12 @@ spec:
                           Default: name of the TorIngress
                         nullable: true
                         type: string
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    nullable: true
                     type: object
                   namePrefix:
                     description: |-
@@ -644,6 +740,18 @@ spec:
                     description: OnionKey settings.
                     nullable: true
                     properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                        nullable: true
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                        nullable: true
+                        type: object
                       namePrefix:
                         description: |-
                           Name prefix of the OnionKey.
@@ -655,6 +763,18 @@ spec:
                         description: Secret settings.
                         nullable: true
                         properties:
+                          annotations:
+                            additionalProperties:
+                              type: string
+                            description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                            nullable: true
+                            type: object
+                          labels:
+                            additionalProperties:
+                              type: string
+                            description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                            nullable: true
+                            type: object
                           namePrefix:
                             description: |-
                               Name prefix of the Secret.
