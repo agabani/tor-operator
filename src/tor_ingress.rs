@@ -1,4 +1,8 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::Arc,
+    time::Duration,
+};
 
 use futures::StreamExt;
 use k8s_openapi::{
@@ -56,8 +60,10 @@ use crate::{
 ///
 /// The Tor Operator will auto generate random `OnionKeys` for the `OnionServices`.
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[kube(
+    derive = "Default",
+    derive = "PartialEq",
     group = "tor.agabani.co.uk",
     kind = "TorIngress",
     namespaced,
@@ -82,11 +88,17 @@ pub struct TorIngressSpec {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressHorizontalPodAutoscaler {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
     /// behavior configures the scaling behavior of the target in both Up and Down directions (scaleUp and scaleDown fields respectively). If not set, the default HPAScalingRules for scale up and scale down are used.
     pub behavior: Option<HorizontalPodAutoscalerBehavior>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
 
     /// Name of the HorizontalPodAutoscaler.
     ///
@@ -104,14 +116,20 @@ pub struct TorIngressHorizontalPodAutoscaler {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalance {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
     /// Config Map settings.
     pub config_map: Option<TorIngressSpecOnionBalanceConfigMap>,
 
     /// Deployment settings.
     pub deployment: Option<TorIngressSpecOnionBalanceDeployment>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
 
     /// Name of the OnionBalance.
     ///
@@ -123,9 +141,15 @@ pub struct TorIngressSpecOnionBalance {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceConfigMap {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
+
     /// Name of the Config Map.
     ///
     /// Default: name of the TorIngress
@@ -133,11 +157,17 @@ pub struct TorIngressSpecOnionBalanceConfigMap {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceDeployment {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
     /// Containers of the Deployment.
     pub containers: Option<TorIngressSpecOnionBalanceDeploymentContainers>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
 
     /// Name of the Deployment.
     ///
@@ -146,7 +176,7 @@ pub struct TorIngressSpecOnionBalanceDeployment {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceDeploymentContainers {
     /// Onion Balance container.
@@ -157,7 +187,7 @@ pub struct TorIngressSpecOnionBalanceDeploymentContainers {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceDeploymentContainersOnionBalance {
     /// Resources of the container.
@@ -165,7 +195,7 @@ pub struct TorIngressSpecOnionBalanceDeploymentContainersOnionBalance {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceDeploymentContainersTor {
     /// Resources of the container.
@@ -173,22 +203,34 @@ pub struct TorIngressSpecOnionBalanceDeploymentContainersTor {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceOnionKey {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
+
     /// Name of the OnionKey.
     pub name: String,
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionService {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
     /// Config Map settings.
     pub config_map: Option<TorIngressSpecOnionServiceConfigMap>,
 
     /// Deployment settings.
     pub deployment: Option<TorIngressSpecOnionServiceDeployment>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
 
     /// Name prefix of the OnionService.
     ///
@@ -211,9 +253,15 @@ fn default_onion_service_replicas() -> i32 {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceConfigMap {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
+
     /// Name prefix of the Config Map.
     ///
     /// Default: name of the TorIngress
@@ -221,11 +269,17 @@ pub struct TorIngressSpecOnionServiceConfigMap {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceDeployment {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
     /// Containers of the Deployment.
     pub containers: Option<TorIngressSpecOnionServiceDeploymentContainers>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
 
     /// Name prefix of the Deployment.
     ///
@@ -234,7 +288,7 @@ pub struct TorIngressSpecOnionServiceDeployment {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceDeploymentContainers {
     /// Tor container.
@@ -242,7 +296,7 @@ pub struct TorIngressSpecOnionServiceDeploymentContainers {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceDeploymentContainersTor {
     /// Resources of the container.
@@ -250,9 +304,15 @@ pub struct TorIngressSpecOnionServiceDeploymentContainersTor {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceOnionKey {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
+
     /// Name prefix of the OnionKey.
     ///
     /// Default: name of the TorIngress
@@ -263,9 +323,15 @@ pub struct TorIngressSpecOnionServiceOnionKey {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceOnionKeySecret {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
+
     /// Name prefix of the Secret.
     ///
     /// Default: name of the TorIngress
@@ -273,7 +339,7 @@ pub struct TorIngressSpecOnionServiceOnionKeySecret {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServicePort {
     /// The target any incoming traffic will be redirect to.
@@ -284,7 +350,7 @@ pub struct TorIngressSpecOnionServicePort {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressStatus {
     /// Represents the latest available observations of a deployment's current state.
@@ -319,12 +385,64 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn horizontal_pod_autoscaler_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .horizontal_pod_autoscaler
+            .as_ref()
+            .and_then(|f| f.annotations.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn horizontal_pod_autoscaler_labels(&self) -> Option<Labels> {
+        self.spec
+            .horizontal_pod_autoscaler
+            .as_ref()
+            .and_then(|f| f.labels.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
     pub fn horizontal_pod_autoscaler_name(&self) -> ResourceName {
         self.spec
             .horizontal_pod_autoscaler
             .as_ref()
             .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_balance_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .onion_balance
+            .annotations
+            .as_ref()
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_balance_config_map_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .onion_balance
+            .config_map
+            .as_ref()
+            .and_then(|f| f.annotations.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_balance_config_map_labels(&self) -> Option<Labels> {
+        self.spec
+            .onion_balance
+            .config_map
+            .as_ref()
+            .and_then(|f| f.labels.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
     }
 
     #[must_use]
@@ -335,6 +453,17 @@ impl TorIngress {
             .as_ref()
             .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_balance_deployment_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.annotations.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
     }
 
     #[must_use]
@@ -364,6 +493,17 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_balance_deployment_labels(&self) -> Option<Labels> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.labels.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
     pub fn onion_balance_deployment_name(&self) -> ResourceName {
         self.spec
             .onion_balance
@@ -371,6 +511,16 @@ impl TorIngress {
             .as_ref()
             .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_balance_labels(&self) -> Option<Labels> {
+        self.spec
+            .onion_balance
+            .labels
+            .as_ref()
+            .map(Clone::clone)
+            .map(Into::into)
     }
 
     #[must_use]
@@ -388,6 +538,43 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_service_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .onion_service
+            .annotations
+            .as_ref()
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_config_map_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .onion_service
+            .config_map
+            .as_ref()
+            .and_then(|f| f.annotations.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_config_map_labels(&self) -> Option<Labels> {
+        self.spec
+            .onion_service
+            .config_map
+            .as_ref()
+            .and_then(|f| f.labels.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_config_map_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_config_map_name_prefix()).into()
+    }
+
+    #[must_use]
     pub fn onion_service_config_map_name_prefix(&self) -> ResourceName {
         self.spec
             .onion_service
@@ -398,18 +585,14 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_config_map_name(&self, instance: i32) -> ResourceName {
-        format!("{}-{instance}", self.onion_service_config_map_name_prefix()).into()
-    }
-
-    #[must_use]
-    pub fn onion_service_deployment_name_prefix(&self) -> ResourceName {
+    pub fn onion_service_deployment_annotations(&self) -> Option<Annotations> {
         self.spec
             .onion_service
             .deployment
             .as_ref()
-            .and_then(|f| f.name_prefix.as_ref())
-            .map_or_else(|| self.default_name(), Into::into)
+            .and_then(|f| f.annotations.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
     }
 
     #[must_use]
@@ -426,8 +609,44 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_service_deployment_labels(&self) -> Option<Labels> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.labels.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
     pub fn onion_service_deployment_name(&self, instance: i32) -> ResourceName {
         format!("{}-{instance}", self.onion_service_deployment_name_prefix()).into()
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_name_prefix(&self) -> ResourceName {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.name_prefix.as_ref())
+            .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_labels(&self) -> Option<Labels> {
+        self.spec
+            .onion_service
+            .labels
+            .as_ref()
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_name_prefix()).into()
     }
 
     #[must_use]
@@ -440,8 +659,8 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_name(&self, instance: i32) -> ResourceName {
-        format!("{}-{instance}", self.onion_service_name_prefix()).into()
+    pub fn onion_service_onion_key_name(&self, instance: i32) -> ResourceName {
+        format!("{}-{instance}", self.onion_service_onion_key_name_prefix()).into()
     }
 
     #[must_use]
@@ -455,11 +674,6 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_onion_key_name(&self, instance: i32) -> ResourceName {
-        format!("{}-{instance}", self.onion_service_onion_key_name_prefix()).into()
-    }
-
-    #[must_use]
     pub fn onion_service_onion_key_secret_name_prefix(&self) -> ResourceName {
         self.spec
             .onion_service
@@ -468,6 +682,52 @@ impl TorIngress {
             .and_then(|f| f.secret.as_ref())
             .and_then(|f| f.name_prefix.as_ref())
             .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_onion_key_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .onion_service
+            .onion_key
+            .as_ref()
+            .and_then(|f| f.annotations.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_onion_key_labels(&self) -> Option<Labels> {
+        self.spec
+            .onion_service
+            .onion_key
+            .as_ref()
+            .and_then(|f| f.labels.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_onion_key_secret_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .onion_service
+            .onion_key
+            .as_ref()
+            .and_then(|f| f.secret.as_ref())
+            .and_then(|f| f.annotations.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_onion_key_secret_labels(&self) -> Option<Labels> {
+        self.spec
+            .onion_service
+            .onion_key
+            .as_ref()
+            .and_then(|f| f.secret.as_ref())
+            .and_then(|f| f.labels.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
     }
 
     #[must_use]
@@ -865,15 +1125,43 @@ fn generate_onion_balance(
     OnionBalance {
         metadata: ObjectMeta {
             name: Some(object.onion_balance_name().into()),
-            annotations: Some(annotations.into()),
-            labels: Some(labels.into()),
+            annotations: Some(
+                annotations
+                    .clone()
+                    .append_reverse(object.onion_balance_annotations())
+                    .into(),
+            ),
+            labels: Some(
+                labels
+                    .clone()
+                    .append_reverse(object.onion_balance_labels())
+                    .into(),
+            ),
             ..Default::default()
         },
         spec: OnionBalanceSpec {
             config_map: Some(OnionBalanceSpecConfigMap {
+                annotations: Some(
+                    annotations
+                        .clone()
+                        .append_reverse(object.onion_balance_config_map_annotations())
+                        .into(),
+                ),
+                labels: Some(
+                    labels
+                        .clone()
+                        .append_reverse(object.onion_balance_config_map_labels())
+                        .into(),
+                ),
                 name: Some(object.onion_balance_config_map_name().into()),
             }),
             deployment: Some(OnionBalanceSpecDeployment {
+                annotations: Some(
+                    annotations
+                        .clone()
+                        .append_reverse(object.onion_balance_deployment_annotations())
+                        .into(),
+                ),
                 containers: Some(OnionBalanceSpecDeploymentContainers {
                     onion_balance: Some(OnionBalanceSpecDeploymentContainersOnionBalance {
                         resources: object
@@ -886,6 +1174,12 @@ fn generate_onion_balance(
                             .cloned(),
                     }),
                 }),
+                labels: Some(
+                    labels
+                        .clone()
+                        .append_reverse(object.onion_balance_deployment_labels())
+                        .into(),
+                ),
                 name: Some(object.onion_balance_deployment_name().into()),
             }),
             onion_key: OnionBalanceSpecOnionKey {
@@ -916,14 +1210,36 @@ fn generate_onion_service_onion_key(
     OnionKey {
         metadata: ObjectMeta {
             name: Some(object.onion_service_onion_key_name(instance).into()),
-            annotations: Some(annotations.into()),
-            labels: Some(labels.into()),
+            annotations: Some(
+                annotations
+                    .clone()
+                    .append_reverse(object.onion_service_onion_key_annotations())
+                    .into(),
+            ),
+            labels: Some(
+                labels
+                    .clone()
+                    .append_reverse(object.onion_service_onion_key_labels())
+                    .into(),
+            ),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
         spec: OnionKeySpec {
             auto_generate: true,
             secret: OnionKeySpecSecret {
+                annotations: Some(
+                    annotations
+                        .clone()
+                        .append_reverse(object.onion_service_onion_key_secret_annotations())
+                        .into(),
+                ),
+                labels: Some(
+                    labels
+                        .clone()
+                        .append_reverse(object.onion_service_onion_key_secret_labels())
+                        .into(),
+                ),
                 name: object.onion_service_onion_key_secret_name(instance).into(),
             },
         },
@@ -941,15 +1257,43 @@ fn generate_onion_service(
     OnionService {
         metadata: ObjectMeta {
             name: Some(object.onion_service_name(instance).into()),
-            annotations: Some(annotations.into()),
-            labels: Some(labels.into()),
+            annotations: Some(
+                annotations
+                    .clone()
+                    .append_reverse(object.onion_service_annotations())
+                    .into(),
+            ),
+            labels: Some(
+                labels
+                    .clone()
+                    .append_reverse(object.onion_service_labels())
+                    .into(),
+            ),
             ..Default::default()
         },
         spec: OnionServiceSpec {
             config_map: Some(OnionServiceSpecConfigMap {
+                annotations: Some(
+                    annotations
+                        .clone()
+                        .append_reverse(object.onion_service_config_map_annotations())
+                        .into(),
+                ),
+                labels: Some(
+                    labels
+                        .clone()
+                        .append_reverse(object.onion_service_config_map_labels())
+                        .into(),
+                ),
                 name: Some(object.onion_service_config_map_name(instance).into()),
             }),
             deployment: Some(OnionServiceSpecDeployment {
+                annotations: Some(
+                    annotations
+                        .clone()
+                        .append_reverse(object.onion_service_deployment_annotations())
+                        .into(),
+                ),
                 containers: Some(OnionServiceSpecDeploymentContainers {
                     tor: Some(OnionServiceSpecDeploymentContainersTor {
                         resources: object
@@ -957,6 +1301,12 @@ fn generate_onion_service(
                             .cloned(),
                     }),
                 }),
+                labels: Some(
+                    labels
+                        .clone()
+                        .append_reverse(object.onion_service_deployment_labels())
+                        .into(),
+                ),
                 name: Some(object.onion_service_deployment_name(instance).into()),
             }),
             onion_balance: Some(OnionServiceSpecOnionBalance {
@@ -994,8 +1344,18 @@ fn generate_horizontal_pod_autoscaler(
         .map(|horizontal_pod_autoscaler| HorizontalPodAutoscaler {
             metadata: ObjectMeta {
                 name: Some(object.horizontal_pod_autoscaler_name().into()),
-                annotations: Some(annotations.into()),
-                labels: Some(labels.into()),
+                annotations: Some(
+                    annotations
+                        .clone()
+                        .append_reverse(object.horizontal_pod_autoscaler_annotations())
+                        .into(),
+                ),
+                labels: Some(
+                    labels
+                        .clone()
+                        .append_reverse(object.horizontal_pod_autoscaler_labels())
+                        .into(),
+                ),
                 ..Default::default()
             },
             spec: Some(HorizontalPodAutoscalerSpec {

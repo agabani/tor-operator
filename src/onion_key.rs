@@ -56,8 +56,10 @@ use crate::{
 /// A user can have the Tor Operator create a new random Tor Onion Key by using the
 /// auto generate feature controlled by `.autoGenerate`.
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[kube(
+    derive = "Default",
+    derive = "PartialEq",
     group = "tor.agabani.co.uk",
     kind = "OnionKey",
     namespaced,
@@ -102,9 +104,15 @@ pub struct OnionKeySpec {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionKeySpecSecret {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
+
     /// Name of the secret.
     ///
     /// Secret data must have keys `hostname`, `hs_ed25519_public_key` and
@@ -113,7 +121,7 @@ pub struct OnionKeySpecSecret {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionKeyStatus {
     /// Auto generated OnionKey.
@@ -150,6 +158,26 @@ impl OnionKey {
             .and_then(|status| status.hostname.as_ref())
             .map(Clone::clone)
             .map(Hostname::new)
+    }
+
+    #[must_use]
+    pub fn secret_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .secret
+            .annotations
+            .as_ref()
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn secret_labels(&self) -> Option<Labels> {
+        self.spec
+            .secret
+            .labels
+            .as_ref()
+            .map(Clone::clone)
+            .map(Into::into)
     }
 
     #[must_use]
@@ -401,8 +429,13 @@ fn generate_secret(
         Secret {
             metadata: ObjectMeta {
                 name: Some(object.secret_name().into()),
-                annotations: Some(annotations.into()),
-                labels: Some(labels.into()),
+                annotations: Some(
+                    annotations
+                        .clone()
+                        .append_reverse(object.secret_annotations())
+                        .into(),
+                ),
+                labels: Some(labels.clone().append_reverse(object.secret_labels()).into()),
                 owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
                 ..Default::default()
             },

@@ -2,7 +2,7 @@ use std::{borrow::Cow, collections::BTreeMap, ops::Deref};
 
 use super::Annotation;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Annotations(BTreeMap<String, String>);
 
 impl Annotations {
@@ -30,6 +30,16 @@ impl Annotations {
         }
         self
     }
+
+    pub fn append_reverse(mut self, other: Option<Self>) -> Self {
+        if let Some(other) = other {
+            let mut other = other.0;
+            other.append(&mut self.0);
+            Self(other)
+        } else {
+            self
+        }
+    }
 }
 
 impl Deref for Annotations {
@@ -37,6 +47,12 @@ impl Deref for Annotations {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl From<BTreeMap<String, String>> for Annotations {
+    fn from(value: BTreeMap<String, String>) -> Self {
+        Self(value)
     }
 }
 

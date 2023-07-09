@@ -6,8 +6,17 @@ metadata:
     {{- include "example.labels" . | nindent 4 }}
 spec:
   configMap:
+    annotations:
+      key-a-1: value-a-1
+      key-a-2: value-a-2
+    labels:
+      key-l-1: value-l-1
+      key-l-2: value-l-2
     name: onion-service-{{ include "example.fullname" . }}-full
   deployment:
+    annotations:
+      key-a-3: value-a-3
+      key-a-4: value-a-4
     containers:
       tor:
         resources:
@@ -17,6 +26,9 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi
+    labels:
+      key-l-3: value-l-3
+      key-l-4: value-l-4
     name: onion-service-{{ include "example.fullname" . }}-full
   onionKey:
     name: onion-service-{{ include "example.fullname" . }}-full

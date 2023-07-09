@@ -45,6 +45,15 @@ The Tor Operator will auto generated a random OnionKey and store it in a `Secret
 {% include "../../example/templates/onionkey_auto_generate/onionkey.yaml" %}
 ```
 
+### Full
+
+The Tor Operator will auto generated a random OnionKey and store it in a `Secret` on your behalf.
+
+```
+#onionkey.yaml
+{% include "../../example/templates/onionkey_full/onionkey.yaml" %}
+```
+
 ## Conditions
 
 {%

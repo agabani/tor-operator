@@ -83,6 +83,12 @@ pub struct OnionServiceSpec {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecConfigMap {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
+
     /// Name of the Config Map.
     ///
     /// Default: name of the OnionService
@@ -93,8 +99,14 @@ pub struct OnionServiceSpecConfigMap {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeployment {
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    pub annotations: Option<BTreeMap<String, String>>,
+
     /// Containers of the Deployment.
     pub containers: Option<OnionServiceSpecDeploymentContainers>,
+
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    pub labels: Option<BTreeMap<String, String>>,
 
     /// Name of the Deployment.
     ///
@@ -188,12 +200,42 @@ impl OnionService {
     }
 
     #[must_use]
+    pub fn config_map_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .config_map
+            .as_ref()
+            .and_then(|f| f.annotations.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
+    pub fn config_map_labels(&self) -> Option<Labels> {
+        self.spec
+            .config_map
+            .as_ref()
+            .and_then(|f| f.labels.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
+    }
+
+    #[must_use]
     pub fn config_map_name(&self) -> ResourceName {
         self.spec
             .config_map
             .as_ref()
             .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
+    pub fn deployment_annotations(&self) -> Option<Annotations> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.annotations.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
     }
 
     #[must_use]
@@ -204,6 +246,16 @@ impl OnionService {
             .and_then(|f| f.containers.as_ref())
             .and_then(|f| f.tor.as_ref())
             .and_then(|f| f.resources.as_ref())
+    }
+
+    #[must_use]
+    pub fn deployment_labels(&self) -> Option<Labels> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.labels.as_ref())
+            .map(Clone::clone)
+            .map(Into::into)
     }
 
     #[must_use]
@@ -576,8 +628,18 @@ fn generate_config_map(
     ConfigMap {
         metadata: ObjectMeta {
             name: Some(object.config_map_name().into()),
-            annotations: Some(annotations.into()),
-            labels: Some(labels.into()),
+            annotations: Some(
+                annotations
+                    .clone()
+                    .append_reverse(object.config_map_annotations())
+                    .into(),
+            ),
+            labels: Some(
+                labels
+                    .clone()
+                    .append_reverse(object.config_map_labels())
+                    .into(),
+            ),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
@@ -603,8 +665,8 @@ fn generate_deployment(
     Deployment {
         metadata: ObjectMeta {
             name: Some(object.deployment_name().into()),
-            annotations: Some(annotations.into()),
-            labels: Some(labels.into()),
+            annotations: Some(annotations.clone().append_reverse(object.deployment_annotations()).into()),
+            labels: Some(labels.clone().append_reverse(object.deployment_labels()).into()),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
@@ -616,8 +678,8 @@ fn generate_deployment(
             },
             template: PodTemplateSpec {
                 metadata: Some(ObjectMeta {
-                    annotations: Some(annotations.into()),
-                    labels: Some(labels.into()),
+                    annotations: Some(annotations.clone().append_reverse(object.deployment_annotations()).into()),
+                    labels: Some(labels.clone().append_reverse(object.deployment_labels()).into()),
                     ..Default::default()
                 }),
                 spec: Some(PodSpec {
