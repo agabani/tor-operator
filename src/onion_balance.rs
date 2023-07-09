@@ -46,8 +46,10 @@ use crate::{
 /// multiple hosts while also increasing resiliency by eliminating single
 /// points of failure.
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[kube(
+    derive = "Default",
+    derive = "PartialEq",
     group = "tor.agabani.co.uk",
     kind = "OnionBalance",
     namespaced,
@@ -74,7 +76,7 @@ pub struct OnionBalanceSpec {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecConfigMap {
     /// Name of the Config Map.
@@ -84,7 +86,7 @@ pub struct OnionBalanceSpecConfigMap {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecDeployment {
     /// Containers of the Deployment.
@@ -97,7 +99,7 @@ pub struct OnionBalanceSpecDeployment {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecDeploymentContainers {
     /// Onion Balance container.
@@ -108,7 +110,7 @@ pub struct OnionBalanceSpecDeploymentContainers {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecDeploymentContainersOnionBalance {
     /// Resources of the container.
@@ -116,7 +118,7 @@ pub struct OnionBalanceSpecDeploymentContainersOnionBalance {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecDeploymentContainersTor {
     /// Resources of the container.
@@ -124,7 +126,7 @@ pub struct OnionBalanceSpecDeploymentContainersTor {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecOnionKey {
     /// Name of the OnionKey.
@@ -132,7 +134,7 @@ pub struct OnionBalanceSpecOnionKey {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecOnionService {
     /// OnionKey reference of the OnionService.
@@ -140,7 +142,7 @@ pub struct OnionBalanceSpecOnionService {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecOnionServiceOnionKey {
     /// Hostname value of the OnionKey.
@@ -150,7 +152,7 @@ pub struct OnionBalanceSpecOnionServiceOnionKey {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceStatus {
     /// Represents the latest available observations of a deployment's current state.
@@ -768,5 +770,61 @@ fn generate_deployment(
             ..Default::default()
         }),
         ..Default::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn config() {
+        let object = OnionBalance {
+            spec: OnionBalanceSpec {
+                onion_services: vec![
+                    OnionBalanceSpecOnionService {
+                        onion_key: OnionBalanceSpecOnionServiceOnionKey {
+                            hostname: "hostname1.onion".into(),
+                        },
+                    },
+                    OnionBalanceSpecOnionService {
+                        onion_key: OnionBalanceSpecOnionServiceOnionKey {
+                            hostname: "hostname2.onion".into(),
+                        },
+                    },
+                    OnionBalanceSpecOnionService {
+                        onion_key: OnionBalanceSpecOnionServiceOnionKey {
+                            hostname: "hostname3.onion".into(),
+                        },
+                    },
+                ],
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let config_yaml = generate_config_yaml(&object);
+
+        assert_eq!(
+            r#"services:
+- instances:
+  - address: hostname1.onion
+    name: hostname1.onion
+  - address: hostname2.onion
+    name: hostname2.onion
+  - address: hostname3.onion
+    name: hostname3.onion
+  key: /var/lib/tor/hidden_service/hs_ed25519_secret_key
+"#,
+            config_yaml.to_string()
+        );
+
+        let torrc = generate_torrc(&object);
+
+        assert_eq!(
+            r#"SocksPort 9050
+ControlPort 127.0.0.1:6666"#,
+            torrc.to_string()
+        );
     }
 }

@@ -54,7 +54,7 @@ use crate::{
 /// ```
 ///
 /// A user can have the Tor Operator create a new random Tor Onion Key by using the
-/// auto generate feature controlled by `.auto_generate`.
+/// auto generate feature controlled by `.autoGenerate`.
 #[allow(clippy::module_name_repetitions)]
 #[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
 #[kube(

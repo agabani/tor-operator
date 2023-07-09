@@ -45,8 +45,10 @@ use crate::{
 /// Running a Tor Onion Service gives your users all the security of HTTPS with
 /// the added privacy benefits of Tor.
 #[allow(clippy::module_name_repetitions)]
-#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(CustomResource, JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[kube(
+    derive = "Default",
+    derive = "PartialEq",
     group = "tor.agabani.co.uk",
     kind = "OnionService",
     namespaced,
@@ -78,7 +80,7 @@ pub struct OnionServiceSpec {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecConfigMap {
     /// Name of the Config Map.
@@ -88,7 +90,7 @@ pub struct OnionServiceSpecConfigMap {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeployment {
     /// Containers of the Deployment.
@@ -101,7 +103,7 @@ pub struct OnionServiceSpecDeployment {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeploymentContainers {
     /// Tor container.
@@ -109,7 +111,7 @@ pub struct OnionServiceSpecDeploymentContainers {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeploymentContainersTor {
     /// Resources of the container.
@@ -117,7 +119,7 @@ pub struct OnionServiceSpecDeploymentContainersTor {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecOnionBalance {
     /// OnionKey reference of the OnionBalance.
@@ -125,7 +127,7 @@ pub struct OnionServiceSpecOnionBalance {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecOnionBalanceOnionKey {
     /// Hostname value of the OnionKey.
@@ -135,7 +137,7 @@ pub struct OnionServiceSpecOnionBalanceOnionKey {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecOnionKey {
     /// Name of the OnionKey.
@@ -143,7 +145,7 @@ pub struct OnionServiceSpecOnionKey {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecHiddenServicePort {
     /// The target any incoming traffic will be redirect to.
@@ -158,7 +160,7 @@ pub struct OnionServiceSpecHiddenServicePort {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceStatus {
     /// Represents the latest available observations of a deployment's current state.
@@ -747,5 +749,82 @@ fn generate_deployment(
             ..Default::default()
         }),
         ..Default::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn config() {
+        let object = &OnionService {
+            spec: OnionServiceSpec {
+                ports: vec![
+                    OnionServiceSpecHiddenServicePort {
+                        target: "example:80".into(),
+                        virtport: 80,
+                    },
+                    OnionServiceSpecHiddenServicePort {
+                        target: "example:443".into(),
+                        virtport: 443,
+                    },
+                ],
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let ob_config = generate_ob_config(&object);
+
+        assert!(ob_config.is_none());
+
+        let torrc = generate_torrc(&object);
+
+        assert_eq!(
+            r#"HiddenServiceDir /var/lib/tor/hidden_service
+HiddenServicePort 80 example:80
+HiddenServicePort 443 example:443"#,
+            torrc.to_string()
+        )
+    }
+
+    #[test]
+    fn config_onion_balance() {
+        let object = &OnionService {
+            spec: OnionServiceSpec {
+                onion_balance: Some(OnionServiceSpecOnionBalance {
+                    onion_key: OnionServiceSpecOnionBalanceOnionKey {
+                        hostname: "hostname.onion".into(),
+                    },
+                }),
+                ports: vec![
+                    OnionServiceSpecHiddenServicePort {
+                        target: "example:80".into(),
+                        virtport: 80,
+                    },
+                    OnionServiceSpecHiddenServicePort {
+                        target: "example:443".into(),
+                        virtport: 443,
+                    },
+                ],
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let ob_config = generate_ob_config(&object).unwrap();
+
+        assert_eq!("MasterOnionAddress hostname.onion", ob_config.to_string());
+
+        let torrc = generate_torrc(&object);
+
+        assert_eq!(
+            r#"HiddenServiceDir /var/lib/tor/hidden_service
+HiddenServiceOnionbalanceInstance 1
+HiddenServicePort 80 example:80
+HiddenServicePort 443 example:443"#,
+            torrc.to_string()
+        );
     }
 }
