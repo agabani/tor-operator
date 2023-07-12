@@ -110,7 +110,8 @@ jobs:
   release-container-image:
     name: Release Container Image
     needs: release
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    # runs-on: self-hosted
     permissions:
       contents: read
       packages: write
@@ -149,8 +150,8 @@ jobs:
         with:
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }},mode=max
+          # cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
+          # cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }},mode=max
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
       - name: Export digest
         run: |
