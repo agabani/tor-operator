@@ -1,7 +1,7 @@
 FROM rust:latest as build
 
 # 1a: Prepare toolchain
-RUN cargo install cargo-auditable cargo-audit
+RUN cargo install cargo-auditable
 
 # 1b: Download and compile Rust dependencies using fake source code and store as a separate Docker layer
 WORKDIR /root
