@@ -10,6 +10,7 @@
 ### Fixed
 
 - TorIngress ownership references for OnionBalance, OnionService and HorizontalPodAutoscaler.
+- OnionBalance, OnionKey, OnionService and TorIngress Custom Resource Definition additional printer columns.
 
 ## [0.0.8] - 2023-07-13
 

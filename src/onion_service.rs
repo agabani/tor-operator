@@ -55,7 +55,7 @@ use crate::{
     namespaced,
     printcolumn = r#"{"name":"Hostname", "type":"string", "description":"The hostname of the OnionService", "jsonPath":".status.hostname"}"#,
     printcolumn = r#"{"name":"OnionBalance Hostname", "type":"string", "description":"The hostname of the OnionBalance", "jsonPath":".spec.onionBalance.onionKey.hostname"}"#,
-    printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.state"}"#,
+    printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.summary.Initialized"}"#,
     printcolumn = r#"{"name":"Age", "type":"date", "jsonPath":".metadata.creationTimestamp"}"#,
     status = "OnionServiceStatus",
     version = "v1"
@@ -207,6 +207,10 @@ pub struct OnionServiceStatus {
     ///
     /// The hostname is only populated once `state` is "running".
     pub hostname: Option<String>,
+
+    /// Represents the latest available observations of a deployment's current state.
+    #[serde(default)]
+    pub summary: BTreeMap<String, String>,
 }
 
 impl OnionService {
@@ -645,18 +649,28 @@ async fn reconcile_onion_service(
     object: &OnionService,
     state: &State,
 ) -> Result<()> {
+    let conditions = object
+        .status_conditions()
+        .unwrap_or(&Vec::new())
+        .merge_from(&state.into());
+
+    let summary = conditions
+        .iter()
+        .fold(BTreeMap::new(), |mut summary, condition| {
+            summary.insert(condition.type_.clone(), condition.reason.clone());
+            summary
+        });
+
     api.update_status(
         object,
         OnionServiceStatus {
-            conditions: object
-                .status_conditions()
-                .unwrap_or(&Vec::new())
-                .merge_from(&state.into()),
+            conditions,
             hostname: if let State::Initialized(onion_key) = state {
                 onion_key.hostname().as_ref().map(ToString::to_string)
             } else {
                 None
             },
+            summary,
         },
     )
     .await

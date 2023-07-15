@@ -56,7 +56,7 @@ use crate::{
     namespaced,
     printcolumn = r#"{"name":"Hostname", "type":"string", "description":"The hostname of the OnionBalance", "jsonPath":".status.hostname"}"#,
     printcolumn = r#"{"name":"OnionServices", "type":"number", "description":"The hostname of OnionServices", "jsonPath":".status.onionServices"}"#,
-    printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.state"}"#,
+    printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.summary.Initialized"}"#,
     printcolumn = r#"{"name":"Age", "type":"date", "jsonPath":".metadata.creationTimestamp"}"#,
     status = "OnionBalanceStatus",
     version = "v1"
@@ -202,6 +202,10 @@ pub struct OnionBalanceStatus {
 
     /// Number of OnionServices.
     pub onion_services: i32,
+
+    /// Represents the latest available observations of a deployment's current state.
+    #[serde(default)]
+    pub summary: BTreeMap<String, String>,
 }
 
 impl OnionBalance {
@@ -632,19 +636,29 @@ async fn reconcile_onion_balance(
     object: &OnionBalance,
     state: &State,
 ) -> Result<()> {
+    let conditions = object
+        .status_conditions()
+        .unwrap_or(&Vec::new())
+        .merge_from(&state.into());
+
+    let summary = conditions
+        .iter()
+        .fold(BTreeMap::new(), |mut summary, condition| {
+            summary.insert(condition.type_.clone(), condition.reason.clone());
+            summary
+        });
+
     api.update_status(
         object,
         OnionBalanceStatus {
-            conditions: object
-                .status_conditions()
-                .unwrap_or(&Vec::new())
-                .merge_from(&state.into()),
+            conditions,
             hostname: if let State::Initialized(onion_key) = state {
                 onion_key.hostname().as_ref().map(ToString::to_string)
             } else {
                 None
             },
             onion_services: i32::try_from(object.spec.onion_services.len()).unwrap(),
+            summary,
         },
     )
     .await

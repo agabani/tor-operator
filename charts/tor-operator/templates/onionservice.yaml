@@ -29,7 +29,7 @@ spec:
       name: OnionBalance Hostname
       type: string
     - description: Human readable description of state
-      jsonPath: .status.state
+      jsonPath: .status.summary.Initialized
       name: State
       type: string
     - jsonPath: .metadata.creationTimestamp
@@ -846,6 +846,12 @@ spec:
                   The hostname is only populated once `state` is "running".
                 nullable: true
                 type: string
+              summary:
+                additionalProperties:
+                  type: string
+                default: {}
+                description: Represents the latest available observations of a deployment's current state.
+                type: object
             type: object
         required:
         - spec

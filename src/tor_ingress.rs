@@ -72,7 +72,7 @@ use crate::{
     namespaced,
     printcolumn = r#"{"name":"Hostname", "type":"string", "description":"The hostname of the tor ingress", "jsonPath":".status.hostname"}"#,
     printcolumn = r#"{"name":"Replicas", "type":"number", "description":"Number of replicas", "jsonPath":".status.replicas"}"#,
-    printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.state"}"#,
+    printcolumn = r#"{"name":"State", "type":"string", "description":"Human readable description of state", "jsonPath":".status.summary.Initialized"}"#,
     printcolumn = r#"{"name":"Age", "type":"date", "jsonPath":".metadata.creationTimestamp"}"#,
     scale = r#"{"specReplicasPath":".spec.onionService.replicas", "statusReplicasPath":".status.replicas", "labelSelectorPath":".status.labelSelector"}"#,
     status = "TorIngressStatus",
@@ -409,6 +409,10 @@ pub struct TorIngressStatus {
 
     /// Number of replicas.
     pub replicas: i32,
+
+    /// Represents the latest available observations of a deployment's current state.
+    #[serde(default)]
+    pub summary: BTreeMap<String, String>,
 }
 
 impl TorIngress {
@@ -1234,13 +1238,22 @@ async fn reconcile_tor_ingress(
     object: &TorIngress,
     state: &State,
 ) -> Result<()> {
+    let conditions = object
+        .status_conditions()
+        .unwrap_or(&Vec::new())
+        .merge_from(&state.into());
+
+    let summary = conditions
+        .iter()
+        .fold(BTreeMap::new(), |mut summary, condition| {
+            summary.insert(condition.type_.clone(), condition.reason.clone());
+            summary
+        });
+
     api.update_status(
         object,
         TorIngressStatus {
-            conditions: object
-                .status_conditions()
-                .unwrap_or(&Vec::new())
-                .merge_from(&state.into()),
+            conditions,
             hostname: if let State::Initialized((onion_key, _)) = state {
                 onion_key.hostname().as_ref().map(ToString::to_string)
             } else {
@@ -1248,6 +1261,7 @@ async fn reconcile_tor_ingress(
             },
             label_selector: object.try_label_selector::<OnionService>()?,
             replicas: object.onion_service_replicas(),
+            summary,
         },
     )
     .await

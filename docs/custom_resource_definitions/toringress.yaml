@@ -22,7 +22,7 @@ spec:
       name: Replicas
       type: number
     - description: Human readable description of state
-      jsonPath: .status.state
+      jsonPath: .status.summary.Initialized
       name: State
       type: string
     - jsonPath: .metadata.creationTimestamp
@@ -2062,6 +2062,12 @@ spec:
                 description: Number of replicas.
                 format: int32
                 type: integer
+              summary:
+                additionalProperties:
+                  type: string
+                default: {}
+                description: Represents the latest available observations of a deployment's current state.
+                type: object
             required:
             - replicas
             type: object
