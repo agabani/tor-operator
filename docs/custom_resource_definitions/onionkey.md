@@ -20,6 +20,10 @@ A user can import their existing Tor Onion Key by creating a secret.
 A user can have the Tor Operator create a new random Onion Key by using the
 auto generate feature controlled by `.autoGenerate`.
 
+## Screenshots
+
+![OnionKey](./onionkey.png)
+
 ## Examples
 
 ### Basic

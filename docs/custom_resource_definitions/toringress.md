@@ -6,6 +6,10 @@ The user must provide the OnionKey for the OnionBalance.
 
 The Tor Operator wil auto generate random OnionKeys for the OnionServices.
 
+## Screenshots
+
+![TorIngress](./toringress.png)
+
 ## Examples
 
 ### Basic

@@ -6,6 +6,10 @@ A Tor Onion Service is a service that can only be accessed over Tor.
 Running a Tor Onion Service gives your users all the security of HTTPS with
 the added privacy benefits of Tor.
 
+## Screenshots
+
+![OnionService](./onionservice.png)
+
 ## Examples
 
 ### Basic

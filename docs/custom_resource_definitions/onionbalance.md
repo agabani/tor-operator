@@ -7,6 +7,10 @@ load of introduction and rendezvous requests gets distributed across
 multiple hosts while also increasing resiliency by eliminating single
 points of failure.
 
+## Screenshots
+
+![OnionBalance](./onionbalance.png)
+
 ## Examples
 
 ### Basic

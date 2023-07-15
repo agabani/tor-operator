@@ -81,3 +81,13 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
     `kubectl apply -f toringress.yaml`
 
 <!--getting-started-end-->
+
+## Screenshots
+
+![OnionBalance](./docs/custom_resource_definitions/onionbalance.png)
+
+![OnionKey](./docs/custom_resource_definitions/onionkey.png)
+
+![OnionService](./docs/custom_resource_definitions/onionservice.png)
+
+![TorIngress](./docs/custom_resource_definitions/toringress.png)
