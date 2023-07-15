@@ -5,6 +5,7 @@
 ### Added
 
 - Expose affinity, image pull secrets, node selector, tolerations and topology spread constraints configuration.
+- Expose output parameter for CLI onion-key generate.
 
 ### Fixed
 
