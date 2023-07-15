@@ -92,6 +92,10 @@
         </ul>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#tor-operator-onion-key-generate">tor-operator onion-key generate</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#options_2"># Options:</a>
+    </li>
+        </ul>
     </li>
         </ul>
     </li>
@@ -162,7 +166,7 @@
               
                 <h1 id="cli">CLI</h1>
 <h2 id="installation">Installation</h2>
-<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag 0.0.8
+<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag 0.0.9
 </code></pre>
 <!-- BEGIN INCLUDE cli_help.md -->
 <h2 id="command-line-help-for-tor-operator">Command-Line Help for <code>tor-operator</code></h2>
@@ -239,7 +243,11 @@
 </ul>
 <h3 id="tor-operator-onion-key-generate"><code>tor-operator onion-key generate</code></h3>
 <p>Generate a random Tor Onion Key</p>
-<p><strong>Usage:</strong> <code>tor-operator onion-key generate</code></p>
+<p><strong>Usage:</strong> <code>tor-operator onion-key generate [OPTIONS]</code></p>
+<h6 id="options_2"># <strong>Options:</strong></h6>
+<ul>
+<li><code>--output &lt;OUTPUT&gt;</code> — Output the Onion Keys into a directory</li>
+</ul>
 <hr/>
 
 <p><small><i>
