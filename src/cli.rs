@@ -161,4 +161,8 @@ pub enum OnionKeyCommands {
 }
 
 #[derive(Args, Debug)]
-pub struct OnionKeyGenerateArgs {}
+pub struct OnionKeyGenerateArgs {
+    /// Output the Onion Keys into a directory
+    #[arg(long, value_hint = clap::ValueHint::DirPath)]
+    pub output: Option<PathBuf>,
+}

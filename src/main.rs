@@ -1,4 +1,4 @@
-use std::{fs::File, io::Write};
+use std::{borrow::Cow, fs::File, io::Write};
 
 use kube::Client;
 use tor_operator::{
@@ -155,7 +155,7 @@ fn markdown_generate(_cli: &CliArgs, _markdown: &MarkdownArgs, generate: &Markdo
     }
 }
 
-fn onion_key_generate(_cli: &CliArgs, _onion_key: &OnionKeyArgs, _generate: &OnionKeyGenerateArgs) {
+fn onion_key_generate(_cli: &CliArgs, _onion_key: &OnionKeyArgs, generate: &OnionKeyGenerateArgs) {
     let expanded_secret_key = ExpandedSecretKey::generate();
     let public_key = PublicKey::from(&expanded_secret_key);
 
@@ -163,17 +163,22 @@ fn onion_key_generate(_cli: &CliArgs, _onion_key: &OnionKeyArgs, _generate: &Oni
     let hidden_service_public_key = HiddenServicePublicKey::from(&public_key);
     let hidden_service_secret_key = HiddenServiceSecretKey::from(&expanded_secret_key);
 
-    File::create("hostname")
+    let directory = generate
+        .output
+        .as_ref()
+        .map_or_else(Default::default, Cow::Borrowed);
+
+    File::create(directory.join("hostname"))
         .unwrap()
         .write_all(&Vec::<u8>::from(&hostname))
         .unwrap();
 
-    File::create("hs_ed25519_public_key")
+    File::create(directory.join("hs_ed25519_public_key"))
         .unwrap()
         .write_all(&Vec::<u8>::from(&hidden_service_public_key))
         .unwrap();
 
-    File::create("hs_ed25519_secret_key")
+    File::create(directory.join("hs_ed25519_secret_key"))
         .unwrap()
         .write_all(&Vec::<u8>::from(&hidden_service_secret_key))
         .unwrap();

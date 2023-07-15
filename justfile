@@ -20,6 +20,13 @@ cli-crd-generate:
   @cargo run -- crd generate --format helm --output ./charts/tor-operator/templates
   @cargo run -- crd generate --format yaml --output ./docs/custom_resource_definitions
 
+# kube example onion key
+cli-onion-key-generate-example:
+  @{{ if path_exists("./example/secrets/onionkey") == "true" { "" } else { "mkdir -p ./example/secrets/onionkey" } }}
+  @{{ if path_exists("./example/secrets/onionkey/hostname") == "true" { "" } else { "cargo run -- onion-key generate --output ./example/secrets/onionkey" } }}
+  @{{ if path_exists("./example/secrets/onionkey/hs_ed25519_public_key") == "true" { "" } else { "cargo run -- onion-key generate --output ./example/secrets/onionkey" } }}
+  @{{ if path_exists("./example/secrets/onionkey/hs_ed25519_secret_key") == "true" { "" } else { "cargo run -- onion-key generate --output ./example/secrets/onionkey" } }}
+
 # cli markdown generate
 cli-markdown-generate:
   @cargo run -- markdown generate --output ./docs/cli_help.md
@@ -91,7 +98,7 @@ kube-clean:
   @tilt down
 
 # kube run
-kube-run:
+kube-run: cli-onion-key-generate-example
   @tilt up
 
 # kube dashboard port-forward
