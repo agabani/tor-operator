@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.9] - 2023-07-15
+
 ### Added
 
 - Expose affinity, image pull secrets, node selector, tolerations and topology spread constraints configuration.
@@ -82,7 +84,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.8...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.9...HEAD
+
+[0.0.9]: https://github.com/agabani/tor-operator/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/agabani/tor-operator/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/agabani/tor-operator/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/agabani/tor-operator/compare/v0.0.5...v0.0.6
