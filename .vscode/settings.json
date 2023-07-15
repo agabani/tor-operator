@@ -33,6 +33,7 @@
     "schemars",
     "serde",
     "subresource",
+    "tolerations",
     "toringress",
     "torrc",
     "virtport"

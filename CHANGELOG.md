@@ -2,6 +2,14 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Expose affinity, image pull secrets, node selector, tolerations and topology spread constraints configuration.
+
+### Fixed
+
+- TorIngress ownership references for OnionBalance, OnionService and HorizontalPodAutoscaler.
+
 ## [0.0.8] - 2023-07-13
 
 ### Changed
@@ -73,7 +81,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.8...HEAD
-
 [0.0.8]: https://github.com/agabani/tor-operator/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/agabani/tor-operator/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/agabani/tor-operator/compare/v0.0.5...v0.0.6

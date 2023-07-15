@@ -5,8 +5,9 @@ use k8s_openapi::{
     api::{
         apps::v1::{Deployment, DeploymentSpec},
         core::v1::{
-            ConfigMap, ConfigMapVolumeSource, Container, ExecAction, KeyToPath, PodSpec,
-            PodTemplateSpec, Probe, ResourceRequirements, SecretVolumeSource, Volume, VolumeMount,
+            Affinity, ConfigMap, ConfigMapVolumeSource, Container, ExecAction, KeyToPath,
+            LocalObjectReference, PodSpec, PodTemplateSpec, Probe, ResourceRequirements,
+            SecretVolumeSource, Toleration, TopologySpreadConstraint, Volume, VolumeMount,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
@@ -99,11 +100,17 @@ pub struct OnionServiceSpecConfigMap {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionServiceSpecDeployment {
+    /// If specified, the pod's scheduling constraints
+    pub affinity: Option<Affinity>,
+
     /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
     pub containers: Option<OnionServiceSpecDeploymentContainers>,
+
+    /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+    pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
 
     /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
     pub labels: Option<BTreeMap<String, String>>,
@@ -112,6 +119,15 @@ pub struct OnionServiceSpecDeployment {
     ///
     /// Default: name of the OnionService
     pub name: Option<String>,
+
+    /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+    pub node_selector: Option<std::collections::BTreeMap<String, String>>,
+
+    /// If specified, the pod's tolerations.
+    pub tolerations: Option<Vec<Toleration>>,
+
+    /// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
+    pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -229,6 +245,15 @@ impl OnionService {
     }
 
     #[must_use]
+    pub fn deployment_affinity(&self) -> Option<Affinity> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.affinity.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
     pub fn deployment_annotations(&self) -> Option<Annotations> {
         self.spec
             .deployment
@@ -249,6 +274,15 @@ impl OnionService {
     }
 
     #[must_use]
+    pub fn deployment_image_pull_secrets(&self) -> Option<Vec<LocalObjectReference>> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.image_pull_secrets.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
     pub fn deployment_labels(&self) -> Option<Labels> {
         self.spec
             .deployment
@@ -265,6 +299,33 @@ impl OnionService {
             .as_ref()
             .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
+    pub fn deployment_node_selector(&self) -> Option<BTreeMap<String, String>> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.node_selector.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
+    pub fn deployment_tolerations(&self) -> Option<Vec<Toleration>> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.tolerations.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
+    pub fn deployment_topology_spread_constraints(&self) -> Option<Vec<TopologySpreadConstraint>> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.topology_spread_constraints.as_ref())
+            .map(Clone::clone)
     }
 
     #[must_use]
@@ -683,6 +744,7 @@ fn generate_deployment(
                     ..Default::default()
                 }),
                 spec: Some(PodSpec {
+                    affinity: object.deployment_affinity(),
                     containers: vec![Container {
                         args: Some(vec![
                             "-c".into(),
@@ -753,6 +815,10 @@ fn generate_deployment(
                         ]),
                         ..Default::default()
                     }],
+                    image_pull_secrets: object.deployment_image_pull_secrets(),
+                    node_selector: object.deployment_node_selector(),
+                    tolerations: object.deployment_tolerations(),
+                    topology_spread_constraints: object.deployment_topology_spread_constraints(),
                     volumes: Some(vec![
                         Volume {
                             name: "etc-secrets".into(),

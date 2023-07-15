@@ -11,7 +11,10 @@ use k8s_openapi::{
             CrossVersionObjectReference, HorizontalPodAutoscaler, HorizontalPodAutoscalerBehavior,
             HorizontalPodAutoscalerSpec, MetricSpec,
         },
-        core::v1::ResourceRequirements,
+        core::v1::{
+            Affinity, LocalObjectReference, ResourceRequirements, Toleration,
+            TopologySpreadConstraint,
+        },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
     apimachinery::pkg::apis::meta::v1::{Condition, Time},
@@ -160,11 +163,17 @@ pub struct TorIngressSpecOnionBalanceConfigMap {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceDeployment {
+    /// If specified, the pod's scheduling constraints
+    pub affinity: Option<Affinity>,
+
     /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
     pub containers: Option<TorIngressSpecOnionBalanceDeploymentContainers>,
+
+    /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+    pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
 
     /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
     pub labels: Option<BTreeMap<String, String>>,
@@ -173,6 +182,15 @@ pub struct TorIngressSpecOnionBalanceDeployment {
     ///
     /// Default: name of the TorIngress
     pub name: Option<String>,
+
+    /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+    pub node_selector: Option<std::collections::BTreeMap<String, String>>,
+
+    /// If specified, the pod's tolerations.
+    pub tolerations: Option<Vec<Toleration>>,
+
+    /// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
+    pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -272,11 +290,17 @@ pub struct TorIngressSpecOnionServiceConfigMap {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceDeployment {
+    /// If specified, the pod's scheduling constraints
+    pub affinity: Option<Affinity>,
+
     /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
     pub containers: Option<TorIngressSpecOnionServiceDeploymentContainers>,
+
+    /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+    pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
 
     /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
     pub labels: Option<BTreeMap<String, String>>,
@@ -285,6 +309,15 @@ pub struct TorIngressSpecOnionServiceDeployment {
     ///
     /// Default: name of the TorIngress
     pub name_prefix: Option<String>,
+
+    /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+    pub node_selector: Option<std::collections::BTreeMap<String, String>>,
+
+    /// If specified, the pod's tolerations.
+    pub tolerations: Option<Vec<Toleration>>,
+
+    /// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
+    pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -456,6 +489,16 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_balance_deployment_affinity(&self) -> Option<Affinity> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.affinity.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
     pub fn onion_balance_deployment_annotations(&self) -> Option<Annotations> {
         self.spec
             .onion_balance
@@ -493,6 +536,16 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_balance_deployment_image_pull_secrets(&self) -> Option<Vec<LocalObjectReference>> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.image_pull_secrets.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
     pub fn onion_balance_deployment_labels(&self) -> Option<Labels> {
         self.spec
             .onion_balance
@@ -511,6 +564,38 @@ impl TorIngress {
             .as_ref()
             .and_then(|f| f.name.as_ref())
             .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_balance_deployment_node_selector(&self) -> Option<BTreeMap<String, String>> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.node_selector.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
+    pub fn onion_balance_deployment_tolerations(&self) -> Option<Vec<Toleration>> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.tolerations.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
+    pub fn onion_balance_deployment_topology_spread_constraints(
+        &self,
+    ) -> Option<Vec<TopologySpreadConstraint>> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.topology_spread_constraints.as_ref())
+            .map(Clone::clone)
     }
 
     #[must_use]
@@ -585,6 +670,16 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_service_deployment_affinity(&self) -> Option<Affinity> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.affinity.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
     pub fn onion_service_deployment_annotations(&self) -> Option<Annotations> {
         self.spec
             .onion_service
@@ -606,6 +701,16 @@ impl TorIngress {
             .and_then(|f| f.containers.as_ref())
             .and_then(|f| f.tor.as_ref())
             .and_then(|f| f.resources.as_ref())
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_image_pull_secrets(&self) -> Option<Vec<LocalObjectReference>> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.image_pull_secrets.as_ref())
+            .map(Clone::clone)
     }
 
     #[must_use]
@@ -632,6 +737,38 @@ impl TorIngress {
             .as_ref()
             .and_then(|f| f.name_prefix.as_ref())
             .map_or_else(|| self.default_name(), Into::into)
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_node_selector(&self) -> Option<BTreeMap<String, String>> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.node_selector.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_tolerations(&self) -> Option<Vec<Toleration>> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.tolerations.as_ref())
+            .map(Clone::clone)
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_topology_spread_constraints(
+        &self,
+    ) -> Option<Vec<TopologySpreadConstraint>> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.topology_spread_constraints.as_ref())
+            .map(Clone::clone)
     }
 
     #[must_use]
@@ -1137,6 +1274,7 @@ fn generate_onion_balance(
                     .append_reverse(object.onion_balance_labels())
                     .into(),
             ),
+            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
         spec: OnionBalanceSpec {
@@ -1156,6 +1294,7 @@ fn generate_onion_balance(
                 name: Some(object.onion_balance_config_map_name().into()),
             }),
             deployment: Some(OnionBalanceSpecDeployment {
+                affinity: object.onion_balance_deployment_affinity(),
                 annotations: Some(
                     annotations
                         .clone()
@@ -1174,6 +1313,7 @@ fn generate_onion_balance(
                             .cloned(),
                     }),
                 }),
+                image_pull_secrets: object.onion_balance_deployment_image_pull_secrets(),
                 labels: Some(
                     labels
                         .clone()
@@ -1181,6 +1321,10 @@ fn generate_onion_balance(
                         .into(),
                 ),
                 name: Some(object.onion_balance_deployment_name().into()),
+                node_selector: object.onion_balance_deployment_node_selector(),
+                tolerations: object.onion_balance_deployment_tolerations(),
+                topology_spread_constraints: object
+                    .onion_balance_deployment_topology_spread_constraints(),
             }),
             onion_key: OnionBalanceSpecOnionKey {
                 name: object.onion_balance_onion_key_name().into(),
@@ -1269,6 +1413,7 @@ fn generate_onion_service(
                     .append_reverse(object.onion_service_labels())
                     .into(),
             ),
+            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
         spec: OnionServiceSpec {
@@ -1288,6 +1433,7 @@ fn generate_onion_service(
                 name: Some(object.onion_service_config_map_name(instance).into()),
             }),
             deployment: Some(OnionServiceSpecDeployment {
+                affinity: object.onion_service_deployment_affinity(),
                 annotations: Some(
                     annotations
                         .clone()
@@ -1301,6 +1447,7 @@ fn generate_onion_service(
                             .cloned(),
                     }),
                 }),
+                image_pull_secrets: object.onion_service_deployment_image_pull_secrets(),
                 labels: Some(
                     labels
                         .clone()
@@ -1308,6 +1455,10 @@ fn generate_onion_service(
                         .into(),
                 ),
                 name: Some(object.onion_service_deployment_name(instance).into()),
+                node_selector: object.onion_service_deployment_node_selector(),
+                tolerations: object.onion_service_deployment_tolerations(),
+                topology_spread_constraints: object
+                    .onion_service_deployment_topology_spread_constraints(),
             }),
             onion_balance: Some(OnionServiceSpecOnionBalance {
                 onion_key: OnionServiceSpecOnionBalanceOnionKey {
@@ -1356,6 +1507,7 @@ fn generate_horizontal_pod_autoscaler(
                         .append_reverse(object.horizontal_pod_autoscaler_labels())
                         .into(),
                 ),
+                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
                 ..Default::default()
             },
             spec: Some(HorizontalPodAutoscalerSpec {
