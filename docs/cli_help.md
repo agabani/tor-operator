@@ -113,7 +113,11 @@ Onion Key
 
 Generate a random Tor Onion Key
 
-**Usage:** `tor-operator onion-key generate`
+**Usage:** `tor-operator onion-key generate [OPTIONS]`
+
+###### **Options:**
+
+* `--output <OUTPUT>` — Output the Onion Keys into a directory
 
 
 
