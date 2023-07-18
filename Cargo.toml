@@ -25,7 +25,7 @@ rand_07 = { package = "rand", version = "0.7.3" }
 schemars = "0.8.12"
 serde = { version = "1.0.171", features = ["derive"] }
 serde_json = "1.0.103"
-serde_yaml = "0.9.23"
+serde_yaml = "0.9.24"
 sha2 = "0.10.7"
 sha3 = "0.10.8"
 tokio = { version = "1.29.1", features = ["full"] }
