@@ -8,7 +8,7 @@ The Tor Operator wil auto generate random OnionKeys for the OnionServices.
 
 ## Screenshots
 
-![TorIngress](./toringress.png)
+![TorIngress](./toringress.svg)
 
 ## Examples
 

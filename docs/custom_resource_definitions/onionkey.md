@@ -22,7 +22,7 @@ auto generate feature controlled by `.autoGenerate`.
 
 ## Screenshots
 
-![OnionKey](./onionkey.png)
+![OnionKey](./onionkey.svg)
 
 ## Examples
 

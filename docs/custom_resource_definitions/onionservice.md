@@ -8,7 +8,7 @@ the added privacy benefits of Tor.
 
 ## Screenshots
 
-![OnionService](./onionservice.png)
+![OnionService](./onionservice.svg)
 
 ## Examples
 

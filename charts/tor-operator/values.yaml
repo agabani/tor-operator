@@ -81,7 +81,7 @@ service:
 env:
   # Configures logging
   RUST_LOG:
-    value: "info"
+    value: "RUST_LOG=trace,hyper=debug"
 
 resources:
   {}

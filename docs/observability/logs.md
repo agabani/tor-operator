@@ -12,7 +12,7 @@ Logs are configured through the `RUST_LOG` environment variable. [Example Syntax
 RUST_LOG=info
 ```
 
-![logs](./logs.png)
+![logs](./logs.svg)
 
 ### Per Module
 
@@ -20,4 +20,4 @@ RUST_LOG=info
 RUST_LOG=trace,hyper=debug
 ```
 
-![logs per module](./logs_per_module.png)
+![logs per module](./logs_per_module.svg)

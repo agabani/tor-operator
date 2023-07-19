@@ -9,7 +9,7 @@ points of failure.
 
 ## Screenshots
 
-![OnionBalance](./onionbalance.png)
+![OnionBalance](./onionbalance.svg)
 
 ## Examples
 
