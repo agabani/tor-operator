@@ -8,14 +8,13 @@
     <title>Tor Operator</title>
     <link rel="stylesheet" href="/tor-operator/docs/css/theme.css" />
     <link rel="stylesheet" href="/tor-operator/docs/css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
-    <script src="/tor-operator/docs/js/jquery-3.6.0.min.js" defer></script>
     <!--[if lt IE 9]>
       <script src="/tor-operator/docs/js/html5shiv.min.js"></script>
     <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script> 
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
@@ -141,13 +140,14 @@
     
   </span>
 </div>
-    <script>var base_url = '/tor-operator/docs/';</script>
-    <script src="/tor-operator/docs/js/theme_extra.js" defer></script>
-    <script src="/tor-operator/docs/js/theme.js" defer></script>
-    <script defer>
-        window.onload = function () {
+    <script src="/tor-operator/docs/js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "/tor-operator/docs/";</script>
+    <script src="/tor-operator/docs/js/theme_extra.js"></script>
+    <script src="/tor-operator/docs/js/theme.js"></script>
+    <script>
+        jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
-        };
+        });
     </script>
 
 </body>
