@@ -30,7 +30,7 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
 
     or generate a new Onion Key using:
 
-        cargo install --git https://github.com/agabani/tor-operator --tag 0.0.9
+        cargo install --git https://github.com/agabani/tor-operator --tag 0.0.10
         tor-operator onion-key generate
 
 1.  Create a `Secret` containing the Onion Key.
