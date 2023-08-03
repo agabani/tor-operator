@@ -28,7 +28,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=tor-0.4.7.13
+            type=raw,value=tor-0.4.7.14
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -83,7 +83,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=tor-0.4.7.13
+            type=raw,value=tor-0.4.7.14
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
