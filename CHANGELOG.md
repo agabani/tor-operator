@@ -10,7 +10,7 @@
 
 ### Changed
 
-- Upgrade dependencies
+- Upgrade dependencies.
 
 ## [0.0.9] - 2023-07-15
 
@@ -28,13 +28,13 @@
 
 ### Changed
 
-- Upgrade dependencies
+- Upgrade dependencies.
 
 ## [0.0.7] - 2023-07-10
 
 ### Changed
 
-- Upgrade dependencies
+- Upgrade dependencies.
 
 ## [0.0.6] - 2023-07-09
 
