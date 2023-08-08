@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Upgrade dependencies.
+
 ## [0.0.11] - 2023-08-04
 
 ### Changed
@@ -97,7 +101,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.11...HEAD
-
 [0.0.11]: https://github.com/agabani/tor-operator/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/agabani/tor-operator/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/agabani/tor-operator/compare/v0.0.8...v0.0.9
