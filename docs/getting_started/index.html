@@ -46,6 +46,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#creating-a-tor-ingress">Creating a Tor Ingress</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#creating-a-tor-proxy">Creating a Tor Proxy</a>
+    </li>
     </ul>
                 </li>
               </ul>
@@ -74,6 +76,8 @@
                   <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/onionservice/">OnionService</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/toringress/">TorIngress</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/torproxy/">TorProxy</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Observability</span></p>
@@ -120,7 +124,7 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="getting-started">Getting Started</h1>
-<!-- BEGIN INCLUDE ../README.md '&lt;!--getting-started-start--&gt;' '&lt;!--getting-started-end--&gt;' -->
+<!-- BEGIN INCLUDE ../README.md '&lt;!--getting-started-installation-start--&gt;' '&lt;!--getting-started-installation-end--&gt;' -->
 
 <h2 id="installation">Installation</h2>
 <ol>
@@ -130,13 +134,28 @@
 </code></pre>
 </li>
 <li>
+<p>Update the chart repository.</p>
+<pre><code>helm repo update agabani-tor-operator
+</code></pre>
+</li>
+<li>
 <p>Install the Tor Operator.</p>
-<pre><code>helm install tor-operator agabani-tor-operator/tor-operator \
+<pre><code>helm upgrade tor-operator agabani-tor-operator/tor-operator \
     --create-namespace \
+    --install \
     --namespace tor-operator
 </code></pre>
 </li>
+<li>
+<p>Test the Tor Operator.</p>
+<pre><code>helm test tor-operator --namespace tor-operator
+</code></pre>
+</li>
 </ol>
+<!-- END INCLUDE -->
+
+<!-- BEGIN INCLUDE ../README.md '&lt;!--getting-started-custom-resource-definitions-start--&gt;' '&lt;!--getting-started-custom-resource-definitions-end--&gt;' -->
+
 <h2 id="creating-a-tor-ingress">Creating a Tor Ingress</h2>
 <ol>
 <li>
@@ -147,7 +166,7 @@
 <li><code>hs_ed25519_secret_key</code></li>
 </ul>
 <p>or generate a new Onion Key using:</p>
-<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag 0.0.12
+<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag 0.0.13
 tor-operator onion-key generate
 </code></pre>
 </li>
@@ -198,6 +217,37 @@ spec:
         virtport: 80
 </code></pre>
 <p><code>kubectl apply -f toringress.yaml</code></p>
+</li>
+</ol>
+<h2 id="creating-a-tor-proxy">Creating a Tor Proxy</h2>
+<ol>
+<li>
+<p>Create a <code>TorProxy</code></p>
+<pre><code># torproxy.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: TorProxy
+metadata:
+  name: tor-proxy-example
+spec:
+  deployment:
+    containers:
+      tor:
+        resources:
+          requests:
+            cpu: 100m
+  horizontalPodAutoscaler:
+    maxReplicas: 4
+    minReplicas: 2
+  service:
+    ports:
+      - name: http-tunnel
+        port: 1080
+        protocol: HTTP_TUNNEL
+      - name: socks
+        port: 9050
+        protocol: SOCKS
+</code></pre>
+<p><code>kubectl apply -f torproxy.yaml</code></p>
 </li>
 </ol>
 <!-- END INCLUDE -->

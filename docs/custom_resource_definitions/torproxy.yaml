@@ -1,282 +1,25 @@
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionbalance/" />
-      <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>OnionBalance - Tor Operator</title>
-    <link rel="stylesheet" href="../../css/theme.css" />
-    <link rel="stylesheet" href="../../css/theme_extra.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
-    
-      <script>
-        // Current page data
-        var mkdocs_page_name = "OnionBalance";
-        var mkdocs_page_input_path = "custom_resource_definitions/onionbalance.md";
-        var mkdocs_page_url = "/tor-operator/docs/custom_resource_definitions/onionbalance/";
-      </script>
-    
-    <!--[if lt IE 9]>
-      <script src="../../js/html5shiv.min.js"></script>
-    <![endif]-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-      <script>hljs.highlightAll();</script> 
-</head>
-
-<body class="wy-body-for-nav" role="document">
-
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
-    <div class="wy-side-scroll">
-      <div class="wy-side-nav-search">
-          <a href="../.." class="icon icon-home"> Tor Operator
-        </a>
-      </div>
-
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../..">Tor Operator</a>
-                </li>
-              </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../getting_started/">Getting Started</a>
-                </li>
-              </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../changelog/">Changelog</a>
-                </li>
-              </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../cli/">CLI</a>
-                </li>
-              </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../container_images/">Container Images</a>
-                </li>
-              </ul>
-              <ul>
-                <li class="toctree-l1"><a class="reference internal" href="../../helm/">Helm</a>
-                </li>
-              </ul>
-              <p class="caption"><span class="caption-text">Custom Resource Definitions</span></p>
-              <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">OnionBalance</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#screenshots">Screenshots</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
-        <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#full">Full</a>
-    </li>
-        </ul>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#conditions">Conditions</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#openapi-spec">OpenAPI Spec</a>
-    </li>
-    </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../onionkey/">OnionKey</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../onionservice/">OnionService</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../toringress/">TorIngress</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../torproxy/">TorProxy</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">Observability</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../../observability/logs/">Logs</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../observability/metrics/">Metrics</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">Security</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../../security/cluster_role/">Cluster Role</a>
-                  </li>
-              </ul>
-              <p class="caption"><span class="caption-text">Licenses</span></p>
-              <ul>
-                  <li class="toctree-l1"><a class="reference internal" href="../../licenses/first_party/">First Party</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../../licenses/third_party/">Third Party</a>
-                  </li>
-              </ul>
-      </div>
-    </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../..">Tor Operator</a>
-        
-      </nav>
-      <div class="wy-nav-content">
-        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
-  <ul class="wy-breadcrumbs">
-    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
-          <li>Custom Resource Definitions &raquo;</li>
-      <li class="breadcrumb-item active">OnionBalance</li>
-    <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/agabani/tor-operator/edit/master/docs/custom_resource_definitions/onionbalance.md" class="icon icon-github"> Edit on GitHub</a>
-    </li>
-  </ul>
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-            <div class="section" itemprop="articleBody">
-              
-                <h1 id="onionbalance">OnionBalance</h1>
-<p>An OnionBalance is an abstraction of a Tor Onion Balance.</p>
-<p>Tor Onion Balance is the best way to load balance Tor Onion Services. The
-load of introduction and rendezvous requests gets distributed across
-multiple hosts while also increasing resiliency by eliminating single
-points of failure.</p>
-<h2 id="screenshots">Screenshots</h2>
-<p><img alt="OnionBalance" src="../onionbalance.svg" /></p>
-<h2 id="examples">Examples</h2>
-<h3 id="basic">Basic</h3>
-<p>The Tor Operator will create an OnionBalance using an auto generated OnionKey load balancing a list of OnionServices.</p>
-<pre><code>#onionkey.yaml
-apiVersion: tor.agabani.co.uk/v1
-kind: OnionKey
-metadata:
-  name: onion-balance-{{ include &quot;example.fullname&quot; . }}
-  labels:
-    {{- include &quot;example.labels&quot; . | nindent 4 }}
-spec:
-  autoGenerate: true
-  secret:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}
-
-</code></pre>
-<pre><code>#onionbalance.yaml
-apiVersion: tor.agabani.co.uk/v1
-kind: OnionBalance
-metadata:
-  name: onion-balance-{{ include &quot;example.fullname&quot; . }}
-  labels: {{- include &quot;example.labels&quot; . | nindent 4 }}
-spec:
-  onionKey:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}
-  onionServices:
-    - onionKey:
-        hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
-
-</code></pre>
-<h3 id="full">Full</h3>
-<p>The Tor Operator will create an OnionBalance using an auto generated OnionKey load balancing a list of OnionServices.</p>
-<pre><code>#onionkey.yaml
-apiVersion: tor.agabani.co.uk/v1
-kind: OnionKey
-metadata:
-  name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  labels: {{- include &quot;example.labels&quot; . | nindent 4 }}
-spec:
-  autoGenerate: true
-  secret:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-
-</code></pre>
-<pre><code>#onionbalance.yaml
-apiVersion: tor.agabani.co.uk/v1
-kind: OnionBalance
-metadata:
-  name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  labels:
-    {{- include &quot;example.labels&quot; . | nindent 4 }}
-spec:
-  configMap:
-    annotations:
-      key-a-1: value-a-1
-      key-a-2: value-a-2
-    labels:
-      key-l-1: value-l-1
-      key-l-2: value-l-2
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  deployment:
-    annotations:
-      key-a-3: value-a-3
-      key-a-4: value-a-4
-    containers:
-      onionBalance:
-        resources:
-          limits:
-            cpu: 200m
-            memory: 256Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-      tor:
-        resources:
-          limits:
-            cpu: 200m
-            memory: 256Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-    labels:
-      key-l-3: value-l-3
-      key-l-4: value-l-4
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  onionKey:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  onionServices:
-    - onionKey:
-        hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
-
-</code></pre>
-<h2 id="conditions">Conditions</h2>
-<pre><code>          ### Initialized
-
-          `Initialized`
-
-          ### OnionKey
-
-          `NotFound`, `HostnameNotFound`, `Ready`
-
-        type: object
-    required:
-    - onionServices
-    type: object
-required:
-- spec
-title: OnionBalance
-type: object
-</code></pre>
-<p>served: true
-storage: true
-subresources:
-  status: {}</p>
-<h2 id="openapi-spec">OpenAPI Spec</h2>
-<pre><code>apiVersion: apiextensions.k8s.io/v1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: onionbalances.tor.agabani.co.uk
+  name: torproxies.tor.agabani.co.uk
 spec:
   group: tor.agabani.co.uk
   names:
     categories: []
-    kind: OnionBalance
-    plural: onionbalances
+    kind: TorProxy
+    plural: torproxies
     shortNames: []
-    singular: onionbalance
+    singular: torproxy
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: The hostname of the OnionBalance
+    - description: The hostname of the tor proxy
       jsonPath: .status.hostname
       name: Hostname
       type: string
-    - description: The hostname of OnionServices
-      jsonPath: .status.onionServices
-      name: OnionServices
+    - description: Number of replicas
+      jsonPath: .status.replicas
+      name: Replicas
       type: number
     - description: Human readable description of state
       jsonPath: .status.summary.Initialized
@@ -288,13 +31,10 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: Auto-generated derived type for OnionBalanceSpec via `CustomResource`
+        description: Auto-generated derived type for TorProxySpec via `CustomResource`
         properties:
           spec:
-            description: |-
-              An `OnionBalance` is an abstraction of a Tor Onion Balance.
-
-              Tor Onion Balance is the best way to load balance Tor Onion Services. The load of introduction and rendezvous requests gets distributed across multiple hosts while also increasing resiliency by eliminating single points of failure.
+            description: A `TorProxy` is collection of `Tor` clients load balanced by a `Service`.
             properties:
               configMap:
                 description: Config Map settings.
@@ -316,7 +56,7 @@ spec:
                     description: |-
                       Name of the Config Map.
 
-                      Default: name of the OnionBalance
+                      Default: name of the OnionService
                     nullable: true
                     type: string
                 type: object
@@ -332,7 +72,7 @@ spec:
                         description: Describes node affinity scheduling rules for the pod.
                         properties:
                           preferredDuringSchedulingIgnoredDuringExecution:
-                            description: The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding &quot;weight&quot; to the sum if the node matches the corresponding matchExpressions; the node(s) with the highest sum are the most preferred.
+                            description: The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node matches the corresponding matchExpressions; the node(s) with the highest sum are the most preferred.
                             items:
                               description: An empty preferred scheduling term matches all objects with implicit weight 0 (i.e. it's a no-op). A null preferred scheduling term matches no objects (i.e. is also a no-op).
                               properties:
@@ -451,7 +191,7 @@ spec:
                         description: Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc. as some other pod(s)).
                         properties:
                           preferredDuringSchedulingIgnoredDuringExecution:
-                            description: The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding &quot;weight&quot; to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.
+                            description: The scheduler will prefer to schedule pods to nodes that satisfy the affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.
                             items:
                               description: The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)
                               properties:
@@ -485,11 +225,11 @@ spec:
                                         matchLabels:
                                           additionalProperties:
                                             type: string
-                                          description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                          description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                                           type: object
                                       type: object
                                     namespaceSelector:
-                                      description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means &quot;this pod's namespace&quot;. An empty selector ({}) matches all namespaces.
+                                      description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
                                       properties:
                                         matchExpressions:
                                           description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -515,11 +255,11 @@ spec:
                                         matchLabels:
                                           additionalProperties:
                                             type: string
-                                          description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                          description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                                           type: object
                                       type: object
                                     namespaces:
-                                      description: namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means &quot;this pod's namespace&quot;.
+                                      description: namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace".
                                       items:
                                         type: string
                                       type: array
@@ -541,7 +281,7 @@ spec:
                           requiredDuringSchedulingIgnoredDuringExecution:
                             description: If the affinity requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the affinity requirements specified by this field cease to be met at some point during pod execution (e.g. due to a pod label update), the system may or may not try to eventually evict the pod from its node. When there are multiple elements, the lists of nodes corresponding to each podAffinityTerm are intersected, i.e. all terms must be satisfied.
                             items:
-                              description: Defines a set of pods (namely those matching the labelSelector relative to the given namespace(s)) that this pod should be co-located (affinity) or not co-located (anti-affinity) with, where co-located is defined as running on a node whose value of the label with key &lt;topologyKey&gt; matches that of any node on which a pod of the set of pods is running
+                              description: Defines a set of pods (namely those matching the labelSelector relative to the given namespace(s)) that this pod should be co-located (affinity) or not co-located (anti-affinity) with, where co-located is defined as running on a node whose value of the label with key <topologyKey> matches that of any node on which a pod of the set of pods is running
                               properties:
                                 labelSelector:
                                   description: A label query over a set of resources, in this case pods.
@@ -570,11 +310,11 @@ spec:
                                     matchLabels:
                                       additionalProperties:
                                         type: string
-                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                                       type: object
                                   type: object
                                 namespaceSelector:
-                                  description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means &quot;this pod's namespace&quot;. An empty selector ({}) matches all namespaces.
+                                  description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
                                   properties:
                                     matchExpressions:
                                       description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -600,11 +340,11 @@ spec:
                                     matchLabels:
                                       additionalProperties:
                                         type: string
-                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                                       type: object
                                   type: object
                                 namespaces:
-                                  description: namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means &quot;this pod's namespace&quot;.
+                                  description: namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace".
                                   items:
                                     type: string
                                   type: array
@@ -620,7 +360,7 @@ spec:
                         description: Describes pod anti-affinity scheduling rules (e.g. avoid putting this pod in the same node, zone, etc. as some other pod(s)).
                         properties:
                           preferredDuringSchedulingIgnoredDuringExecution:
-                            description: The scheduler will prefer to schedule pods to nodes that satisfy the anti-affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling anti-affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding &quot;weight&quot; to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.
+                            description: The scheduler will prefer to schedule pods to nodes that satisfy the anti-affinity expressions specified by this field, but it may choose a node that violates one or more of the expressions. The node that is most preferred is the one with the greatest sum of weights, i.e. for each node that meets all of the scheduling requirements (resource request, requiredDuringScheduling anti-affinity expressions, etc.), compute a sum by iterating through the elements of this field and adding "weight" to the sum if the node has pods which matches the corresponding podAffinityTerm; the node(s) with the highest sum are the most preferred.
                             items:
                               description: The weights of all of the matched WeightedPodAffinityTerm fields are added per-node to find the most preferred node(s)
                               properties:
@@ -654,11 +394,11 @@ spec:
                                         matchLabels:
                                           additionalProperties:
                                             type: string
-                                          description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                          description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                                           type: object
                                       type: object
                                     namespaceSelector:
-                                      description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means &quot;this pod's namespace&quot;. An empty selector ({}) matches all namespaces.
+                                      description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
                                       properties:
                                         matchExpressions:
                                           description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -684,11 +424,11 @@ spec:
                                         matchLabels:
                                           additionalProperties:
                                             type: string
-                                          description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                          description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                                           type: object
                                       type: object
                                     namespaces:
-                                      description: namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means &quot;this pod's namespace&quot;.
+                                      description: namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace".
                                       items:
                                         type: string
                                       type: array
@@ -710,7 +450,7 @@ spec:
                           requiredDuringSchedulingIgnoredDuringExecution:
                             description: If the anti-affinity requirements specified by this field are not met at scheduling time, the pod will not be scheduled onto the node. If the anti-affinity requirements specified by this field cease to be met at some point during pod execution (e.g. due to a pod label update), the system may or may not try to eventually evict the pod from its node. When there are multiple elements, the lists of nodes corresponding to each podAffinityTerm are intersected, i.e. all terms must be satisfied.
                             items:
-                              description: Defines a set of pods (namely those matching the labelSelector relative to the given namespace(s)) that this pod should be co-located (affinity) or not co-located (anti-affinity) with, where co-located is defined as running on a node whose value of the label with key &lt;topologyKey&gt; matches that of any node on which a pod of the set of pods is running
+                              description: Defines a set of pods (namely those matching the labelSelector relative to the given namespace(s)) that this pod should be co-located (affinity) or not co-located (anti-affinity) with, where co-located is defined as running on a node whose value of the label with key <topologyKey> matches that of any node on which a pod of the set of pods is running
                               properties:
                                 labelSelector:
                                   description: A label query over a set of resources, in this case pods.
@@ -739,11 +479,11 @@ spec:
                                     matchLabels:
                                       additionalProperties:
                                         type: string
-                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                                       type: object
                                   type: object
                                 namespaceSelector:
-                                  description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means &quot;this pod's namespace&quot;. An empty selector ({}) matches all namespaces.
+                                  description: A label query over the set of namespaces that the term applies to. The term is applied to the union of the namespaces selected by this field and the ones listed in the namespaces field. null selector and null or empty namespaces list means "this pod's namespace". An empty selector ({}) matches all namespaces.
                                   properties:
                                     matchExpressions:
                                       description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
@@ -769,11 +509,11 @@ spec:
                                     matchLabels:
                                       additionalProperties:
                                         type: string
-                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                                       type: object
                                   type: object
                                 namespaces:
-                                  description: namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means &quot;this pod's namespace&quot;.
+                                  description: namespaces specifies a static list of namespace names that the term applies to. The term is applied to the union of the namespaces listed in this field and the ones selected by namespaceSelector. null or empty namespaces list and null namespaceSelector means "this pod's namespace".
                                   items:
                                     type: string
                                   type: array
@@ -796,45 +536,6 @@ spec:
                     description: Containers of the Deployment.
                     nullable: true
                     properties:
-                      onionBalance:
-                        description: Onion Balance container.
-                        nullable: true
-                        properties:
-                          resources:
-                            description: Resources of the container.
-                            nullable: true
-                            properties:
-                              claims:
-                                description: |-
-                                  Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
-
-                                  This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
-
-                                  This field is immutable. It can only be set for containers.
-                                items:
-                                  description: ResourceClaim references one entry in PodSpec.ResourceClaims.
-                                  properties:
-                                    name:
-                                      description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
-                                      type: string
-                                  required:
-                                  - name
-                                  type: object
-                                type: array
-                              limits:
-                                additionalProperties:
-                                  description: &quot;Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` &lt;quantity&gt;        ::= &lt;signedNumber&gt;&lt;suffix&gt;\n\n\t(Note that &lt;suffix&gt; may be empty, from the \&quot;\&quot; case in &lt;decimalSI&gt;.)\n\n&lt;digit&gt;           ::= 0 | 1 | ... | 9 &lt;digits&gt;          ::= &lt;digit&gt; | &lt;digit&gt;&lt;digits&gt; &lt;number&gt;          ::= &lt;digits&gt; | &lt;digits&gt;.&lt;digits&gt; | &lt;digits&gt;. | .&lt;digits&gt; &lt;sign&gt;            ::= \&quot;+\&quot; | \&quot;-\&quot; &lt;signedNumber&gt;    ::= &lt;number&gt; | &lt;sign&gt;&lt;number&gt; &lt;suffix&gt;          ::= &lt;binarySI&gt; | &lt;decimalExponent&gt; | &lt;decimalSI&gt; &lt;binarySI&gt;        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n&lt;decimalSI&gt;       ::= m | \&quot;\&quot; | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n&lt;decimalExponent&gt; ::= \&quot;e\&quot; &lt;signedNumber&gt; | \&quot;E\&quot; &lt;signedNumber&gt; ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \&quot;canonical form\&quot;. This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \&quot;1500m\&quot; - 1.5Gi will be serialized as \&quot;1536Mi\&quot;\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.&quot;
-                                  type: string
-                                description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                                type: object
-                              requests:
-                                additionalProperties:
-                                  description: &quot;Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` &lt;quantity&gt;        ::= &lt;signedNumber&gt;&lt;suffix&gt;\n\n\t(Note that &lt;suffix&gt; may be empty, from the \&quot;\&quot; case in &lt;decimalSI&gt;.)\n\n&lt;digit&gt;           ::= 0 | 1 | ... | 9 &lt;digits&gt;          ::= &lt;digit&gt; | &lt;digit&gt;&lt;digits&gt; &lt;number&gt;          ::= &lt;digits&gt; | &lt;digits&gt;.&lt;digits&gt; | &lt;digits&gt;. | .&lt;digits&gt; &lt;sign&gt;            ::= \&quot;+\&quot; | \&quot;-\&quot; &lt;signedNumber&gt;    ::= &lt;number&gt; | &lt;sign&gt;&lt;number&gt; &lt;suffix&gt;          ::= &lt;binarySI&gt; | &lt;decimalExponent&gt; | &lt;decimalSI&gt; &lt;binarySI&gt;        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n&lt;decimalSI&gt;       ::= m | \&quot;\&quot; | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n&lt;decimalExponent&gt; ::= \&quot;e\&quot; &lt;signedNumber&gt; | \&quot;E\&quot; &lt;signedNumber&gt; ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \&quot;canonical form\&quot;. This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \&quot;1500m\&quot; - 1.5Gi will be serialized as \&quot;1536Mi\&quot;\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.&quot;
-                                  type: string
-                                description: 'Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                                type: object
-                            type: object
-                        type: object
                       tor:
                         description: Tor container.
                         nullable: true
@@ -862,13 +563,13 @@ spec:
                                 type: array
                               limits:
                                 additionalProperties:
-                                  description: &quot;Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` &lt;quantity&gt;        ::= &lt;signedNumber&gt;&lt;suffix&gt;\n\n\t(Note that &lt;suffix&gt; may be empty, from the \&quot;\&quot; case in &lt;decimalSI&gt;.)\n\n&lt;digit&gt;           ::= 0 | 1 | ... | 9 &lt;digits&gt;          ::= &lt;digit&gt; | &lt;digit&gt;&lt;digits&gt; &lt;number&gt;          ::= &lt;digits&gt; | &lt;digits&gt;.&lt;digits&gt; | &lt;digits&gt;. | .&lt;digits&gt; &lt;sign&gt;            ::= \&quot;+\&quot; | \&quot;-\&quot; &lt;signedNumber&gt;    ::= &lt;number&gt; | &lt;sign&gt;&lt;number&gt; &lt;suffix&gt;          ::= &lt;binarySI&gt; | &lt;decimalExponent&gt; | &lt;decimalSI&gt; &lt;binarySI&gt;        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n&lt;decimalSI&gt;       ::= m | \&quot;\&quot; | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n&lt;decimalExponent&gt; ::= \&quot;e\&quot; &lt;signedNumber&gt; | \&quot;E\&quot; &lt;signedNumber&gt; ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \&quot;canonical form\&quot;. This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \&quot;1500m\&quot; - 1.5Gi will be serialized as \&quot;1536Mi\&quot;\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.&quot;
+                                  description: "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation."
                                   type: string
                                 description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                 type: object
                               requests:
                                 additionalProperties:
-                                  description: &quot;Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` &lt;quantity&gt;        ::= &lt;signedNumber&gt;&lt;suffix&gt;\n\n\t(Note that &lt;suffix&gt; may be empty, from the \&quot;\&quot; case in &lt;decimalSI&gt;.)\n\n&lt;digit&gt;           ::= 0 | 1 | ... | 9 &lt;digits&gt;          ::= &lt;digit&gt; | &lt;digit&gt;&lt;digits&gt; &lt;number&gt;          ::= &lt;digits&gt; | &lt;digits&gt;.&lt;digits&gt; | &lt;digits&gt;. | .&lt;digits&gt; &lt;sign&gt;            ::= \&quot;+\&quot; | \&quot;-\&quot; &lt;signedNumber&gt;    ::= &lt;number&gt; | &lt;sign&gt;&lt;number&gt; &lt;suffix&gt;          ::= &lt;binarySI&gt; | &lt;decimalExponent&gt; | &lt;decimalSI&gt; &lt;binarySI&gt;        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n&lt;decimalSI&gt;       ::= m | \&quot;\&quot; | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n&lt;decimalExponent&gt; ::= \&quot;e\&quot; &lt;signedNumber&gt; | \&quot;E\&quot; &lt;signedNumber&gt; ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \&quot;canonical form\&quot;. This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \&quot;1500m\&quot; - 1.5Gi will be serialized as \&quot;1536Mi\&quot;\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.&quot;
+                                  description: "Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` <quantity>        ::= <signedNumber><suffix>\n\n\t(Note that <suffix> may be empty, from the \"\" case in <decimalSI>.)\n\n<digit>           ::= 0 | 1 | ... | 9 <digits>          ::= <digit> | <digit><digits> <number>          ::= <digits> | <digits>.<digits> | <digits>. | .<digits> <sign>            ::= \"+\" | \"-\" <signedNumber>    ::= <number> | <sign><number> <suffix>          ::= <binarySI> | <decimalExponent> | <decimalSI> <binarySI>        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n<decimalSI>       ::= m | \"\" | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n<decimalExponent> ::= \"e\" <signedNumber> | \"E\" <signedNumber> ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \"canonical form\". This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \"1500m\" - 1.5Gi will be serialized as \"1536Mi\"\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation."
                                   type: string
                                 description: 'Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                 type: object
@@ -896,7 +597,7 @@ spec:
                     description: |-
                       Name of the Deployment.
 
-                      Default: name of the OnionBalance
+                      Default: name of the OnionService
                     nullable: true
                     type: string
                   nodeSelector:
@@ -905,10 +606,15 @@ spec:
                     description: 'NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node''s labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/'
                     nullable: true
                     type: object
+                  replicas:
+                    default: 3
+                    description: Number of replicas.
+                    format: int32
+                    type: integer
                   tolerations:
                     description: If specified, the pod's tolerations.
                     items:
-                      description: The pod this Toleration is attached to tolerates any taint that matches the triple &lt;key,value,effect&gt; using the matching operator &lt;operator&gt;.
+                      description: The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.
                       properties:
                         effect:
                           description: Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
@@ -961,7 +667,7 @@ spec:
                             matchLabels:
                               additionalProperties:
                                 type: string
-                              description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                              description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
                               type: object
                           type: object
                         matchLabelKeys:
@@ -978,9 +684,9 @@ spec:
                           type: integer
                         minDomains:
                           description: |-
-                            MinDomains indicates a minimum number of eligible domains. When the number of eligible domains with matching topology keys is less than minDomains, Pod Topology Spread treats &quot;global minimum&quot; as 0, and then the calculation of Skew is performed. And when the number of eligible domains with matching topology keys equals or greater than minDomains, this value has no effect on scheduling. As a result, when the number of eligible domains is less than minDomains, scheduler won't schedule more than maxSkew Pods to those domains. If value is nil, the constraint behaves as if MinDomains is equal to 1. Valid values are integers greater than 0. When value is not nil, WhenUnsatisfiable must be DoNotSchedule.
+                            MinDomains indicates a minimum number of eligible domains. When the number of eligible domains with matching topology keys is less than minDomains, Pod Topology Spread treats "global minimum" as 0, and then the calculation of Skew is performed. And when the number of eligible domains with matching topology keys equals or greater than minDomains, this value has no effect on scheduling. As a result, when the number of eligible domains is less than minDomains, scheduler won't schedule more than maxSkew Pods to those domains. If value is nil, the constraint behaves as if MinDomains is equal to 1. Valid values are integers greater than 0. When value is not nil, WhenUnsatisfiable must be DoNotSchedule.
 
-                            For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same labelSelector spread as 2/2/2: | zone1 | zone2 | zone3 | |  P P  |  P P  |  P P  | The number of domains is less than 5(MinDomains), so &quot;global minimum&quot; is treated as 0. In this situation, new pod with the same labelSelector cannot be scheduled, because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones, it will violate MaxSkew.
+                            For example, in a 3-zone cluster, MaxSkew is set to 2, MinDomains is set to 5 and pods with the same labelSelector spread as 2/2/2: | zone1 | zone2 | zone3 | |  P P  |  P P  |  P P  | The number of domains is less than 5(MinDomains), so "global minimum" is treated as 0. In this situation, new pod with the same labelSelector cannot be scheduled, because computed skew will be 3(3 - 0) if new Pod is scheduled to any of the three zones, it will violate MaxSkew.
 
                             This is a beta field and requires the MinDomainsInPodTopologySpread feature gate to be enabled (enabled by default).
                           format: int32
@@ -998,14 +704,14 @@ spec:
                             If this value is nil, the behavior is equivalent to the Ignore policy. This is a beta-level feature default enabled by the NodeInclusionPolicyInPodTopologySpread feature flag.
                           type: string
                         topologyKey:
-                          description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each &lt;key, value&gt; as a &quot;bucket&quot;, and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes meet the requirements of nodeAffinityPolicy and nodeTaintsPolicy. e.g. If TopologyKey is &quot;kubernetes.io/hostname&quot;, each Node is a domain of that topology. And, if TopologyKey is &quot;topology.kubernetes.io/zone&quot;, each zone is a domain of that topology. It's a required field.
+                          description: TopologyKey is the key of node labels. Nodes that have a label with this key and identical values are considered to be in the same topology. We consider each <key, value> as a "bucket", and try to put balanced number of pods into each bucket. We define a domain as a particular instance of a topology. Also, we define an eligible domain as a domain whose nodes meet the requirements of nodeAffinityPolicy and nodeTaintsPolicy. e.g. If TopologyKey is "kubernetes.io/hostname", each Node is a domain of that topology. And, if TopologyKey is "topology.kubernetes.io/zone", each zone is a domain of that topology. It's a required field.
                           type: string
                         whenUnsatisfiable:
                           description: |-
                             WhenUnsatisfiable indicates how to deal with a pod if it doesn't satisfy the spread constraint. - DoNotSchedule (default) tells the scheduler not to schedule it. - ScheduleAnyway tells the scheduler to schedule the pod in any location,
                               but giving higher precedence to topologies that would help reduce the
                               skew.
-                            A constraint is considered &quot;Unsatisfiable&quot; for an incoming pod if and only if every possible node assignment for that pod would violate &quot;MaxSkew&quot; on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler won't make it *more* imbalanced. It's a required field.
+                            A constraint is considered "Unsatisfiable" for an incoming pod if and only if every possible node assignment for that pod would violate "MaxSkew" on some topology. For example, in a 3-zone cluster, MaxSkew is set to 1, and pods with the same labelSelector spread as 3/1/1: | zone1 | zone2 | zone3 | | P P P |   P   |   P   | If WhenUnsatisfiable is set to DoNotSchedule, incoming pod can only be scheduled to zone2(zone3) to become 3/2/1(3/1/2) as ActualSkew(2-1) on zone2(zone3) satisfies MaxSkew(1). In other words, the cluster can still be imbalanced, but scheduler won't make it *more* imbalanced. It's a required field.
                           type: string
                       required:
                       - maxSkew
@@ -1015,39 +721,451 @@ spec:
                     nullable: true
                     type: array
                 type: object
-              onionKey:
-                description: OnionKey settings.
+              horizontalPodAutoscaler:
+                description: HorizontalPodAutoscaler settings.
+                nullable: true
                 properties:
-                  name:
-                    description: Name of the OnionKey.
-                    type: string
-                required:
-                - name
-                type: object
-              onionServices:
-                description: OnionService part of the OnionBalance load balancing.
-                items:
-                  properties:
-                    onionKey:
-                      description: OnionKey reference of the OnionService.
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    nullable: true
+                    type: object
+                  behavior:
+                    description: behavior configures the scaling behavior of the target in both Up and Down directions (scaleUp and scaleDown fields respectively). If not set, the default HPAScalingRules for scale up and scale down are used.
+                    nullable: true
+                    properties:
+                      scaleDown:
+                        description: scaleDown is scaling policy for scaling Down. If not set, the default value is to allow to scale down to minReplicas pods, with a 300 second stabilization window (i.e., the highest recommendation for the last 300sec is used).
+                        properties:
+                          policies:
+                            description: policies is a list of potential scaling polices which can be used during scaling. At least one policy must be specified, otherwise the HPAScalingRules will be discarded as invalid
+                            items:
+                              description: HPAScalingPolicy is a single policy which must hold true for a specified past interval.
+                              properties:
+                                periodSeconds:
+                                  description: periodSeconds specifies the window of time for which the policy should hold true. PeriodSeconds must be greater than zero and less than or equal to 1800 (30 min).
+                                  format: int32
+                                  type: integer
+                                type:
+                                  description: type is used to specify the scaling policy.
+                                  type: string
+                                value:
+                                  description: value contains the amount of change which is permitted by the policy. It must be greater than zero
+                                  format: int32
+                                  type: integer
+                              required:
+                              - periodSeconds
+                              - type
+                              - value
+                              type: object
+                            type: array
+                          selectPolicy:
+                            description: selectPolicy is used to specify which policy should be used. If not set, the default value Max is used.
+                            type: string
+                          stabilizationWindowSeconds:
+                            description: 'stabilizationWindowSeconds is the number of seconds for which past recommendations should be considered while scaling up or scaling down. StabilizationWindowSeconds must be greater than or equal to zero and less than or equal to 3600 (one hour). If not set, use the default values: - For scale up: 0 (i.e. no stabilization is done). - For scale down: 300 (i.e. the stabilization window is 300 seconds long).'
+                            format: int32
+                            type: integer
+                        type: object
+                      scaleUp:
+                        description: |-
+                          scaleUp is scaling policy for scaling Up. If not set, the default value is the higher of:
+                            * increase no more than 4 pods per 60 seconds
+                            * double the number of pods per 60 seconds
+                          No stabilization is used.
+                        properties:
+                          policies:
+                            description: policies is a list of potential scaling polices which can be used during scaling. At least one policy must be specified, otherwise the HPAScalingRules will be discarded as invalid
+                            items:
+                              description: HPAScalingPolicy is a single policy which must hold true for a specified past interval.
+                              properties:
+                                periodSeconds:
+                                  description: periodSeconds specifies the window of time for which the policy should hold true. PeriodSeconds must be greater than zero and less than or equal to 1800 (30 min).
+                                  format: int32
+                                  type: integer
+                                type:
+                                  description: type is used to specify the scaling policy.
+                                  type: string
+                                value:
+                                  description: value contains the amount of change which is permitted by the policy. It must be greater than zero
+                                  format: int32
+                                  type: integer
+                              required:
+                              - periodSeconds
+                              - type
+                              - value
+                              type: object
+                            type: array
+                          selectPolicy:
+                            description: selectPolicy is used to specify which policy should be used. If not set, the default value Max is used.
+                            type: string
+                          stabilizationWindowSeconds:
+                            description: 'stabilizationWindowSeconds is the number of seconds for which past recommendations should be considered while scaling up or scaling down. StabilizationWindowSeconds must be greater than or equal to zero and less than or equal to 3600 (one hour). If not set, use the default values: - For scale up: 0 (i.e. no stabilization is done). - For scale down: 300 (i.e. the stabilization window is 300 seconds long).'
+                            format: int32
+                            type: integer
+                        type: object
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    nullable: true
+                    type: object
+                  maxReplicas:
+                    description: maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up. It cannot be less that minReplicas.
+                    format: int32
+                    type: integer
+                  metrics:
+                    description: metrics contains the specifications for which to use to calculate the desired replica count (the maximum replica count across all metrics will be used).  The desired replica count is calculated multiplying the ratio between the target value and the current value by the current number of pods.  Ergo, metrics used must decrease as the pod count is increased, and vice-versa.  See the individual metric source types for more information about how each type of metric must respond. If not set, the default metric will be set to 80% average CPU utilization.
+                    items:
+                      description: MetricSpec specifies how to scale based on a single metric (only `type` and one other matching field should be set at once).
                       properties:
-                        hostname:
-                          description: |-
-                            Hostname value of the OnionKey.
-
-                            Example: &quot;abcdefg.onion&quot;
+                        containerResource:
+                          description: containerResource refers to a resource metric (such as those specified in requests and limits) known to Kubernetes describing a single container in each pod of the current scale target (e.g. CPU or memory). Such metrics are built in to Kubernetes, and have special scaling options on top of those available to normal per-pod metrics using the "pods" source. This is an alpha feature and can be enabled by the HPAContainerMetrics feature flag.
+                          properties:
+                            container:
+                              description: container is the name of the container in the pods of the scaling target
+                              type: string
+                            name:
+                              description: name is the name of the resource in question.
+                              type: string
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - container
+                          - name
+                          - target
+                          type: object
+                        external:
+                          description: external refers to a global metric that is not associated with any Kubernetes object. It allows autoscaling based on information coming from components running outside of cluster (for example length of queue in cloud messaging service, or QPS from loadbalancer running outside of cluster).
+                          properties:
+                            metric:
+                              description: metric identifies the target metric by name and selector
+                              properties:
+                                name:
+                                  description: name is the name of the given metric
+                                  type: string
+                                selector:
+                                  description: selector is the string-encoded form of a standard kubernetes label selector for the given metric When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping. When unset, just the metricName will be used to gather metrics.
+                                  properties:
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                                      items:
+                                        description: A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.
+                                        properties:
+                                          key:
+                                            description: key is the label key that the selector applies to.
+                                            type: string
+                                          operator:
+                                            description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+                                            type: string
+                                          values:
+                                            description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+                                            items:
+                                              type: string
+                                            type: array
+                                        required:
+                                        - key
+                                        - operator
+                                        type: object
+                                      type: array
+                                    matchLabels:
+                                      additionalProperties:
+                                        type: string
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                      type: object
+                                  type: object
+                              required:
+                              - name
+                              type: object
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - metric
+                          - target
+                          type: object
+                        object:
+                          description: object refers to a metric describing a single kubernetes object (for example, hits-per-second on an Ingress object).
+                          properties:
+                            describedObject:
+                              description: describedObject specifies the descriptions of a object,such as kind,name apiVersion
+                              properties:
+                                apiVersion:
+                                  description: apiVersion is the API version of the referent
+                                  type: string
+                                kind:
+                                  description: 'kind is the kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                                  type: string
+                                name:
+                                  description: 'name is the name of the referent; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                                  type: string
+                              required:
+                              - kind
+                              - name
+                              type: object
+                            metric:
+                              description: metric identifies the target metric by name and selector
+                              properties:
+                                name:
+                                  description: name is the name of the given metric
+                                  type: string
+                                selector:
+                                  description: selector is the string-encoded form of a standard kubernetes label selector for the given metric When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping. When unset, just the metricName will be used to gather metrics.
+                                  properties:
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                                      items:
+                                        description: A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.
+                                        properties:
+                                          key:
+                                            description: key is the label key that the selector applies to.
+                                            type: string
+                                          operator:
+                                            description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+                                            type: string
+                                          values:
+                                            description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+                                            items:
+                                              type: string
+                                            type: array
+                                        required:
+                                        - key
+                                        - operator
+                                        type: object
+                                      type: array
+                                    matchLabels:
+                                      additionalProperties:
+                                        type: string
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                      type: object
+                                  type: object
+                              required:
+                              - name
+                              type: object
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - describedObject
+                          - metric
+                          - target
+                          type: object
+                        pods:
+                          description: pods refers to a metric describing each pod in the current scale target (for example, transactions-processed-per-second).  The values will be averaged together before being compared to the target value.
+                          properties:
+                            metric:
+                              description: metric identifies the target metric by name and selector
+                              properties:
+                                name:
+                                  description: name is the name of the given metric
+                                  type: string
+                                selector:
+                                  description: selector is the string-encoded form of a standard kubernetes label selector for the given metric When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping. When unset, just the metricName will be used to gather metrics.
+                                  properties:
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                                      items:
+                                        description: A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.
+                                        properties:
+                                          key:
+                                            description: key is the label key that the selector applies to.
+                                            type: string
+                                          operator:
+                                            description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+                                            type: string
+                                          values:
+                                            description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+                                            items:
+                                              type: string
+                                            type: array
+                                        required:
+                                        - key
+                                        - operator
+                                        type: object
+                                      type: array
+                                    matchLabels:
+                                      additionalProperties:
+                                        type: string
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
+                                      type: object
+                                  type: object
+                              required:
+                              - name
+                              type: object
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - metric
+                          - target
+                          type: object
+                        resource:
+                          description: resource refers to a resource metric (such as those specified in requests and limits) known to Kubernetes describing each pod in the current scale target (e.g. CPU or memory). Such metrics are built in to Kubernetes, and have special scaling options on top of those available to normal per-pod metrics using the "pods" source.
+                          properties:
+                            name:
+                              description: name is the name of the resource in question.
+                              type: string
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - name
+                          - target
+                          type: object
+                        type:
+                          description: 'type is the type of metric source.  It should be one of "ContainerResource", "External", "Object", "Pods" or "Resource", each mapping to a matching field in the object. Note: "ContainerResource" type is available on when the feature-gate HPAContainerMetrics is enabled'
                           type: string
                       required:
-                      - hostname
+                      - type
                       type: object
-                  required:
-                  - onionKey
-                  type: object
-                type: array
+                    nullable: true
+                    type: array
+                  minReplicas:
+                    description: minReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.  It defaults to 1 pod.  minReplicas is allowed to be 0 if the alpha feature gate HPAScaleToZero is enabled and at least one Object or External metric is configured.  Scaling is active as long as at least one metric value is available.
+                    format: int32
+                    nullable: true
+                    type: integer
+                  name:
+                    description: |-
+                      Name of the HorizontalPodAutoscaler.
+
+                      Default: name of the TorIngress
+                    nullable: true
+                    type: string
+                required:
+                - maxReplicas
+                type: object
+              service:
+                description: Service settings.
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    nullable: true
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    nullable: true
+                    type: object
+                  name:
+                    description: |-
+                      Name of the Service.
+
+                      Default: name of the Service
+                    nullable: true
+                    type: string
+                  ports:
+                    description: 'The list of ports that are exposed by this service. More info: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies'
+                    items:
+                      properties:
+                        name:
+                          description: The name of this port within the service. This must be a DNS_LABEL. All ports within a ServiceSpec must have unique names. When considering the endpoints for a Service, this must match the 'name' field in the EndpointPort.
+                          type: string
+                        port:
+                          description: The port that will be exposed by this service.
+                          format: int32
+                          type: integer
+                        protocol:
+                          description: The IP protocol for this port. Supports "HTTP_TUNNEL", "SOCKS".
+                          type: string
+                      required:
+                      - name
+                      - port
+                      - protocol
+                      type: object
+                    type: array
+                required:
+                - ports
+                type: object
             required:
-            - onionKey
-            - onionServices
-            title: '`OnionBalance`'
+            - service
+            title: '`TorProxy`'
             type: object
           status:
             nullable: true
@@ -1060,9 +1178,7 @@ spec:
 
                   `Initialized`
 
-                  ### OnionKey
-
-                  `NotFound`, `HostnameNotFound`, `Ready`
+                  ### Service `PortsNotFound`, `Ready`
                 items:
                   description: Condition contains details for one aspect of the current state of this API Resource.
                   properties:
@@ -1095,14 +1211,15 @@ spec:
                   type: object
                 type: array
               hostname:
-                description: |-
-                  OnionKey hostname.
-
-                  The hostname is only populated once `state` is &quot;running&quot;.
+                description: Hostname.
                 nullable: true
                 type: string
-              onionServices:
-                description: Number of OnionServices.
+              labelSelector:
+                default: ''
+                description: Label selector the Horizontal Pod Autoscaler will use to collect metrics.
+                type: string
+              replicas:
+                description: Number of replicas.
                 format: int32
                 type: integer
               summary:
@@ -1112,66 +1229,17 @@ spec:
                 description: Represents the latest available observations of a deployment's current state.
                 type: object
             required:
-            - onionServices
+            - replicas
             type: object
         required:
         - spec
-        title: OnionBalance
+        title: TorProxy
         type: object
     served: true
     storage: true
     subresources:
+      scale:
+        labelSelectorPath: .status.labelSelector
+        specReplicasPath: .spec.deployment.replicas
+        statusReplicasPath: .status.replicas
       status: {}
-
-</code></pre>
-              
-            </div>
-          </div><footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../../helm/" class="btn btn-neutral float-left" title="Helm"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../onionkey/" class="btn btn-neutral float-right" title="OnionKey">Next <span class="icon icon-circle-arrow-right"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <!-- Copyright etc -->
-  </div>
-
-  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-</footer>
-          
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-
-  <div class="rst-versions" role="note" aria-label="Versions">
-  <span class="rst-current-version" data-toggle="rst-current-version">
-    
-        <span>
-          <a href="https://github.com/agabani/tor-operator/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
-        </span>
-    
-    
-      <span><a href="../../helm/" style="color: #fcfcfc">&laquo; Previous</a></span>
-    
-    
-      <span><a href="../onionkey/" style="color: #fcfcfc">Next &raquo;</a></span>
-    
-  </span>
-</div>
-    <script src="../../js/jquery-3.6.0.min.js"></script>
-    <script>var base_url = "../..";</script>
-    <script src="../../js/theme_extra.js"></script>
-    <script src="../../js/theme.js"></script>
-    <script>
-        jQuery(function () {
-            SphinxRtdTheme.Navigation.enable(true);
-        });
-    </script>
-
-</body>
-</html>

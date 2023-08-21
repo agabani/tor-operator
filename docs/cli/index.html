@@ -119,6 +119,8 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/toringress/">TorIngress</a>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/torproxy/">TorProxy</a>
+                  </li>
               </ul>
               <p class="caption"><span class="caption-text">Observability</span></p>
               <ul>
@@ -165,7 +167,7 @@
               
                 <h1 id="cli">CLI</h1>
 <h2 id="installation">Installation</h2>
-<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag 0.0.12
+<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag 0.0.13
 </code></pre>
 <!-- BEGIN INCLUDE cli_help.md -->
 <h2 id="command-line-help-for-tor-operator">Command-Line Help for <code>tor-operator</code></h2>
@@ -181,7 +183,7 @@
 <li><a href=".#tor-operator-onion-key-generate"><code>tor-operator onion-key generate</code>↴</a></li>
 </ul>
 <h3 id="tor-operator"><code>tor-operator</code></h3>
-<p>Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress.</p>
+<p>Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress and Tor Proxy.</p>
 <p><strong>Usage:</strong> <code>tor-operator &lt;COMMAND&gt;</code></p>
 <h6 id="subcommands"># <strong>Subcommands:</strong></h6>
 <ul>

@@ -3,18 +3,18 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionbalance/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://agabani.github.io/tor-operator/docs/custom_resource_definitions/torproxy/" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>OnionBalance - Tor Operator</title>
+    <title>TorProxy - Tor Operator</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "OnionBalance";
-        var mkdocs_page_input_path = "custom_resource_definitions/onionbalance.md";
-        var mkdocs_page_url = "/tor-operator/docs/custom_resource_definitions/onionbalance/";
+        var mkdocs_page_name = "TorProxy";
+        var mkdocs_page_input_path = "custom_resource_definitions/torproxy.md";
+        var mkdocs_page_url = "/tor-operator/docs/custom_resource_definitions/torproxy/";
       </script>
     
     <!--[if lt IE 9]>
@@ -61,13 +61,25 @@
               </ul>
               <p class="caption"><span class="caption-text">Custom Resource Definitions</span></p>
               <ul class="current">
-                  <li class="toctree-l1 current"><a class="reference internal current" href="./">OnionBalance</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionbalance/">OnionBalance</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionkey/">OnionKey</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../onionservice/">OnionService</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../toringress/">TorIngress</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">TorProxy</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#screenshots">Screenshots</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#horizontalpodautoscaler">HorizontalPodAutoscaler</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#external-horizontalpodautoscaler">External HorizontalPodAutoscaler</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#full">Full</a>
     </li>
@@ -78,14 +90,6 @@
     <li class="toctree-l2"><a class="reference internal" href="#openapi-spec">OpenAPI Spec</a>
     </li>
     </ul>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../onionkey/">OnionKey</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../onionservice/">OnionService</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../toringress/">TorIngress</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../torproxy/">TorProxy</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Observability</span></p>
@@ -122,9 +126,9 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a> &raquo;</li>
           <li>Custom Resource Definitions &raquo;</li>
-      <li class="breadcrumb-item active">OnionBalance</li>
+      <li class="breadcrumb-item active">TorProxy</li>
     <li class="wy-breadcrumbs-aside">
-          <a href="https://github.com/agabani/tor-operator/edit/master/docs/custom_resource_definitions/onionbalance.md" class="icon icon-github"> Edit on GitHub</a>
+          <a href="https://github.com/agabani/tor-operator/edit/master/docs/custom_resource_definitions/torproxy.md" class="icon icon-github"> Edit on GitHub</a>
     </li>
   </ul>
   <hr/>
@@ -132,104 +136,233 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="onionbalance">OnionBalance</h1>
-<p>An OnionBalance is an abstraction of a Tor Onion Balance.</p>
-<p>Tor Onion Balance is the best way to load balance Tor Onion Services. The
-load of introduction and rendezvous requests gets distributed across
-multiple hosts while also increasing resiliency by eliminating single
-points of failure.</p>
+                <h1 id="torproxy">TorProxy</h1>
+<p>A TorProxy is collection of Tor clients load balanced by a Service.</p>
 <h2 id="screenshots">Screenshots</h2>
-<p><img alt="OnionBalance" src="../onionbalance.svg" /></p>
+<p><img alt="TorProxy" src="../torproxy.svg" /></p>
 <h2 id="examples">Examples</h2>
 <h3 id="basic">Basic</h3>
-<p>The Tor Operator will create an OnionBalance using an auto generated OnionKey load balancing a list of OnionServices.</p>
-<pre><code>#onionkey.yaml
+<p>The Tor Operator will create a load balanced TorProxy instance.</p>
+<pre><code>#torproxy.yaml
 apiVersion: tor.agabani.co.uk/v1
-kind: OnionKey
+kind: TorProxy
 metadata:
-  name: onion-balance-{{ include &quot;example.fullname&quot; . }}
+  name: tor-proxy-{{ include &quot;example.fullname&quot; . }}
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  autoGenerate: true
-  secret:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}
+  service:
+    ports:
+      - name: http-tunnel
+        port: 1080
+        protocol: HTTP_TUNNEL
+      - name: socks
+        port: 9050
+        protocol: SOCKS
 
 </code></pre>
-<pre><code>#onionbalance.yaml
+<h3 id="horizontalpodautoscaler">HorizontalPodAutoscaler</h3>
+<p>The Tor Operator will create a load balanced TorProxy instance managed by a HorizontalPodAutoscaler.</p>
+<pre><code>#torproxy.yaml
 apiVersion: tor.agabani.co.uk/v1
-kind: OnionBalance
+kind: TorProxy
 metadata:
-  name: onion-balance-{{ include &quot;example.fullname&quot; . }}
-  labels: {{- include &quot;example.labels&quot; . | nindent 4 }}
+  name: tor-proxy-{{ include &quot;example.fullname&quot; . }}-hpa
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  onionKey:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}
-  onionServices:
-    - onionKey:
-        hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
+  deployment:
+    containers:
+      tor:
+        resources:
+          requests:
+            cpu: 100m
+  horizontalPodAutoscaler:
+    maxReplicas: 4
+    minReplicas: 2
+  service:
+    ports:
+      - name: http-tunnel
+        port: 1080
+        protocol: HTTP_TUNNEL
+      - name: socks
+        port: 9050
+        protocol: SOCKS
+
+</code></pre>
+<h3 id="external-horizontalpodautoscaler">External HorizontalPodAutoscaler</h3>
+<p>The Tor Operator will create a load balanced TorProxy instance managed by an external HorizontalPodAutoscaler.</p>
+<pre><code>#torproxy.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: TorProxy
+metadata:
+  name: tor-proxy-{{ include &quot;example.fullname&quot; . }}-hpa-external
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  deployment:
+    containers:
+      tor:
+        resources:
+          requests:
+            cpu: 100m
+  service:
+    ports:
+      - name: http-tunnel
+        port: 1080
+        protocol: HTTP_TUNNEL
+      - name: socks
+        port: 9050
+        protocol: SOCKS
+
+</code></pre>
+<pre><code>#hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tor-proxy-{{ include &quot;example.fullname&quot; . }}-hpa-external
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  maxReplicas: 4
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: tor.agabani.co.uk/v1
+    kind: TorProxy
+    name: tor-proxy-{{ include &quot;example.fullname&quot; . }}-hpa-external
 
 </code></pre>
 <h3 id="full">Full</h3>
-<p>The Tor Operator will create an OnionBalance using an auto generated OnionKey load balancing a list of OnionServices.</p>
+<p>The Tor Operator will create a load balanced TorProxy instance managed by a HorizontalPodAutoscaler.</p>
 <pre><code>#onionkey.yaml
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
 metadata:
-  name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  labels: {{- include &quot;example.labels&quot; . | nindent 4 }}
-spec:
-  autoGenerate: true
-  secret:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-
-</code></pre>
-<pre><code>#onionbalance.yaml
-apiVersion: tor.agabani.co.uk/v1
-kind: OnionBalance
-metadata:
-  name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
+  name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-0
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  configMap:
+  autoGenerate: true
+  secret:
+    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-1
+
+</code></pre>
+<pre><code>#toringress.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: TorIngress
+metadata:
+  name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  horizontalPodAutoscaler:
     annotations:
       key-a-1: value-a-1
       key-a-2: value-a-2
+    # behavior:
     labels:
       key-l-1: value-l-1
       key-l-2: value-l-2
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  deployment:
+    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-11
+    maxReplicas: 4
+    minReplicas: 2
+    # metrics:
+  onionBalance:
     annotations:
       key-a-3: value-a-3
       key-a-4: value-a-4
-    containers:
-      onionBalance:
-        resources:
-          limits:
-            cpu: 200m
-            memory: 256Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-      tor:
-        resources:
-          limits:
-            cpu: 200m
-            memory: 256Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
+    configMap:
+      annotations:
+        key-a-5: value-a-5
+        key-a-6: value-a-6
+      labels:
+        key-l-5: value-l-5
+        key-l-6: value-l-6
+      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-2
+    deployment:
+      annotations:
+        key-a-7: value-a-7
+        key-a-8: value-a-8
+      containers:
+        onionBalance:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        tor:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      labels:
+        key-l-7: value-l-7
+        key-l-8: value-l-8
+      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-3
     labels:
       key-l-3: value-l-3
       key-l-4: value-l-4
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  onionKey:
-    name: onion-balance-{{ include &quot;example.fullname&quot; . }}-full
-  onionServices:
-    - onionKey:
-        hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
+    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-4
+    onionKey:
+      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-0
+  onionService:
+    annotations:
+      key-a-9: value-a-9
+      key-a-10: value-a-10
+    configMap:
+      annotations:
+        key-a-11: value-a-11
+        key-a-12: value-a-12
+      labels:
+        key-l-11: value-l-11
+        key-l-12: value-l-12
+      namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-6
+    deployment:
+      annotations:
+        key-a-13: value-a-13
+        key-a-14: value-a-14
+      containers:
+        tor:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      labels:
+        key-l-13: value-l-13
+        key-l-14: value-l-14
+      namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-7
+    labels:
+      key-l-9: value-l-9
+      key-l-10: value-l-10
+    namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-8
+    onionKey:
+      annotations:
+        key-a-15: value-a-15
+        key-a-16: value-a-16
+      labels:
+        key-l-15: value-l-15
+        key-l-16: value-l-16
+      namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-9
+      secret:
+        annotations:
+          key-a-17: value-a-17
+          key-a-18: value-a-18
+        labels:
+          key-l-17: value-l-17
+          key-l-18: value-l-18
+        namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-10
+    ports:
+      - target: example:80
+        virtport: 80
+    replicas: 3
 
 </code></pre>
 <h2 id="conditions">Conditions</h2>
@@ -237,46 +370,48 @@ spec:
 
           `Initialized`
 
-          ### OnionKey
-
-          `NotFound`, `HostnameNotFound`, `Ready`
+          ### Service `PortsNotFound`, `Ready`
 
         type: object
     required:
-    - onionServices
+    - replicas
     type: object
 required:
 - spec
-title: OnionBalance
+title: TorProxy
 type: object
 </code></pre>
 <p>served: true
 storage: true
 subresources:
+  scale:
+    labelSelectorPath: .status.labelSelector
+    specReplicasPath: .spec.deployment.replicas
+    statusReplicasPath: .status.replicas
   status: {}</p>
 <h2 id="openapi-spec">OpenAPI Spec</h2>
 <pre><code>apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: onionbalances.tor.agabani.co.uk
+  name: torproxies.tor.agabani.co.uk
 spec:
   group: tor.agabani.co.uk
   names:
     categories: []
-    kind: OnionBalance
-    plural: onionbalances
+    kind: TorProxy
+    plural: torproxies
     shortNames: []
-    singular: onionbalance
+    singular: torproxy
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: The hostname of the OnionBalance
+    - description: The hostname of the tor proxy
       jsonPath: .status.hostname
       name: Hostname
       type: string
-    - description: The hostname of OnionServices
-      jsonPath: .status.onionServices
-      name: OnionServices
+    - description: Number of replicas
+      jsonPath: .status.replicas
+      name: Replicas
       type: number
     - description: Human readable description of state
       jsonPath: .status.summary.Initialized
@@ -288,13 +423,10 @@ spec:
     name: v1
     schema:
       openAPIV3Schema:
-        description: Auto-generated derived type for OnionBalanceSpec via `CustomResource`
+        description: Auto-generated derived type for TorProxySpec via `CustomResource`
         properties:
           spec:
-            description: |-
-              An `OnionBalance` is an abstraction of a Tor Onion Balance.
-
-              Tor Onion Balance is the best way to load balance Tor Onion Services. The load of introduction and rendezvous requests gets distributed across multiple hosts while also increasing resiliency by eliminating single points of failure.
+            description: A `TorProxy` is collection of `Tor` clients load balanced by a `Service`.
             properties:
               configMap:
                 description: Config Map settings.
@@ -316,7 +448,7 @@ spec:
                     description: |-
                       Name of the Config Map.
 
-                      Default: name of the OnionBalance
+                      Default: name of the OnionService
                     nullable: true
                     type: string
                 type: object
@@ -796,45 +928,6 @@ spec:
                     description: Containers of the Deployment.
                     nullable: true
                     properties:
-                      onionBalance:
-                        description: Onion Balance container.
-                        nullable: true
-                        properties:
-                          resources:
-                            description: Resources of the container.
-                            nullable: true
-                            properties:
-                              claims:
-                                description: |-
-                                  Claims lists the names of resources, defined in spec.resourceClaims, that are used by this container.
-
-                                  This is an alpha field and requires enabling the DynamicResourceAllocation feature gate.
-
-                                  This field is immutable. It can only be set for containers.
-                                items:
-                                  description: ResourceClaim references one entry in PodSpec.ResourceClaims.
-                                  properties:
-                                    name:
-                                      description: Name must match the name of one entry in pod.spec.resourceClaims of the Pod where this field is used. It makes that resource available inside a container.
-                                      type: string
-                                  required:
-                                  - name
-                                  type: object
-                                type: array
-                              limits:
-                                additionalProperties:
-                                  description: &quot;Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` &lt;quantity&gt;        ::= &lt;signedNumber&gt;&lt;suffix&gt;\n\n\t(Note that &lt;suffix&gt; may be empty, from the \&quot;\&quot; case in &lt;decimalSI&gt;.)\n\n&lt;digit&gt;           ::= 0 | 1 | ... | 9 &lt;digits&gt;          ::= &lt;digit&gt; | &lt;digit&gt;&lt;digits&gt; &lt;number&gt;          ::= &lt;digits&gt; | &lt;digits&gt;.&lt;digits&gt; | &lt;digits&gt;. | .&lt;digits&gt; &lt;sign&gt;            ::= \&quot;+\&quot; | \&quot;-\&quot; &lt;signedNumber&gt;    ::= &lt;number&gt; | &lt;sign&gt;&lt;number&gt; &lt;suffix&gt;          ::= &lt;binarySI&gt; | &lt;decimalExponent&gt; | &lt;decimalSI&gt; &lt;binarySI&gt;        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n&lt;decimalSI&gt;       ::= m | \&quot;\&quot; | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n&lt;decimalExponent&gt; ::= \&quot;e\&quot; &lt;signedNumber&gt; | \&quot;E\&quot; &lt;signedNumber&gt; ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \&quot;canonical form\&quot;. This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \&quot;1500m\&quot; - 1.5Gi will be serialized as \&quot;1536Mi\&quot;\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.&quot;
-                                  type: string
-                                description: 'Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                                type: object
-                              requests:
-                                additionalProperties:
-                                  description: &quot;Quantity is a fixed-point representation of a number. It provides convenient marshaling/unmarshaling in JSON and YAML, in addition to String() and AsInt64() accessors.\n\nThe serialization format is:\n\n``` &lt;quantity&gt;        ::= &lt;signedNumber&gt;&lt;suffix&gt;\n\n\t(Note that &lt;suffix&gt; may be empty, from the \&quot;\&quot; case in &lt;decimalSI&gt;.)\n\n&lt;digit&gt;           ::= 0 | 1 | ... | 9 &lt;digits&gt;          ::= &lt;digit&gt; | &lt;digit&gt;&lt;digits&gt; &lt;number&gt;          ::= &lt;digits&gt; | &lt;digits&gt;.&lt;digits&gt; | &lt;digits&gt;. | .&lt;digits&gt; &lt;sign&gt;            ::= \&quot;+\&quot; | \&quot;-\&quot; &lt;signedNumber&gt;    ::= &lt;number&gt; | &lt;sign&gt;&lt;number&gt; &lt;suffix&gt;          ::= &lt;binarySI&gt; | &lt;decimalExponent&gt; | &lt;decimalSI&gt; &lt;binarySI&gt;        ::= Ki | Mi | Gi | Ti | Pi | Ei\n\n\t(International System of units; See: http://physics.nist.gov/cuu/Units/binary.html)\n\n&lt;decimalSI&gt;       ::= m | \&quot;\&quot; | k | M | G | T | P | E\n\n\t(Note that 1024 = 1Ki but 1000 = 1k; I didn't choose the capitalization.)\n\n&lt;decimalExponent&gt; ::= \&quot;e\&quot; &lt;signedNumber&gt; | \&quot;E\&quot; &lt;signedNumber&gt; ```\n\nNo matter which of the three exponent forms is used, no quantity may represent a number greater than 2^63-1 in magnitude, nor may it have more than 3 decimal places. Numbers larger or more precise will be capped or rounded up. (E.g.: 0.1m will rounded up to 1m.) This may be extended in the future if we require larger or smaller quantities.\n\nWhen a Quantity is parsed from a string, it will remember the type of suffix it had, and will use the same type again when it is serialized.\n\nBefore serializing, Quantity will be put in \&quot;canonical form\&quot;. This means that Exponent/suffix will be adjusted up or down (with a corresponding increase or decrease in Mantissa) such that:\n\n- No precision is lost - No fractional digits will be emitted - The exponent (or suffix) is as large as possible.\n\nThe sign will be omitted unless the number is negative.\n\nExamples:\n\n- 1.5 will be serialized as \&quot;1500m\&quot; - 1.5Gi will be serialized as \&quot;1536Mi\&quot;\n\nNote that the quantity will NEVER be internally represented by a floating point number. That is the whole point of this exercise.\n\nNon-canonical values will still parse as long as they are well formed, but will be re-emitted in their canonical form. (So always use canonical form, or don't diff.)\n\nThis format is intended to make it difficult to use these numbers without writing some sort of special handling code in the hopes that that will cause implementors to also use a fixed point implementation.&quot;
-                                  type: string
-                                description: 'Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                                type: object
-                            type: object
-                        type: object
                       tor:
                         description: Tor container.
                         nullable: true
@@ -896,7 +989,7 @@ spec:
                     description: |-
                       Name of the Deployment.
 
-                      Default: name of the OnionBalance
+                      Default: name of the OnionService
                     nullable: true
                     type: string
                   nodeSelector:
@@ -905,6 +998,11 @@ spec:
                     description: 'NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node''s labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/'
                     nullable: true
                     type: object
+                  replicas:
+                    default: 3
+                    description: Number of replicas.
+                    format: int32
+                    type: integer
                   tolerations:
                     description: If specified, the pod's tolerations.
                     items:
@@ -1015,39 +1113,451 @@ spec:
                     nullable: true
                     type: array
                 type: object
-              onionKey:
-                description: OnionKey settings.
+              horizontalPodAutoscaler:
+                description: HorizontalPodAutoscaler settings.
+                nullable: true
                 properties:
-                  name:
-                    description: Name of the OnionKey.
-                    type: string
-                required:
-                - name
-                type: object
-              onionServices:
-                description: OnionService part of the OnionBalance load balancing.
-                items:
-                  properties:
-                    onionKey:
-                      description: OnionKey reference of the OnionService.
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    nullable: true
+                    type: object
+                  behavior:
+                    description: behavior configures the scaling behavior of the target in both Up and Down directions (scaleUp and scaleDown fields respectively). If not set, the default HPAScalingRules for scale up and scale down are used.
+                    nullable: true
+                    properties:
+                      scaleDown:
+                        description: scaleDown is scaling policy for scaling Down. If not set, the default value is to allow to scale down to minReplicas pods, with a 300 second stabilization window (i.e., the highest recommendation for the last 300sec is used).
+                        properties:
+                          policies:
+                            description: policies is a list of potential scaling polices which can be used during scaling. At least one policy must be specified, otherwise the HPAScalingRules will be discarded as invalid
+                            items:
+                              description: HPAScalingPolicy is a single policy which must hold true for a specified past interval.
+                              properties:
+                                periodSeconds:
+                                  description: periodSeconds specifies the window of time for which the policy should hold true. PeriodSeconds must be greater than zero and less than or equal to 1800 (30 min).
+                                  format: int32
+                                  type: integer
+                                type:
+                                  description: type is used to specify the scaling policy.
+                                  type: string
+                                value:
+                                  description: value contains the amount of change which is permitted by the policy. It must be greater than zero
+                                  format: int32
+                                  type: integer
+                              required:
+                              - periodSeconds
+                              - type
+                              - value
+                              type: object
+                            type: array
+                          selectPolicy:
+                            description: selectPolicy is used to specify which policy should be used. If not set, the default value Max is used.
+                            type: string
+                          stabilizationWindowSeconds:
+                            description: 'stabilizationWindowSeconds is the number of seconds for which past recommendations should be considered while scaling up or scaling down. StabilizationWindowSeconds must be greater than or equal to zero and less than or equal to 3600 (one hour). If not set, use the default values: - For scale up: 0 (i.e. no stabilization is done). - For scale down: 300 (i.e. the stabilization window is 300 seconds long).'
+                            format: int32
+                            type: integer
+                        type: object
+                      scaleUp:
+                        description: |-
+                          scaleUp is scaling policy for scaling Up. If not set, the default value is the higher of:
+                            * increase no more than 4 pods per 60 seconds
+                            * double the number of pods per 60 seconds
+                          No stabilization is used.
+                        properties:
+                          policies:
+                            description: policies is a list of potential scaling polices which can be used during scaling. At least one policy must be specified, otherwise the HPAScalingRules will be discarded as invalid
+                            items:
+                              description: HPAScalingPolicy is a single policy which must hold true for a specified past interval.
+                              properties:
+                                periodSeconds:
+                                  description: periodSeconds specifies the window of time for which the policy should hold true. PeriodSeconds must be greater than zero and less than or equal to 1800 (30 min).
+                                  format: int32
+                                  type: integer
+                                type:
+                                  description: type is used to specify the scaling policy.
+                                  type: string
+                                value:
+                                  description: value contains the amount of change which is permitted by the policy. It must be greater than zero
+                                  format: int32
+                                  type: integer
+                              required:
+                              - periodSeconds
+                              - type
+                              - value
+                              type: object
+                            type: array
+                          selectPolicy:
+                            description: selectPolicy is used to specify which policy should be used. If not set, the default value Max is used.
+                            type: string
+                          stabilizationWindowSeconds:
+                            description: 'stabilizationWindowSeconds is the number of seconds for which past recommendations should be considered while scaling up or scaling down. StabilizationWindowSeconds must be greater than or equal to zero and less than or equal to 3600 (one hour). If not set, use the default values: - For scale up: 0 (i.e. no stabilization is done). - For scale down: 300 (i.e. the stabilization window is 300 seconds long).'
+                            format: int32
+                            type: integer
+                        type: object
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    nullable: true
+                    type: object
+                  maxReplicas:
+                    description: maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up. It cannot be less that minReplicas.
+                    format: int32
+                    type: integer
+                  metrics:
+                    description: metrics contains the specifications for which to use to calculate the desired replica count (the maximum replica count across all metrics will be used).  The desired replica count is calculated multiplying the ratio between the target value and the current value by the current number of pods.  Ergo, metrics used must decrease as the pod count is increased, and vice-versa.  See the individual metric source types for more information about how each type of metric must respond. If not set, the default metric will be set to 80% average CPU utilization.
+                    items:
+                      description: MetricSpec specifies how to scale based on a single metric (only `type` and one other matching field should be set at once).
                       properties:
-                        hostname:
-                          description: |-
-                            Hostname value of the OnionKey.
-
-                            Example: &quot;abcdefg.onion&quot;
+                        containerResource:
+                          description: containerResource refers to a resource metric (such as those specified in requests and limits) known to Kubernetes describing a single container in each pod of the current scale target (e.g. CPU or memory). Such metrics are built in to Kubernetes, and have special scaling options on top of those available to normal per-pod metrics using the &quot;pods&quot; source. This is an alpha feature and can be enabled by the HPAContainerMetrics feature flag.
+                          properties:
+                            container:
+                              description: container is the name of the container in the pods of the scaling target
+                              type: string
+                            name:
+                              description: name is the name of the resource in question.
+                              type: string
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - container
+                          - name
+                          - target
+                          type: object
+                        external:
+                          description: external refers to a global metric that is not associated with any Kubernetes object. It allows autoscaling based on information coming from components running outside of cluster (for example length of queue in cloud messaging service, or QPS from loadbalancer running outside of cluster).
+                          properties:
+                            metric:
+                              description: metric identifies the target metric by name and selector
+                              properties:
+                                name:
+                                  description: name is the name of the given metric
+                                  type: string
+                                selector:
+                                  description: selector is the string-encoded form of a standard kubernetes label selector for the given metric When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping. When unset, just the metricName will be used to gather metrics.
+                                  properties:
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                                      items:
+                                        description: A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.
+                                        properties:
+                                          key:
+                                            description: key is the label key that the selector applies to.
+                                            type: string
+                                          operator:
+                                            description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+                                            type: string
+                                          values:
+                                            description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+                                            items:
+                                              type: string
+                                            type: array
+                                        required:
+                                        - key
+                                        - operator
+                                        type: object
+                                      type: array
+                                    matchLabels:
+                                      additionalProperties:
+                                        type: string
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                      type: object
+                                  type: object
+                              required:
+                              - name
+                              type: object
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - metric
+                          - target
+                          type: object
+                        object:
+                          description: object refers to a metric describing a single kubernetes object (for example, hits-per-second on an Ingress object).
+                          properties:
+                            describedObject:
+                              description: describedObject specifies the descriptions of a object,such as kind,name apiVersion
+                              properties:
+                                apiVersion:
+                                  description: apiVersion is the API version of the referent
+                                  type: string
+                                kind:
+                                  description: 'kind is the kind of the referent; More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                                  type: string
+                                name:
+                                  description: 'name is the name of the referent; More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                                  type: string
+                              required:
+                              - kind
+                              - name
+                              type: object
+                            metric:
+                              description: metric identifies the target metric by name and selector
+                              properties:
+                                name:
+                                  description: name is the name of the given metric
+                                  type: string
+                                selector:
+                                  description: selector is the string-encoded form of a standard kubernetes label selector for the given metric When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping. When unset, just the metricName will be used to gather metrics.
+                                  properties:
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                                      items:
+                                        description: A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.
+                                        properties:
+                                          key:
+                                            description: key is the label key that the selector applies to.
+                                            type: string
+                                          operator:
+                                            description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+                                            type: string
+                                          values:
+                                            description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+                                            items:
+                                              type: string
+                                            type: array
+                                        required:
+                                        - key
+                                        - operator
+                                        type: object
+                                      type: array
+                                    matchLabels:
+                                      additionalProperties:
+                                        type: string
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                      type: object
+                                  type: object
+                              required:
+                              - name
+                              type: object
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - describedObject
+                          - metric
+                          - target
+                          type: object
+                        pods:
+                          description: pods refers to a metric describing each pod in the current scale target (for example, transactions-processed-per-second).  The values will be averaged together before being compared to the target value.
+                          properties:
+                            metric:
+                              description: metric identifies the target metric by name and selector
+                              properties:
+                                name:
+                                  description: name is the name of the given metric
+                                  type: string
+                                selector:
+                                  description: selector is the string-encoded form of a standard kubernetes label selector for the given metric When set, it is passed as an additional parameter to the metrics server for more specific metrics scoping. When unset, just the metricName will be used to gather metrics.
+                                  properties:
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
+                                      items:
+                                        description: A label selector requirement is a selector that contains values, a key, and an operator that relates the key and values.
+                                        properties:
+                                          key:
+                                            description: key is the label key that the selector applies to.
+                                            type: string
+                                          operator:
+                                            description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+                                            type: string
+                                          values:
+                                            description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
+                                            items:
+                                              type: string
+                                            type: array
+                                        required:
+                                        - key
+                                        - operator
+                                        type: object
+                                      type: array
+                                    matchLabels:
+                                      additionalProperties:
+                                        type: string
+                                      description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &quot;key&quot;, the operator is &quot;In&quot;, and the values array contains only &quot;value&quot;. The requirements are ANDed.
+                                      type: object
+                                  type: object
+                              required:
+                              - name
+                              type: object
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - metric
+                          - target
+                          type: object
+                        resource:
+                          description: resource refers to a resource metric (such as those specified in requests and limits) known to Kubernetes describing each pod in the current scale target (e.g. CPU or memory). Such metrics are built in to Kubernetes, and have special scaling options on top of those available to normal per-pod metrics using the &quot;pods&quot; source.
+                          properties:
+                            name:
+                              description: name is the name of the resource in question.
+                              type: string
+                            target:
+                              description: target specifies the target value for the given metric
+                              properties:
+                                averageUtilization:
+                                  description: averageUtilization is the target value of the average of the resource metric across all relevant pods, represented as a percentage of the requested value of the resource for the pods. Currently only valid for Resource metric source type
+                                  format: int32
+                                  type: integer
+                                averageValue:
+                                  description: averageValue is the target value of the average of the metric across all relevant pods (as a quantity)
+                                  type: string
+                                type:
+                                  description: type represents whether the metric type is Utilization, Value, or AverageValue
+                                  type: string
+                                value:
+                                  description: value is the target value of the metric (as a quantity).
+                                  type: string
+                              required:
+                              - type
+                              type: object
+                          required:
+                          - name
+                          - target
+                          type: object
+                        type:
+                          description: 'type is the type of metric source.  It should be one of &quot;ContainerResource&quot;, &quot;External&quot;, &quot;Object&quot;, &quot;Pods&quot; or &quot;Resource&quot;, each mapping to a matching field in the object. Note: &quot;ContainerResource&quot; type is available on when the feature-gate HPAContainerMetrics is enabled'
                           type: string
                       required:
-                      - hostname
+                      - type
                       type: object
-                  required:
-                  - onionKey
-                  type: object
-                type: array
+                    nullable: true
+                    type: array
+                  minReplicas:
+                    description: minReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.  It defaults to 1 pod.  minReplicas is allowed to be 0 if the alpha feature gate HPAScaleToZero is enabled and at least one Object or External metric is configured.  Scaling is active as long as at least one metric value is available.
+                    format: int32
+                    nullable: true
+                    type: integer
+                  name:
+                    description: |-
+                      Name of the HorizontalPodAutoscaler.
+
+                      Default: name of the TorIngress
+                    nullable: true
+                    type: string
+                required:
+                - maxReplicas
+                type: object
+              service:
+                description: Service settings.
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    nullable: true
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    nullable: true
+                    type: object
+                  name:
+                    description: |-
+                      Name of the Service.
+
+                      Default: name of the Service
+                    nullable: true
+                    type: string
+                  ports:
+                    description: 'The list of ports that are exposed by this service. More info: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies'
+                    items:
+                      properties:
+                        name:
+                          description: The name of this port within the service. This must be a DNS_LABEL. All ports within a ServiceSpec must have unique names. When considering the endpoints for a Service, this must match the 'name' field in the EndpointPort.
+                          type: string
+                        port:
+                          description: The port that will be exposed by this service.
+                          format: int32
+                          type: integer
+                        protocol:
+                          description: The IP protocol for this port. Supports &quot;HTTP_TUNNEL&quot;, &quot;SOCKS&quot;.
+                          type: string
+                      required:
+                      - name
+                      - port
+                      - protocol
+                      type: object
+                    type: array
+                required:
+                - ports
+                type: object
             required:
-            - onionKey
-            - onionServices
-            title: '`OnionBalance`'
+            - service
+            title: '`TorProxy`'
             type: object
           status:
             nullable: true
@@ -1060,9 +1570,7 @@ spec:
 
                   `Initialized`
 
-                  ### OnionKey
-
-                  `NotFound`, `HostnameNotFound`, `Ready`
+                  ### Service `PortsNotFound`, `Ready`
                 items:
                   description: Condition contains details for one aspect of the current state of this API Resource.
                   properties:
@@ -1095,14 +1603,15 @@ spec:
                   type: object
                 type: array
               hostname:
-                description: |-
-                  OnionKey hostname.
-
-                  The hostname is only populated once `state` is &quot;running&quot;.
+                description: Hostname.
                 nullable: true
                 type: string
-              onionServices:
-                description: Number of OnionServices.
+              labelSelector:
+                default: ''
+                description: Label selector the Horizontal Pod Autoscaler will use to collect metrics.
+                type: string
+              replicas:
+                description: Number of replicas.
                 format: int32
                 type: integer
               summary:
@@ -1112,15 +1621,19 @@ spec:
                 description: Represents the latest available observations of a deployment's current state.
                 type: object
             required:
-            - onionServices
+            - replicas
             type: object
         required:
         - spec
-        title: OnionBalance
+        title: TorProxy
         type: object
     served: true
     storage: true
     subresources:
+      scale:
+        labelSelectorPath: .status.labelSelector
+        specReplicasPath: .spec.deployment.replicas
+        statusReplicasPath: .status.replicas
       status: {}
 
 </code></pre>
@@ -1128,8 +1641,8 @@ spec:
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../../helm/" class="btn btn-neutral float-left" title="Helm"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../onionkey/" class="btn btn-neutral float-right" title="OnionKey">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../toringress/" class="btn btn-neutral float-left" title="TorIngress"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../observability/logs/" class="btn btn-neutral float-right" title="Logs">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -1156,10 +1669,10 @@ spec:
         </span>
     
     
-      <span><a href="../../helm/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../toringress/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../onionkey/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../../observability/logs/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>

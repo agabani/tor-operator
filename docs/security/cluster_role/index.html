@@ -69,6 +69,8 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../../custom_resource_definitions/toringress/">TorIngress</a>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../custom_resource_definitions/torproxy/">TorProxy</a>
+                  </li>
               </ul>
               <p class="caption"><span class="caption-text">Observability</span></p>
               <ul>
@@ -177,6 +179,22 @@ rules:
     verbs: [&quot;list&quot;, &quot;watch&quot;]
   - apiGroups: [&quot;tor.agabani.co.uk&quot;]
     resources: [&quot;toringresses/status&quot;]
+    verbs: [&quot;patch&quot;]
+  # used by TorProxy
+  - apiGroups: [&quot;&quot;]
+    resources: [&quot;configmaps&quot;, &quot;services&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
+  - apiGroups: [&quot;apps&quot;]
+    resources: [&quot;deployments&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
+  - apiGroups: [&quot;autoscaling&quot;]
+    resources: [&quot;horizontalpodautoscalers&quot;]
+    verbs: [&quot;create&quot;, &quot;delete&quot;, &quot;get&quot;, &quot;list&quot;, &quot;patch&quot;, &quot;watch&quot;]
+  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
+    resources: [&quot;torproxies&quot;]
+    verbs: [&quot;list&quot;, &quot;watch&quot;]
+  - apiGroups: [&quot;tor.agabani.co.uk&quot;]
+    resources: [&quot;torproxies/status&quot;]
     verbs: [&quot;patch&quot;]
 {{- end }}
 

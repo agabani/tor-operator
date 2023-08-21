@@ -75,6 +75,8 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/toringress/">TorIngress</a>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../custom_resource_definitions/torproxy/">TorProxy</a>
+                  </li>
               </ul>
               <p class="caption"><span class="caption-text">Observability</span></p>
               <ul>
@@ -121,6 +123,8 @@
               
                 <h1 id="helm">Helm</h1>
 <p>Helm charts can be found at <a href="https://agabani.github.io/tor-operator/index.yaml">https://agabani.github.io/tor-operator/index.yaml</a></p>
+<!-- BEGIN INCLUDE ../README.md '&lt;!--getting-started-installation-start--&gt;' '&lt;!--getting-started-installation-end--&gt;' -->
+
 <h2 id="installation">Installation</h2>
 <ol>
 <li>
@@ -129,13 +133,26 @@
 </code></pre>
 </li>
 <li>
+<p>Update the chart repository.</p>
+<pre><code>helm repo update agabani-tor-operator
+</code></pre>
+</li>
+<li>
 <p>Install the Tor Operator.</p>
-<pre><code>helm install tor-operator agabani-tor-operator/tor-operator \
+<pre><code>helm upgrade tor-operator agabani-tor-operator/tor-operator \
     --create-namespace \
+    --install \
     --namespace tor-operator
 </code></pre>
 </li>
+<li>
+<p>Test the Tor Operator.</p>
+<pre><code>helm test tor-operator --namespace tor-operator
+</code></pre>
+</li>
 </ol>
+<!-- END INCLUDE -->
+
 <h2 id="values">Values</h2>
 <pre><code># Default values for tor-operator.
 # This is a YAML-formatted file.
