@@ -667,7 +667,7 @@ async fn reconcile_onion_balance(
 #[allow(unused_variables)]
 fn generate_torrc(object: &OnionBalance) -> Torrc {
     Torrc::builder()
-        .socks_port(9050)
+        .socks_port("9050")
         .control_port("127.0.0.1:6666")
         .build()
 }

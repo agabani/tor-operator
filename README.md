@@ -1,6 +1,6 @@
 # Tor Operator
 
-Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionbalance/), [Onion Keys](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionkey/) and [Onion Services](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionservice/) to provide a highly available, load balanced and fault tolerate [Tor Ingress](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/toringress/).
+Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionbalance/), [Onion Keys](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionkey/) and [Onion Services](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/onionservice/) to provide a highly available, load balanced and fault tolerate [Tor Ingress](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/toringress/) and [Tor Proxy](https://agabani.github.io/tor-operator/docs/custom_resource_definitions/torproxy/).
 
 ## Documentation
 
@@ -80,6 +80,36 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
 
     `kubectl apply -f toringress.yaml`
 
+## Creating a Tor Proxy
+
+1.  Create a `TorProxy`
+
+        # torproxy.yaml
+        apiVersion: tor.agabani.co.uk/v1
+        kind: TorProxy
+        metadata:
+          name: tor-proxy-example
+        spec:
+          deployment:
+            containers:
+              tor:
+                resources:
+                  requests:
+                    cpu: 100m
+          horizontalPodAutoscaler:
+            maxReplicas: 4
+            minReplicas: 2
+          service:
+            ports:
+              - name: http-tunnel
+                port: 1080
+                protocol: HTTP_TUNNEL
+              - name: socks
+                port: 9050
+                protocol: SOCKS
+
+    `kubectl apply -f torproxy.yaml`
+
 <!--getting-started-end-->
 
 ## Screenshots
@@ -91,3 +121,5 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
 ![OnionService](./docs/custom_resource_definitions/onionservice.svg)
 
 ![TorIngress](./docs/custom_resource_definitions/toringress.svg)
+
+![TorProxy](./docs/custom_resource_definitions/torproxy.svg)

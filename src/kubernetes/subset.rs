@@ -71,3 +71,9 @@ impl Subset for k8s_openapi::api::apps::v1::DeploymentSpec {
         true
     }
 }
+
+impl Subset for k8s_openapi::api::core::v1::ServiceSpec {
+    fn is_subset(&self, superset: &Self) -> bool {
+        self.ports == superset.ports && self.type_ == superset.type_
+    }
+}

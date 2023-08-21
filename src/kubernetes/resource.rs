@@ -78,3 +78,11 @@ impl Resource for k8s_openapi::api::core::v1::Secret {
         self.data.as_ref().unwrap()
     }
 }
+
+impl Resource for k8s_openapi::api::core::v1::Service {
+    type Spec = k8s_openapi::api::core::v1::ServiceSpec;
+
+    fn spec(&self) -> &Self::Spec {
+        self.spec.as_ref().unwrap()
+    }
+}

@@ -12,7 +12,7 @@ use tor_operator::{
     metrics::Metrics,
     onion_balance, onion_key, onion_service,
     tor::{ExpandedSecretKey, HiddenServicePublicKey, HiddenServiceSecretKey, Hostname, PublicKey},
-    tor_ingress,
+    tor_ingress, tor_proxy,
 };
 
 #[tokio::main]
@@ -68,12 +68,20 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 
     let tor_ingress_config = tor_ingress::Config {};
 
+    let tor_proxy_config = tor_proxy::Config {
+        tor_image: tor_proxy::ImageConfig {
+            pull_policy: run.tor_image_pull_policy.clone(),
+            uri: run.tor_image_uri.clone(),
+        },
+    };
+
     tokio::select! {
         _ = http_server::run(addr, metrics.clone()) => {},
         _ = onion_balance::run_controller(client.clone(), onion_balance_config, metrics.clone()) => {},
         _ = onion_key::run_controller(client.clone(), onion_key_config, metrics.clone()) => {},
         _ = onion_service::run_controller(client.clone(),onion_service_config, metrics.clone()) => {},
         _ = tor_ingress::run_controller(client.clone(), tor_ingress_config, metrics.clone()) => {},
+        _ = tor_proxy::run_controller(client.clone(), tor_proxy_config, metrics.clone()) => {},
     }
 }
 
@@ -117,6 +125,11 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
         (
             "toringress",
             tor_ingress::generate_custom_resource_definition(),
+        ),
+        (
+            //
+            "torproxy",
+            tor_proxy::generate_custom_resource_definition(),
         ),
     ];
 

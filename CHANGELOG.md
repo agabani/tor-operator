@@ -2,6 +2,15 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- TorProxy Custom Resource Definition.
+- TorProxy controller.
+
+### Changed
+
+- Upgrade dependencies.
+
 ## [0.0.12] - 2023-08-08
 
 ### Changed
@@ -103,7 +112,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.12...HEAD
-
 [0.0.12]: https://github.com/agabani/tor-operator/compare/v0.0.11...v0.0.12
 [0.0.11]: https://github.com/agabani/tor-operator/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/agabani/tor-operator/compare/v0.0.9...v0.0.10

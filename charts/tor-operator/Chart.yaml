@@ -1,6 +1,6 @@
 apiVersion: v2
 name: tor-operator
-description: Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress.
+description: Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress and Tor Proxy.
 
 # A chart can be either an 'application' or a 'library' chart.
 #
