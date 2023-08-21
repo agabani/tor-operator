@@ -14,7 +14,7 @@ This document contains the help content for the `tor-operator` command-line prog
 
 ## `tor-operator`
 
-Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress.
+Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress and Tor Proxy.
 
 **Usage:** `tor-operator <COMMAND>`
 

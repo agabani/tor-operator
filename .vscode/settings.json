@@ -35,6 +35,7 @@
     "subresource",
     "tolerations",
     "toringress",
+    "torproxy",
     "torrc",
     "virtport"
   ]

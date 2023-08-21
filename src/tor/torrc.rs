@@ -64,10 +64,19 @@ impl TorrcBuilder {
         self
     }
 
-    /// 9050
+    /// 1080
+    /// 0.0.0.0:1080
     #[must_use]
-    pub fn socks_port(mut self, port: i32) -> Self {
-        self.0.push(format!("SocksPort {port}"));
+    pub fn http_tunnel_port(mut self, addr: &str) -> Self {
+        self.0.push(format!("HTTPTunnelPort {addr}"));
+        self
+    }
+
+    /// 9050
+    /// 0.0.0.0:9050
+    #[must_use]
+    pub fn socks_port(mut self, addr: &str) -> Self {
+        self.0.push(format!("SocksPort {addr}"));
         self
     }
 }

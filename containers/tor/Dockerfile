@@ -19,10 +19,15 @@ RUN curl -fsSLO "https://github.com/libevent/libevent/releases/download/release-
     tar zxvf libevent-2.1.12-stable.tar.gz && \
     rm libevent-2.1.12-stable.tar.gz
 
-RUN curl -fsSLO "https://zlib.net/zlib-1.2.13.tar.gz" && \
-    echo "b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30  zlib-1.2.13.tar.gz" | sha256sum -c && \
-    tar zxvf zlib-1.2.13.tar.gz && \
-    rm zlib-1.2.13.tar.gz
+RUN curl -fsSLO "https://zlib.net/zlib-1.3.tar.gz" && \
+    echo "ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e  zlib-1.3.tar.gz" | sha256sum -c && \
+    tar zxvf zlib-1.3.tar.gz && \
+    rm zlib-1.3.tar.gz
+
+RUN curl -fsSLO "https://dist.torproject.org/tor-0.4.7.14.tar.gz" && \
+    echo "a5ac67f6466380fc05e8043d01c581e4e8a2b22fe09430013473e71065e65df8  tor-0.4.7.14.tar.gz" | sha256sum -c && \
+    tar zxvf tor-0.4.7.14.tar.gz && \
+    rm tor-0.4.7.14.tar.gz
 
 # build dependencies
 RUN cd openssl-1.1.1v && \
@@ -37,24 +42,17 @@ RUN cd libevent-2.1.12-stable && \
     make install && \
     cd ..
 
-RUN cd zlib-1.2.13 && \
+RUN cd zlib-1.3 && \
     ./configure --prefix=$PWD/install && \
     make -j$(nproc) && \
     make install && \
     cd ..
 
-# download tor
-RUN curl -fsSLO "https://dist.torproject.org/tor-0.4.7.14.tar.gz" && \
-    echo "a5ac67f6466380fc05e8043d01c581e4e8a2b22fe09430013473e71065e65df8  tor-0.4.7.14.tar.gz" | sha256sum -c && \
-    tar zxvf tor-0.4.7.14.tar.gz && \
-    rm tor-0.4.7.14.tar.gz
-
-# build tor
 RUN cd tor-0.4.7.14 && \
     ./configure --prefix=$PWD/install --enable-static-tor \
     --with-libevent-dir=/libevent-2.1.12-stable/install \
     --with-openssl-dir=/openssl-1.1.1v/install \
-    --with-zlib-dir=/zlib-1.2.13/install &&  \
+    --with-zlib-dir=/zlib-1.3/install &&  \
     make -j$(nproc) && \
     make install && \
     cd ..

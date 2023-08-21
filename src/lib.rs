@@ -9,6 +9,7 @@ pub mod onion_key;
 pub mod onion_service;
 pub mod tor;
 pub mod tor_ingress;
+pub mod tor_proxy;
 
 /*
  * ============================================================================
