@@ -1,4 +1,4 @@
-name: "Tor"
+name: "CD: Tor"
 
 on:
   workflow_dispatch:
@@ -8,9 +8,9 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  release-container-image:
+    name: "Release: Container Image"
     runs-on: ubuntu-latest
-    # runs-on: self-hosted
     permissions:
       contents: read
       packages: write
@@ -63,13 +63,14 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  merge:
+  release-container-manifest:
+    name: "Release: Container Manifest"
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     needs:
-      - build
+      - release-container-image
     steps:
       - name: Download digests
         uses: actions/download-artifact@v3

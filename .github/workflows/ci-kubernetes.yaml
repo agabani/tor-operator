@@ -1,0 +1,40 @@
+name: "CI: Kubernetes"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  helm-test:
+    name: "Helm: Test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: "Toolchain: just"
+        uses: extractions/setup-just@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Toolchain: kubectl"
+        uses: azure/setup-kubectl@v3
+      - name: "Toolchain: helm"
+        uses: azure/setup-helm@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Kubernetes: kind"
+        uses: helm/kind-action@v1.8.0
+        with:
+          cluster_name: kind
+      - name: Build
+        run: just docker-build
+      - name: Test
+        run: just kube-test

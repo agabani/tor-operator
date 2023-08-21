@@ -1,4 +1,4 @@
-name: "Post Release"
+name: "CD: Post Release"
 on:
   push:
     tags:
@@ -9,8 +9,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  release:
-    name: Release
+  release-github:
+    name: "Release: GitHub"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -25,8 +25,8 @@ jobs:
         uses: softprops/action-gh-release@v1
 
   release-binary:
-    name: Release Binary
-    needs: release
+    name: "Release: Binary"
+    needs: release-github
     strategy:
       fail-fast: false
       matrix:
@@ -108,10 +108,9 @@ jobs:
           files: ${{ steps.archive.outputs.asset }}
 
   release-container-image:
-    name: Release Container Image
-    needs: release
+    name: "Release: Container Image"
+    needs: release-github
     runs-on: ubuntu-latest
-    # runs-on: self-hosted
     permissions:
       contents: read
       packages: write
@@ -167,7 +166,7 @@ jobs:
           retention-days: 1
 
   release-container-manifest:
-    name: Release Container Manifest
+    name: "Release: Container Manifest"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -208,7 +207,7 @@ jobs:
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
 
   release-helm:
-    name: Release Helm
+    name: "Release: Helm"
     runs-on: ubuntu-latest
     permissions:
       contents: write
