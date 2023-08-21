@@ -35,6 +35,12 @@ cli-markdown-generate:
 cli-onion-key-generate:
   @cargo run -- onion-key generate
 
+# docker build
+docker-build: docker-build-onion-balance docker-build-tor docker-build-tor-operator
+
+# docker buildx build
+docker-buildx-build: docker-buildx-build-onion-balance docker-buildx-build-tor docker-buildx-build-tor-operator
+
 # docker build onion balance
 docker-build-onion-balance:
   docker build \
@@ -97,10 +103,6 @@ github-runner-create:
 kube-clean:
   @tilt down
 
-# kube run
-kube-run: cli-onion-key-generate-example
-  @tilt up
-
 # kube dashboard port-forward
 kube-dashboard-port-forward:
   @kubectl -n kubernetes-dashboard port-forward services/kubernetes-dashboard 8443:443
@@ -108,6 +110,25 @@ kube-dashboard-port-forward:
 # kube dashboard token
 kube-dashboard-token:
   @kubectl -n kubernetes-dashboard create token admin-user
+
+# kube run
+kube-run: cli-onion-key-generate-example
+  @tilt up
+
+# kube test
+kube-test: docker-build
+  @kind load docker-image agabani/onion-balance:{{GIT_COMMIT}} agabani/tor:{{GIT_COMMIT}} agabani/tor-operator:{{GIT_COMMIT}}
+  @helm upgrade tor-operator ./charts/tor-operator/ \
+    --create-namespace \
+    --install \
+    --namespace tor-operator \
+    --set onionBalance.image.repository=agabani/onion-balance \
+    --set onionBalance.image.tag={{GIT_COMMIT}} \
+    --set tor.image.repository=agabani/tor \
+    --set tor.image.tag={{GIT_COMMIT}} \
+    --set image.repository=agabani/tor-operator \
+    --set image.tag={{GIT_COMMIT}}
+  @helm test tor-operator --namespace tor-operator --timeout 15m0s
 
 # license
 license:

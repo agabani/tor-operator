@@ -1,0 +1,153 @@
+---
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionKey
+metadata:
+  name: {{ include "tor-operator.fullname" . }}-test-tor-ingress-onion-key
+  labels:
+    {{- include "tor-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-failed,hook-succeeded
+    "helm.sh/hook-weight": "-2"
+spec:
+  autoGenerate: true
+  secret:
+    name: {{ include "tor-operator.fullname" . }}-test-tor-ingress-onion-key
+
+---
+apiVersion: tor.agabani.co.uk/v1
+kind: TorIngress
+metadata:
+  name: {{ include "tor-operator.fullname" . }}-test-tor-ingress
+  labels:
+    {{- include "tor-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-failed,hook-succeeded
+    "helm.sh/hook-weight": "-1"
+spec:
+  horizontalPodAutoscaler:
+    maxReplicas: 4
+    minReplicas: 2
+  onionBalance:
+    onionKey:
+      name: {{ include "tor-operator.fullname" . }}-test-tor-ingress-onion-key
+  onionService:
+    deployment:
+      containers:
+        tor:
+          resources:
+            requests:
+              cpu: 100m
+    ports:
+      - target: "{{ include "tor-operator.fullname" . }}:{{ .Values.service.port }}"
+        virtport: 80
+
+---
+apiVersion: tor.agabani.co.uk/v1
+kind: TorProxy
+metadata:
+  name: {{ include "tor-operator.fullname" . }}-test-tor-proxy
+  labels:
+    {{- include "tor-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-failed,hook-succeeded
+    "helm.sh/hook-weight": "-1"
+spec:
+  deployment:
+    containers:
+      tor:
+        resources:
+          requests:
+            cpu: 100m
+  horizontalPodAutoscaler:
+    maxReplicas: 4
+    minReplicas: 2
+  service:
+    ports:
+      - name: http-tunnel
+        port: 1080
+        protocol: HTTP_TUNNEL
+      - name: socks
+        port: 9050
+        protocol: SOCKS
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "tor-operator.fullname" . }}-test-tor-ingress-connection-http-tunnel"
+  labels:
+    {{- include "tor-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl
+      command: ["curl"]
+      args:
+        - "-v"
+        - "-f"
+        - "--max-time"
+        - "30"
+        - "--retry"
+        - "30"
+        - "--retry-all-errors"
+        - "--retry-delay"
+        - "10"
+        - "--retry-max-time"
+        - "300"
+        - "-p"
+        - "--proxy"
+        - "{{ include "tor-operator.fullname" . }}-test-tor-proxy:1080"
+        - "$(ONION_HOSTNAME)/readyz"
+      env:
+        - name: ONION_HOSTNAME
+          valueFrom:
+            secretKeyRef:
+              key: hostname
+              name: {{ include "tor-operator.fullname" . }}-test-tor-ingress-onion-key
+  restartPolicy: Never
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "tor-operator.fullname" . }}-test-tor-ingress-connection-socks"
+  labels:
+    {{- include "tor-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl
+      command: ["curl"]
+      args:
+        - "-v"
+        - "-f"
+        - "--max-time"
+        - "30"
+        - "--retry"
+        - "30"
+        - "--retry-all-errors"
+        - "--retry-delay"
+        - "10"
+        - "--retry-max-time"
+        - "300"
+        - "--socks5"
+        - "{{ include "tor-operator.fullname" . }}-test-tor-proxy:9050"
+        - "--socks5-hostname"
+        - "{{ include "tor-operator.fullname" . }}-test-tor-proxy:9050"
+        - "$(ONION_HOSTNAME)/readyz"
+      env:
+        - name: ONION_HOSTNAME
+          valueFrom:
+            secretKeyRef:
+              key: hostname
+              name: {{ include "tor-operator.fullname" . }}-test-tor-ingress-onion-key
+  restartPolicy: Never

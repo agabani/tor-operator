@@ -1,4 +1,4 @@
-name: Rust
+name: "CI: Rust"
 
 on:
   push:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   cargo-build:
-    name: Cargo Build
+    name: "Cargo: Build"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,7 +45,7 @@ jobs:
           args: --workspace --release --all-features
 
   cargo-clippy:
-    name: Cargo Clippy
+    name: "Cargo: Clippy"
     runs-on: ubuntu-latest
     permissions:
       checks: write
@@ -80,14 +80,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   cargo-deny:
-    name: Cargo Deny
+    name: "Cargo: Deny"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: EmbarkStudios/cargo-deny-action@v1
 
   cargo-format:
-    name: Cargo Format
+    name: "Cargo: Format"
     runs-on: ubuntu-latest
     needs:
       - cargo-build
@@ -119,7 +119,7 @@ jobs:
           command: fmt
 
   cargo-test:
-    name: Cargo Test
+    name: "Cargo: Test"
     runs-on: ubuntu-latest
     needs:
       - cargo-build

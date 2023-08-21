@@ -4,6 +4,7 @@
 
 ### Added
 
+- Helm test support.
 - TorProxy Custom Resource Definition.
 - TorProxy controller.
 
