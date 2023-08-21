@@ -227,6 +227,9 @@ pub struct TorProxyStatus {
     /// ### Initialized
     ///
     /// `Initialized`
+    ///
+    /// ### Service
+    /// `PortsNotFound`, `Ready`
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditions: Vec<Condition>,
 
