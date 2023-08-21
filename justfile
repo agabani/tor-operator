@@ -137,3 +137,18 @@ release-dryrun version: generate
 # release execute
 release-execute version: generate
   @cargo release {{version}} --execute --no-publish
+
+# test kind
+test-kind: docker-build-onion-balance docker-build-tor docker-build-tor-operator
+  @kind load docker-image agabani/onion-balance:{{GIT_COMMIT}} agabani/tor:{{GIT_COMMIT}} agabani/tor-operator:{{GIT_COMMIT}}
+  @helm upgrade tor-operator .\charts\tor-operator\ \
+    --create-namespace \
+    --install \
+    --namespace tor-operator \
+    --set onionBalance.image.repository=agabani/onion-balance \
+    --set onionBalance.image.tag={{GIT_COMMIT}} \
+    --set tor.image.repository=agabani/tor \
+    --set tor.image.tag={{GIT_COMMIT}} \
+    --set image.repository=agabani/tor-operator \
+    --set image.tag={{GIT_COMMIT}}
+  @helm test tor-operator --namespace tor-operator

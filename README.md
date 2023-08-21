@@ -6,7 +6,7 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
 
 [https://agabani.github.io/tor-operator/docs/](https://agabani.github.io/tor-operator/docs/)
 
-<!--getting-started-start-->
+<!--getting-started-installation-start-->
 
 ## Installation
 
@@ -14,11 +14,24 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
 
         helm repo add agabani-tor-operator https://agabani.github.io/tor-operator
 
+1.  Update the chart repository.
+
+        helm repo update agabani-tor-operator
+
 1.  Install the Tor Operator.
 
-        helm install tor-operator agabani-tor-operator/tor-operator \
+        helm upgrade tor-operator agabani-tor-operator/tor-operator \
             --create-namespace \
+            --install \
             --namespace tor-operator
+
+1.  Test the Tor Operator.
+
+        helm test tor-operator --namespace tor-operator
+
+<!--getting-started-installation-end-->
+
+<!--getting-started-custom-resource-definitions-start-->
 
 ## Creating a Tor Ingress
 
@@ -110,7 +123,7 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
 
     `kubectl apply -f torproxy.yaml`
 
-<!--getting-started-end-->
+<!--getting-started-custom-resource-definitions-end-->
 
 ## Screenshots
 
