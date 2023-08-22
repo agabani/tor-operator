@@ -45,13 +45,8 @@ The Tor Operator will create a load balanced TorProxy instance managed by an ext
 The Tor Operator will create a load balanced TorProxy instance managed by a HorizontalPodAutoscaler.
 
 ```
-#onionkey.yaml
-{% include "../../example/templates/toringress_full/onionkey.yaml" %}
-```
-
-```
-#toringress.yaml
-{% include "../../example/templates/toringress_full/toringress.yaml" %}
+#torproxy.yaml
+{% include "../../example/templates/torproxy_full/torproxy.yaml" %}
 ```
 
 ## Conditions
