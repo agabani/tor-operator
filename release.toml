@@ -2,8 +2,8 @@ pre-release-replacements = [
   { file="charts/tor-operator/Chart.yaml", search="version: .*", replace="version: {{version}}" },
   { file="charts/tor-operator/Chart.yaml", search="appVersion: .*", replace="appVersion: \"{{version}}\"" },
 
-  { file="docs/cli.md", search="--tag .*", replace="--tag {{version}}" },
-  { file="README.md", search="--tag .*", replace="--tag {{version}}" },
+  { file="docs/cli.md", search="--tag v.*", replace="--tag v{{version}}" },
+  { file="README.md", search="--tag v.*", replace="--tag v{{version}}" },
 
   { file="CHANGELOG.md", search="Unreleased", replace="{{version}}" },
   { file="CHANGELOG.md", search="\\.\\.\\.HEAD", replace="...{{tag_name}}", exactly=1 },
