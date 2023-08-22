@@ -234,135 +234,68 @@ spec:
 </code></pre>
 <h3 id="full">Full</h3>
 <p>The Tor Operator will create a load balanced TorProxy instance managed by a HorizontalPodAutoscaler.</p>
-<pre><code>#onionkey.yaml
+<pre><code>#torproxy.yaml
 apiVersion: tor.agabani.co.uk/v1
-kind: OnionKey
+kind: TorProxy
 metadata:
-  name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-0
+  name: tor-proxy-{{ include &quot;example.fullname&quot; . }}-full
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
-  autoGenerate: true
-  secret:
-    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-1
-
-</code></pre>
-<pre><code>#toringress.yaml
-apiVersion: tor.agabani.co.uk/v1
-kind: TorIngress
-metadata:
-  name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full
-  labels:
-    {{- include &quot;example.labels&quot; . | nindent 4 }}
-spec:
-  horizontalPodAutoscaler:
+  configMap:
     annotations:
       key-a-1: value-a-1
       key-a-2: value-a-2
-    # behavior:
     labels:
       key-l-1: value-l-1
       key-l-2: value-l-2
-    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-11
-    maxReplicas: 4
-    minReplicas: 2
-    # metrics:
-  onionBalance:
+    name: tor-proxy-{{ include &quot;example.fullname&quot; . }}-full-1
+  deployment:
     annotations:
       key-a-3: value-a-3
       key-a-4: value-a-4
-    configMap:
-      annotations:
-        key-a-5: value-a-5
-        key-a-6: value-a-6
-      labels:
-        key-l-5: value-l-5
-        key-l-6: value-l-6
-      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-2
-    deployment:
-      annotations:
-        key-a-7: value-a-7
-        key-a-8: value-a-8
-      containers:
-        onionBalance:
-          resources:
-            limits:
-              cpu: 200m
-              memory: 256Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
-        tor:
-          resources:
-            limits:
-              cpu: 200m
-              memory: 256Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
-      labels:
-        key-l-7: value-l-7
-        key-l-8: value-l-8
-      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-3
+    containers:
+      tor:
+        resources:
+          requests:
+            cpu: 100m
     labels:
       key-l-3: value-l-3
       key-l-4: value-l-4
-    name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-4
-    onionKey:
-      name: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-0
-  onionService:
+    name: tor-proxy-{{ include &quot;example.fullname&quot; . }}-full-2
+  horizontalPodAutoscaler:
     annotations:
-      key-a-9: value-a-9
-      key-a-10: value-a-10
-    configMap:
-      annotations:
-        key-a-11: value-a-11
-        key-a-12: value-a-12
-      labels:
-        key-l-11: value-l-11
-        key-l-12: value-l-12
-      namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-6
-    deployment:
-      annotations:
-        key-a-13: value-a-13
-        key-a-14: value-a-14
-      containers:
-        tor:
-          resources:
-            limits:
-              cpu: 200m
-              memory: 256Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
-      labels:
-        key-l-13: value-l-13
-        key-l-14: value-l-14
-      namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-7
+      key-a-5: value-a-5
+      key-a-6: value-a-6
+    # behavior:
     labels:
-      key-l-9: value-l-9
-      key-l-10: value-l-10
-    namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-8
-    onionKey:
-      annotations:
-        key-a-15: value-a-15
-        key-a-16: value-a-16
-      labels:
-        key-l-15: value-l-15
-        key-l-16: value-l-16
-      namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-9
-      secret:
-        annotations:
-          key-a-17: value-a-17
-          key-a-18: value-a-18
-        labels:
-          key-l-17: value-l-17
-          key-l-18: value-l-18
-        namePrefix: tor-ingress-{{ include &quot;example.fullname&quot; . }}-full-10
+      key-l-5: value-l-5
+      key-l-6: value-l-6
+    name: tor-proxy-{{ include &quot;example.fullname&quot; . }}-full-3
+    maxReplicas: 4
+    minReplicas: 2
+    # metrics:
+  service:
+    annotations:
+      key-a-7: value-a-7
+      key-a-8: value-a-8
+    labels:
+      key-l-7: value-l-7
+      key-l-8: value-l-8
+    name: tor-proxy-{{ include &quot;example.fullname&quot; . }}-full-4
     ports:
-      - target: example:80
-        virtport: 80
-    replicas: 3
+      - name: http-tunnel-1
+        port: 1080
+        protocol: HTTP_TUNNEL
+      - name: socks-1
+        port: 9050
+        protocol: SOCKS
+      - name: http-tunnel-2
+        port: 1081
+        protocol: HTTP_TUNNEL
+      - name: socks-2
+        port: 9051
+        protocol: SOCKS
 
 </code></pre>
 <h2 id="conditions">Conditions</h2>
