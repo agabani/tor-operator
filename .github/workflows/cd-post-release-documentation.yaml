@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-documentation:
-    name: Release Documentation
+    name: "Release: Documentation"
     runs-on: ubuntu-latest
     permissions:
       contents: write
