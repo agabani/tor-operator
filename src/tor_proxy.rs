@@ -523,6 +523,10 @@ pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
         kube::Api::<Deployment>::all(client.clone()),
         WatcherConfig::default(),
     )
+    .owns(
+        kube::Api::<Service>::all(client.clone()),
+        WatcherConfig::default(),
+    )
     .shutdown_on_signal()
     .run(
         reconciler,
