@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.14] - 2023-08-22
+
 ### Fixed
 
 - TorProxy controller watch services.
@@ -118,7 +120,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.13...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.14...HEAD
+
+[0.0.14]: https://github.com/agabani/tor-operator/compare/v0.0.13...v0.0.14
 [0.0.13]: https://github.com/agabani/tor-operator/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/agabani/tor-operator/compare/v0.0.11...v0.0.12
 [0.0.11]: https://github.com/agabani/tor-operator/compare/v0.0.10...v0.0.11
