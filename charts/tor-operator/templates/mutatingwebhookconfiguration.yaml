@@ -1,0 +1,85 @@
+{{- $caCert := "" }}
+{{- $name := include "tor-operator.fullname" . }}
+
+{{- if and .Values.admission.tls.autoGenerate (or .Release.IsInstall .Values.admission.tls.regenerate) }}
+{{- $ca := genCA "tor-operator-ca" 3650 }}
+{{- $cert := genSignedCert "tor-operator" (list) (list (include "tor-operator.fullname" .) (print (include "tor-operator.fullname" .) "." .Release.Namespace) (print (include "tor-operator.fullname" .) "." .Release.Namespace ".svc")) 3650 $ca }}
+{{- $caCert = $ca.Cert | b64enc }}
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "tor-operator.fullname" . }}-ca
+  annotations:
+    {{- if .Values.admission.tls.regenerate }}
+    helm.sh/hook: pre-upgrade
+    {{- else if .Values.admission.tls.autoGenerate }}
+    helm.sh/hook: pre-install
+    {{- end }}
+    helm.sh/hook-delete-policy: before-hook-creation
+  labels:
+    {{- include "tor-operator.labels" . | nindent 4 }}
+type: kubernetes.io/tls
+data:
+  tls.crt: {{ $ca.Cert | b64enc }}
+  tls.key: {{ $ca.Key | b64enc }}
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "tor-operator.fullname" . }}-cert
+  annotations:
+    {{- if .Values.admission.tls.regenerate }}
+    helm.sh/hook: pre-upgrade
+    {{- else if .Values.admission.tls.autoGenerate }}
+    helm.sh/hook: pre-install
+    {{- end }}
+    helm.sh/hook-delete-policy: before-hook-creation
+  labels:
+    {{- include "tor-operator.labels" . | nindent 4 }}
+type: kubernetes.io/tls
+data:
+  tls.crt: {{ $cert.Cert | b64enc }}
+  tls.key: {{ $cert.Key | b64enc }}
+{{- end }}
+
+{{- if not $caCert }}
+{{- $caObj := (lookup "v1" "Secret" .Release.Namespace "tor-operator-ca") | default dict }}
+{{- $caData := get $caObj "data" | default dict }}
+{{- $caCert = get $caData "tls.crt" | default "" }}
+{{- end }}
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "tor-operator.fullname" . }}
+  labels:
+    {{- include "tor-operator.labels" . | nindent 4 }}
+webhooks:
+  - name: {{ include "tor-operator.fullname" . }}.{{ .Release.Namespace }}.svc
+    admissionReviewVersions: ["v1"]
+    clientConfig:
+      {{- if and .Values.admission.tls.autoGenerate }}
+      caBundle: {{ $caCert }}
+      {{- else }}
+      caBundle: {{ .Values.admission.tls.caBundle }}
+      {{- end }}
+      service:
+       name: {{ include "tor-operator.fullname" . }}
+       namespace: {{ .Release.Namespace }}
+       path: "/mutate"
+    failurePolicy: Fail
+    objectSelector:
+      matchLabels:
+        proxy.tor.agabani.co.uk/inject: "true"
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+        scope: "Namespaced"
+    sideEffects: None
+    timeoutSeconds: 5
