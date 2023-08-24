@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use axum::{extract::rejection::JsonRejection, http::StatusCode, routing::post, Json, Router};
 use hyper::server::conn::AddrIncoming;
 use hyper_rustls::TlsAcceptor;
+use k8s_openapi::api::core::v1::Pod;
 use kube::core::{
     admission::{AdmissionRequest, AdmissionResponse, AdmissionReview},
     DynamicObject,
@@ -34,20 +35,28 @@ pub async fn run(addr: SocketAddr, certs: Vec<rustls::Certificate>, key: rustls:
 #[allow(clippy::unused_async)]
 async fn handler(
     review: Result<Json<AdmissionReview<DynamicObject>>, JsonRejection>,
-) -> (StatusCode, Json<AdmissionResponse>) {
+) -> (StatusCode, Json<AdmissionReview<DynamicObject>>) {
     match review {
         Ok(Json(review)) => {
             tracing::info!(review =? review, "review");
-            let request: AdmissionRequest<_> = review.try_into().unwrap();
-            let response = AdmissionResponse::from(&request);
-            tracing::info!(request =? request, response =? response, "request");
+
+            let request: AdmissionRequest<DynamicObject> = review.try_into().unwrap();
+
+            let pod = DynamicObject::try_parse::<Pod>(request.object.clone().unwrap()).unwrap();
+            // let x = request.object.unwrap();
+
+            let response: AdmissionReview<DynamicObject> =
+                AdmissionResponse::from(&request).into_review();
+
+            tracing::info!(pod =? pod, "request");
+            // tracing::info!(request =? request, response =? response, pod =? pod, "request");
             (StatusCode::OK, Json(response))
         }
         Err(rejection) => {
             tracing::warn!(rejection =? rejection,  "rejection");
             (
                 StatusCode::UNPROCESSABLE_ENTITY,
-                Json(AdmissionResponse::invalid("reason")),
+                Json(AdmissionResponse::invalid("reason").into_review()),
             )
         }
     }
