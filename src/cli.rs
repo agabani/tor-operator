@@ -72,11 +72,19 @@ pub struct ControllerRunArgs {
 
     /// Host the web server binds to
     #[arg(long, default_value = "127.0.0.1")]
-    pub host: String,
+    pub http_host: String,
 
     /// Port the web server binds to
-    #[arg(long, default_value_t = 8080)]
-    pub port: u16,
+    #[arg(long, default_value_t = 80)]
+    pub http_port: u16,
+
+    /// Host the web server binds to
+    #[arg(long, default_value = "127.0.0.1")]
+    pub https_host: String,
+
+    /// Port the web server binds to
+    #[arg(long, default_value_t = 443)]
+    pub https_port: u16,
 
     /// Tor image pull policy
     #[arg(long, default_value = "IfNotPresent")]

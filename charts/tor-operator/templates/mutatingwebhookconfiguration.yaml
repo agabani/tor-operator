@@ -71,6 +71,7 @@ webhooks:
        name: {{ include "tor-operator.fullname" . }}
        namespace: {{ .Release.Namespace }}
        path: "/mutate"
+       port: {{ .Values.service.https.port }}
     failurePolicy: Fail
     objectSelector:
       matchLabels:

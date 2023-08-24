@@ -76,7 +76,10 @@ securityContext:
 
 service:
   type: ClusterIP
-  port: 8080
+  http:
+    port: 80
+  https:
+    port: 443
 
 env:
   # Configures logging

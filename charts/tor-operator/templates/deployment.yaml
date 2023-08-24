@@ -53,11 +53,17 @@ spec:
             - "--onion-balance-image-uri"
             - "{{ .Values.onionBalance.image.repository }}:{{ .Values.onionBalance.image.tag }}"
 
-            - "--host"
+            - "--http-host"
             - "0.0.0.0"
 
-            - "--port"
-            - "{{ .Values.service.port }}"
+            - "--http-port"
+            - "80"
+
+            - "--https-host"
+            - "0.0.0.0"
+
+            - "--https-port"
+            - "443"
 
             - "--tor-image-pull-policy"
             - "{{ .Values.tor.image.pullPolicy }}"
@@ -66,7 +72,10 @@ spec:
             - "{{ .Values.tor.image.repository }}:{{ .Values.tor.image.tag }}"
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: 80
+              protocol: TCP
+            - name: https
+              containerPort: 443
               protocol: TCP
           livenessProbe:
             httpGet:

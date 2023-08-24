@@ -9,7 +9,7 @@ use tor_operator::{
         MarkdownCommands, MarkdownGenerateArgs, OnionKeyArgs, OnionKeyCommands,
         OnionKeyGenerateArgs,
     },
-    http_server,
+    http_server, https_server,
     metrics::Metrics,
     onion_balance, onion_key, onion_service,
     tor::{ExpandedSecretKey, HiddenServicePublicKey, HiddenServiceSecretKey, Hostname, PublicKey},
@@ -69,7 +69,13 @@ fn init_tracing(cli: &CliArgs) {
 }
 
 async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
-    let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
+    let http_addr = format!("{}:{}", run.http_host, run.http_port)
+        .parse()
+        .unwrap();
+
+    let https_addr = format!("{}:{}", run.https_host, run.https_port)
+        .parse()
+        .unwrap();
 
     let client = Client::try_default().await.unwrap();
 
@@ -105,7 +111,8 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
     };
 
     tokio::select! {
-        _ = http_server::run(addr, metrics.clone()) => {},
+        _ = http_server::run(http_addr, metrics.clone()) => {},
+        _ = https_server::run(https_addr) => {},
         _ = onion_balance::run_controller(client.clone(), onion_balance_config, metrics.clone()) => {},
         _ = onion_key::run_controller(client.clone(), onion_key_config, metrics.clone()) => {},
         _ = onion_service::run_controller(client.clone(),onion_service_config, metrics.clone()) => {},

@@ -148,7 +148,7 @@ k8s_yaml(helm(
     values='./Tiltfile.yaml',
 ))
 
-k8s_resource('tor-operator', port_forwards=['8080:8080'])
+k8s_resource('tor-operator', port_forwards=['8080:80', '8443:443'])
 
 # =============================================================================
 # Example

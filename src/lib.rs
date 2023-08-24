@@ -2,6 +2,7 @@
 
 pub mod cli;
 pub mod http_server;
+pub mod https_server;
 mod kubernetes;
 pub mod metrics;
 pub mod onion_balance;
