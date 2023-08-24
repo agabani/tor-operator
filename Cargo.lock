@@ -2128,6 +2128,7 @@ dependencies = [
  "futures",
  "hyper",
  "hyper-rustls",
+ "json-patch",
  "k8s-openapi",
  "kube",
  "opentelemetry",
