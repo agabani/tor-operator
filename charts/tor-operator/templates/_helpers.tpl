@@ -82,3 +82,14 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create the name of the TLS secret to use
+*/}}
+{{- define "tor-operator.tlsSecretName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "tor-operator.fullname" .) .Values.tlsSecret.name }}
+{{- else }}
+{{- default "default" .Values.tlsSecret.name }}
+{{- end }}
+{{- end }}

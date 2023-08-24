@@ -1,20 +1,26 @@
-{{- $caCert := "" }}
-{{- $name := include "tor-operator.fullname" . }}
+{{- $secretData := default (dict) (lookup "v1" "Secret" .Release.Namespace (include "tor-operator.tlsSecretName" .)).data -}}
+{{- $caCrt  := index $secretData "ca.crt"  -}}
+{{- $tlsCrt := index $secretData "tls.crt" -}}
+{{- $tlsKey := index $secretData "tls.key" -}}
 
-{{- if and .Values.admission.tls.autoGenerate (or .Release.IsInstall .Values.admission.tls.regenerate) }}
+{{- if and .Values.tlsSecret.create (or .Release.IsInstall .Values.tlsSecret.recreate) -}}
 {{- $ca := genCA "tor-operator-ca" 3650 }}
-{{- $cert := genSignedCert "tor-operator" (list) (list (include "tor-operator.fullname" .) (print (include "tor-operator.fullname" .) "." .Release.Namespace) (print (include "tor-operator.fullname" .) "." .Release.Namespace ".svc")) 3650 $ca }}
-{{- $caCert = $ca.Cert | b64enc }}
-
+{{- $cert := genSignedCert "tor-operator" (list) (list (printf "%s" (include "tor-operator.fullname" .)) (printf "%s.%s" (include "tor-operator.fullname" .) .Release.Namespace) (printf "%s.%s.svc" (include "tor-operator.fullname" .) .Release.Namespace)) 3650 $ca }}
+{{- $caCrt  = $ca.Cert  | toString | b64enc }}
+{{- $tlsCrt = $cert.Cert | toString | b64enc }}
+{{- $tlsKey = $cert.Key | toString | b64enc }}
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ include "tor-operator.fullname" . }}-ca
+  name: {{ include "tor-operator.tlsSecretName" . }}
   annotations:
-    {{- if .Values.admission.tls.regenerate }}
+    {{- with .Values.tlsSecret.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if .Values.tlsSecret.recreate }}
     helm.sh/hook: pre-upgrade
-    {{- else if .Values.admission.tls.autoGenerate }}
+    {{- else if .Values.tlsSecret.create }}
     helm.sh/hook: pre-install
     {{- end }}
     helm.sh/hook-delete-policy: before-hook-creation
@@ -22,51 +28,23 @@ metadata:
     {{- include "tor-operator.labels" . | nindent 4 }}
 type: kubernetes.io/tls
 data:
-  tls.crt: {{ $ca.Cert | b64enc }}
-  tls.key: {{ $ca.Key | b64enc }}
-
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: {{ include "tor-operator.fullname" . }}-cert
-  annotations:
-    {{- if .Values.admission.tls.regenerate }}
-    helm.sh/hook: pre-upgrade
-    {{- else if .Values.admission.tls.autoGenerate }}
-    helm.sh/hook: pre-install
-    {{- end }}
-    helm.sh/hook-delete-policy: before-hook-creation
-  labels:
-    {{- include "tor-operator.labels" . | nindent 4 }}
-type: kubernetes.io/tls
-data:
-  tls.crt: {{ $cert.Cert | b64enc }}
-  tls.key: {{ $cert.Key | b64enc }}
-{{- end }}
-
-{{- if not $caCert }}
-{{- $caObj := (lookup "v1" "Secret" .Release.Namespace "tor-operator-ca") | default dict }}
-{{- $caData := get $caObj "data" | default dict }}
-{{- $caCert = get $caData "tls.crt" | default "" }}
+  ca.crt:  {{ $caCrt  }}
+  tls.crt: {{ $tlsCrt }}
+  tls.key: {{ $tlsKey }}
 {{- end }}
 
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: {{ include "tor-operator.fullname" . }}
+  name: {{ include "tor-operator.fullname" . }}-a
   labels:
     {{- include "tor-operator.labels" . | nindent 4 }}
 webhooks:
   - name: {{ include "tor-operator.fullname" . }}.{{ .Release.Namespace }}.svc
     admissionReviewVersions: ["v1"]
     clientConfig:
-      {{- if and .Values.admission.tls.autoGenerate }}
-      caBundle: {{ $caCert }}
-      {{- else }}
-      caBundle: {{ .Values.admission.tls.caBundle }}
-      {{- end }}
+      caBundle: {{ $caCrt }}
       service:
        name: {{ include "tor-operator.fullname" . }}
        namespace: {{ .Release.Namespace }}

@@ -59,6 +59,17 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+tlsSecret:
+  # Specifies whether a TLS secret should be created
+  create: true
+  # Specifies whether a TLS secret should be recreated
+  recreate: false
+  # Annotations to add to the TLS secret
+  annotations: {}
+  # The name of the TLS secret to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
 podAnnotations: {}
 
 podSecurityContext:
@@ -108,15 +119,3 @@ affinity: {}
 opentelemetry:
   enabled: false
   endpoint: ""
-
-admission:
-  tls:
-    # Specifies whether the TLS infrastructure should be auto generated.
-    autoGenerate: true
-    # caBundle` is a PEM encoded CA bundle which will be used to validate the webhook's server certificate.
-    # If unspecified, system trust roots on the apiserver are used.
-    # Ignored unless `.admission.tls.autoGenerate` is `false`.
-    caBundle:
-    # Specifies whether the TLS infrastructure should be regenerated.
-    # Ignored unless `.admission.tls.autoGenerate` is `true`.
-    regenerate: false

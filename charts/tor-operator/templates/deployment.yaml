@@ -106,7 +106,7 @@ spec:
               - key: tls.key
                 path: tls.key
             optional: false
-            secretName: {{ include "tor-operator.fullname" . }}-cert
+            secretName: {{ include "tor-operator.tlsSecretName" . }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
