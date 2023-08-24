@@ -65,6 +65,12 @@ spec:
             - "--https-port"
             - "443"
 
+            - "--https-tls-cert"
+            - "/etc/secrets/tls.crt"
+
+            - "--https-tls-key"
+            - "/etc/secrets/tls.key"
+
             - "--tor-image-pull-policy"
             - "{{ .Values.tor.image.pullPolicy }}"
 
@@ -87,6 +93,20 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/secrets
+              name: etc-secrets
+              readOnly: true
+      volumes:
+        - name: etc-secrets
+          secret:
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+            optional: false
+            secretName: {{ include "tor-operator.fullname" . }}-cert
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

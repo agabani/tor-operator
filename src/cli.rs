@@ -86,6 +86,14 @@ pub struct ControllerRunArgs {
     #[arg(long, default_value_t = 443)]
     pub https_port: u16,
 
+    /// Path of the https web server TLS cert
+    #[arg(long, value_hint = clap::ValueHint::DirPath)]
+    pub https_tls_cert: PathBuf,
+
+    /// Path of the https web server TLS key
+    #[arg(long, value_hint = clap::ValueHint::DirPath)]
+    pub https_tls_key: PathBuf,
+
     /// Tor image pull policy
     #[arg(long, default_value = "IfNotPresent")]
     pub tor_image_pull_policy: String,

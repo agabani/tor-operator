@@ -1,4 +1,8 @@
-use std::{borrow::Cow, fs::File, io::Write};
+use std::{
+    borrow::Cow,
+    fs::File,
+    io::{self, Write},
+};
 
 use kube::Client;
 use opentelemetry_otlp::WithExportConfig;
@@ -77,6 +81,22 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
         .parse()
         .unwrap();
 
+    // Load public certificate.
+    let certfile = File::open(&run.https_tls_cert).unwrap();
+    let mut reader = io::BufReader::new(certfile);
+
+    // Load and return certificate.
+    let certs = rustls_pemfile::certs(&mut reader).unwrap();
+    let certs = certs.into_iter().map(rustls::Certificate).collect();
+
+    // Load private key. (see `examples/server.rs`)
+    let keyfile = File::open(&run.https_tls_key).unwrap();
+    let mut reader = io::BufReader::new(keyfile);
+
+    // Load and return a single private key.
+    let keys = rustls_pemfile::rsa_private_keys(&mut reader).unwrap();
+    let key = rustls::PrivateKey(keys[0].clone());
+
     let client = Client::try_default().await.unwrap();
 
     let metrics = Metrics::new();
@@ -112,7 +132,7 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
 
     tokio::select! {
         _ = http_server::run(http_addr, metrics.clone()) => {},
-        _ = https_server::run(https_addr) => {},
+        _ = https_server::run(https_addr, certs, key) => {},
         _ = onion_balance::run_controller(client.clone(), onion_balance_config, metrics.clone()) => {},
         _ = onion_key::run_controller(client.clone(), onion_key_config, metrics.clone()) => {},
         _ = onion_service::run_controller(client.clone(),onion_service_config, metrics.clone()) => {},
