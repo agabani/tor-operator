@@ -77,7 +77,7 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "{{ include "tor-operator.fullname" . }}-test-tor-ingress-connection-http-tunnel"
+  name: "{{ include "tor-operator.fullname" . }}-test-tor-connection-http-tunnel"
   labels:
     {{- include "tor-operator.labels" . | nindent 4 }}
   annotations:
@@ -116,7 +116,7 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "{{ include "tor-operator.fullname" . }}-test-tor-ingress-connection-socks"
+  name: "{{ include "tor-operator.fullname" . }}-test-tor-connection-socks"
   labels:
     {{- include "tor-operator.labels" . | nindent 4 }}
   annotations:
