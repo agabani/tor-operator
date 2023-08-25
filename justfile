@@ -80,6 +80,21 @@ docker-buildx-build-tor-operator:
     --tag agabani/tor-operator:{{GIT_COMMIT}} \
     .
 
+# docker load
+docker-load: docker-load-onion-balance docker-load-tor docker-load-tor-operator
+
+# docker load onion balance
+docker-load-onion-balance:
+  @docker load --input agabani-onion-balance.tar
+
+# docker load tor
+docker-load-tor:
+  @docker load --input agabani-tor.tar
+
+# docker load tor-operator
+docker-load-tor-operator:
+  @docker load --input agabani-tor-operator.tar
+
 # docker run onion balance
 docker-run-onion-balance: docker-build-onion-balance
   @docker run --rm agabani/onion-balance:{{GIT_COMMIT}}
@@ -91,6 +106,21 @@ docker-run-tor: docker-build-tor
 # docker run tor-operator
 docker-run-tor-operator: docker-build-tor-operator
   @docker run --rm agabani/tor-operator:{{GIT_COMMIT}}
+
+# docker save
+docker-save: docker-save-onion-balance docker-save-tor docker-save-tor-operator
+
+# docker save onion balance
+docker-save-onion-balance:
+  @docker save --output agabani-onion-balance.tar agabani/onion-balance:{{GIT_COMMIT}}
+
+# docker save tor
+docker-save-tor:
+  @docker save --output agabani-tor.tar agabani/tor:{{GIT_COMMIT}}
+
+# docker save tor-operator
+docker-save-tor-operator:
+  @docker save --output agabani-tor-operator.tar agabani/tor-operator:{{GIT_COMMIT}}
 
 # generate
 generate: cli-crd-generate cli-markdown-generate license
@@ -111,13 +141,16 @@ kube-dashboard-port-forward:
 kube-dashboard-token:
   @kubectl -n kubernetes-dashboard create token admin-user
 
+# kube load
+kube-load:
+  @kind load docker-image agabani/onion-balance:{{GIT_COMMIT}} agabani/tor:{{GIT_COMMIT}} agabani/tor-operator:{{GIT_COMMIT}}
+
 # kube run
 kube-run: cli-onion-key-generate-example
   @tilt up
 
 # kube test
-kube-test: docker-build
-  @kind load docker-image agabani/onion-balance:{{GIT_COMMIT}} agabani/tor:{{GIT_COMMIT}} agabani/tor-operator:{{GIT_COMMIT}}
+kube-test:
   @helm upgrade tor-operator ./charts/tor-operator/ \
     --create-namespace \
     --install \
