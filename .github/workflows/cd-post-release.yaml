@@ -94,12 +94,12 @@ jobs:
           mkdir -p dist
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             cp "target/${{ matrix.target }}/release/tor-operator.exe" "dist/"
-            7z a tor-operator-${{ needs.release.outputs.version }}-${{ matrix.build }}.zip ./dist/tor-operator.exe
-            echo "asset=tor-operator-${{ needs.release.outputs.version }}-${{ matrix.build }}.zip" >> $GITHUB_OUTPUT
+            7z a tor-operator-${{ needs.release-github.outputs.version }}-${{ matrix.build }}.zip ./dist/tor-operator.exe
+            echo "asset=tor-operator-${{ needs.release-github.outputs.version }}-${{ matrix.build }}.zip" >> $GITHUB_OUTPUT
           else
             cp "target/${{ matrix.target }}/release/tor-operator" "dist/"
-            tar czf "tor-operator-${{ needs.release.outputs.version }}-${{ matrix.build }}.tar.gz" -C "dist" .
-            echo "asset=tor-operator-${{ needs.release.outputs.version }}-${{ matrix.build }}.tar.gz" >> $GITHUB_OUTPUT
+            tar czf "tor-operator-${{ needs.release-github.outputs.version }}-${{ matrix.build }}.tar.gz" -C "dist" .
+            echo "asset=tor-operator-${{ needs.release-github.outputs.version }}-${{ matrix.build }}.tar.gz" >> $GITHUB_OUTPUT
           fi
         shell: bash
       - name: Release
