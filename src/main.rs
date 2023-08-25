@@ -92,7 +92,7 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
             "{{- if .Values.customResourceDefinition.create -}}",
             content.replace(
                 "\nspec:",
-                &vec![
+                &[
                     "",
                     "  labels:",
                     "    {{- include \"tor-operator.labels\" . | nindent 4 }}",
@@ -100,7 +100,7 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
                     "  annotations:",
                     "    {{- toYaml . | nindent 4 }}",
                     "  {{- end }}",
-                    "spec:",
+                    "spec:"
                 ]
                 .join("\n"),
             ),
