@@ -883,7 +883,7 @@ fn generate_deployment(
                     containers: vec![Container {
                         args: Some(vec![
                             "-c".into(),
-                            vec![
+                            [
                                 "mkdir -p /usr/local/etc/tor",
                                 "cp /etc/configs/torrc /usr/local/etc/tor/torrc",
                                 "tor -f /usr/local/etc/tor/torrc",

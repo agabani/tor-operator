@@ -490,7 +490,7 @@ fn generate_secret(
             labels,
             &public_key,
             &secret_key,
-            &hostname
+            &hostname,
         );
 
         return (State::Ready(hostname), Some(secret));

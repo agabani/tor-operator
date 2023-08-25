@@ -570,11 +570,9 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
 }
 
 async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionBalance) -> Result<State> {
-    let Some(onion_key)  = api
-        .get_opt(&object.onion_key_name())
-        .await? else {
-            return Ok(State::OnionKeyNotFound)
-        };
+    let Some(onion_key) = api.get_opt(&object.onion_key_name()).await? else {
+        return Ok(State::OnionKeyNotFound);
+    };
 
     if onion_key.hostname().is_none() {
         return Ok(State::OnionKeyHostnameNotFound);
@@ -756,12 +754,10 @@ fn generate_deployment(
                         Container {
                             args: Some(vec![
                                 "-c".into(),
-                                vec![
-                                    "mkdir -p /var/lib/tor/hidden_service",
+                                ["mkdir -p /var/lib/tor/hidden_service",
                                     "chmod 400 /var/lib/tor/hidden_service",
                                     "cp /etc/secrets/* /var/lib/tor/hidden_service",
-                                    "onionbalance -v info -c /usr/local/etc/onionbalance/config.yaml -p 6666",
-                                ]
+                                    "onionbalance -v info -c /usr/local/etc/onionbalance/config.yaml -p 6666"]
                                 .join(" && "),
                             ]),
                             command: Some(vec!["/bin/bash".into()]),
@@ -788,12 +784,10 @@ fn generate_deployment(
                         Container {
                             args: Some(vec![
                                 "-c".into(),
-                                vec![
-                                    "mkdir -p /var/lib/tor/hidden_service",
+                                ["mkdir -p /var/lib/tor/hidden_service",
                                     "chmod 400 /var/lib/tor/hidden_service",
                                     "cp /etc/secrets/* /var/lib/tor/hidden_service",
-                                    "tor -f /usr/local/etc/tor/torrc",
-                                ]
+                                    "tor -f /usr/local/etc/tor/torrc"]
                                 .join(" && "),
                             ]),
                             command: Some(vec!["/bin/bash".into()]),

@@ -583,11 +583,9 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
 }
 
 async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionService) -> Result<State> {
-    let Some(onion_key)  = api
-        .get_opt(&object.onion_key_name())
-        .await? else {
-            return Ok(State::OnionKeyNotFound)
-        };
+    let Some(onion_key) = api.get_opt(&object.onion_key_name()).await? else {
+        return Ok(State::OnionKeyNotFound);
+    };
 
     if onion_key.hostname().is_none() {
         return Ok(State::OnionKeyHostnameNotFound);
@@ -917,18 +915,18 @@ mod tests {
             ..Default::default()
         };
 
-        let ob_config = generate_ob_config(&object);
+        let ob_config = generate_ob_config(object);
 
         assert!(ob_config.is_none());
 
-        let torrc = generate_torrc(&object);
+        let torrc = generate_torrc(object);
 
         assert_eq!(
             r#"HiddenServiceDir /var/lib/tor/hidden_service
 HiddenServicePort 80 example:80
 HiddenServicePort 443 example:443"#,
             torrc.to_string()
-        )
+        );
     }
 
     #[test]
@@ -955,11 +953,11 @@ HiddenServicePort 443 example:443"#,
             ..Default::default()
         };
 
-        let ob_config = generate_ob_config(&object).unwrap();
+        let ob_config = generate_ob_config(object).unwrap();
 
         assert_eq!("MasterOnionAddress hostname.onion", ob_config.to_string());
 
-        let torrc = generate_torrc(&object);
+        let torrc = generate_torrc(object);
 
         assert_eq!(
             r#"HiddenServiceDir /var/lib/tor/hidden_service

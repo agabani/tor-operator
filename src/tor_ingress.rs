@@ -1124,11 +1124,10 @@ async fn reconcile_onion_key(
     labels: &Labels,
 ) -> Result<State> {
     // OnionBalance
-    let Some(onion_balance_onion_key) = api
-        .get_opt(&object.onion_balance_onion_key_name())
-        .await? else {
-            return Ok(State::OnionBalanceOnionKeyNotFound)
-        };
+    let Some(onion_balance_onion_key) = api.get_opt(&object.onion_balance_onion_key_name()).await?
+    else {
+        return Ok(State::OnionBalanceOnionKeyNotFound);
+    };
 
     if onion_balance_onion_key.hostname().is_none() {
         return Ok(State::OnionBalanceOnionKeyHostnameNotFound);
