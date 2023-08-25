@@ -1,5 +1,7 @@
 FROM ubuntu:22.04 as build
 
+ARG ONIONBALANCE_VERSION=0.2.2
+
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive \
     apt install -y \
@@ -11,7 +13,7 @@ RUN git clone https://gitlab.torproject.org/tpo/core/onionbalance.git
 
 WORKDIR /onionbalance
 
-RUN git fetch && git checkout 0.2.2
+RUN git fetch && git checkout ${ONIONBALANCE_VERSION}
 
 RUN python3 setup.py install
 

@@ -6,6 +6,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  VERSION: 0.4.8.4
 
 jobs:
   release-container-image:
@@ -29,7 +30,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=tor-0.4.7.14
+            type=raw,value=tor-${{ env.VERSION }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -85,7 +86,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=tor-0.4.7.14
+            type=raw,value=tor-${{ env.VERSION }}
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:

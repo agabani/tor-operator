@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Third party Tor v0.4.8.4 container image. (linux/amd64, linux/arm64)
+
 ## [0.0.14] - 2023-08-22
 
 ### Fixed
@@ -121,7 +125,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.14...HEAD
-
 [0.0.14]: https://github.com/agabani/tor-operator/compare/v0.0.13...v0.0.14
 [0.0.13]: https://github.com/agabani/tor-operator/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/agabani/tor-operator/compare/v0.0.11...v0.0.12

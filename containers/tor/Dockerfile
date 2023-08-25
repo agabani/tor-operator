@@ -1,5 +1,17 @@
 FROM ubuntu:22.04 as build
 
+ARG LIBEVENT_SHA=92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb
+ARG LIBEVENT_VERSION=2.1.12
+
+ARG OPENSSL_SHA=d6697e2871e77238460402e9362d47d18382b15ef9f246aba6c7bd780d38a6b0
+ARG OPENSSL_VERSION=1.1.1v
+
+ARG TOR_SHA=09c1ce74a25fc3b48c81ff146cbd0dd538cbbb8fe4e2964fc2fb2b192f6a1d2b
+ARG TOR_VERSION=0.4.8.4
+
+ARG ZLIB_SHA=ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
+ARG ZLIB_VERSION=1.3
+
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive \
     apt install -y \
@@ -9,57 +21,59 @@ RUN apt update && \
     curl
 
 # download dependencies
-RUN curl -fsSLO "https://www.openssl.org/source/openssl-1.1.1v.tar.gz" && \
-    echo "d6697e2871e77238460402e9362d47d18382b15ef9f246aba6c7bd780d38a6b0  openssl-1.1.1v.tar.gz" | sha256sum -c && \
-    tar zxvf openssl-1.1.1v.tar.gz && \
-    rm openssl-1.1.1v.tar.gz
+RUN curl -fsSLO "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz" && \
+    echo "${OPENSSL_SHA}  openssl-${OPENSSL_VERSION}.tar.gz" | sha256sum -c && \
+    tar zxvf openssl-${OPENSSL_VERSION}.tar.gz && \
+    rm openssl-${OPENSSL_VERSION}.tar.gz
 
-RUN curl -fsSLO "https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz" && \
-    echo "92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb  libevent-2.1.12-stable.tar.gz" | sha256sum -c && \
-    tar zxvf libevent-2.1.12-stable.tar.gz && \
-    rm libevent-2.1.12-stable.tar.gz
+RUN curl -fsSLO "https://github.com/libevent/libevent/releases/download/release-${LIBEVENT_VERSION}-stable/libevent-${LIBEVENT_VERSION}-stable.tar.gz" && \
+    echo "${LIBEVENT_SHA}  libevent-${LIBEVENT_VERSION}-stable.tar.gz" | sha256sum -c && \
+    tar zxvf libevent-${LIBEVENT_VERSION}-stable.tar.gz && \
+    rm libevent-${LIBEVENT_VERSION}-stable.tar.gz
 
-RUN curl -fsSLO "https://zlib.net/zlib-1.3.tar.gz" && \
-    echo "ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e  zlib-1.3.tar.gz" | sha256sum -c && \
-    tar zxvf zlib-1.3.tar.gz && \
-    rm zlib-1.3.tar.gz
+RUN curl -fsSLO "https://zlib.net/zlib-${ZLIB_VERSION}.tar.gz" && \
+    echo "${ZLIB_SHA}  zlib-${ZLIB_VERSION}.tar.gz" | sha256sum -c && \
+    tar zxvf zlib-${ZLIB_VERSION}.tar.gz && \
+    rm zlib-${ZLIB_VERSION}.tar.gz
 
-RUN curl -fsSLO "https://dist.torproject.org/tor-0.4.7.14.tar.gz" && \
-    echo "a5ac67f6466380fc05e8043d01c581e4e8a2b22fe09430013473e71065e65df8  tor-0.4.7.14.tar.gz" | sha256sum -c && \
-    tar zxvf tor-0.4.7.14.tar.gz && \
-    rm tor-0.4.7.14.tar.gz
+RUN curl -fsSLO "https://dist.torproject.org/tor-${TOR_VERSION}.tar.gz" && \
+    echo "${TOR_SHA}  tor-${TOR_VERSION}.tar.gz" | sha256sum -c && \
+    tar zxvf tor-${TOR_VERSION}.tar.gz && \
+    rm tor-${TOR_VERSION}.tar.gz
 
 # build dependencies
-RUN cd openssl-1.1.1v && \
+RUN cd openssl-${OPENSSL_VERSION} && \
     ./config --prefix=$PWD/install no-shared no-dso && \
     make -j$(nproc) && \
     make install && \
     cd ..
 
-RUN cd libevent-2.1.12-stable && \
-    ./configure CFLAGS="-I/openssl-1.1.1v/install/include" LDFLAGS="-L/openssl-1.1.1v/install/lib" --prefix=$PWD/install --disable-shared --enable-static --with-pic && \
+RUN cd libevent-${LIBEVENT_VERSION}-stable && \
+    ./configure CFLAGS="-I/openssl-${OPENSSL_VERSION}/install/include" LDFLAGS="-L/openssl-${OPENSSL_VERSION}/install/lib" --prefix=$PWD/install --disable-shared --enable-static --with-pic && \
     make -j$(nproc) && \
     make install && \
     cd ..
 
-RUN cd zlib-1.3 && \
+RUN cd zlib-${ZLIB_VERSION} && \
     ./configure --prefix=$PWD/install && \
     make -j$(nproc) && \
     make install && \
     cd ..
 
-RUN cd tor-0.4.7.14 && \
+RUN cd tor-${TOR_VERSION} && \
     ./configure --prefix=$PWD/install --enable-static-tor \
-    --with-libevent-dir=/libevent-2.1.12-stable/install \
-    --with-openssl-dir=/openssl-1.1.1v/install \
-    --with-zlib-dir=/zlib-1.3/install &&  \
+    --with-libevent-dir=/libevent-${LIBEVENT_VERSION}-stable/install \
+    --with-openssl-dir=/openssl-${OPENSSL_VERSION}/install \
+    --with-zlib-dir=/zlib-${ZLIB_VERSION}/install &&  \
     make -j$(nproc) && \
     make install && \
     cd ..
 
 FROM ubuntu:22.04
 
-COPY --from=build /tor-0.4.7.14/LICENSE /licenses/tor/LICENSE
-COPY --from=build /tor-0.4.7.14/install/bin/tor /usr/local/bin/tor
+ARG TOR_VERSION=0.4.8.4
+
+COPY --from=build /tor-${TOR_VERSION}/LICENSE /licenses/tor/LICENSE
+COPY --from=build /tor-${TOR_VERSION}/install/bin/tor /usr/local/bin/tor
 
 CMD ["/usr/local/bin/tor"]
