@@ -1,6 +1,7 @@
 use std::{borrow::Cow, fs::File, io::Write};
 
 use kube::Client;
+use opentelemetry_otlp::WithExportConfig;
 use tor_operator::{
     cli::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
@@ -14,12 +15,14 @@ use tor_operator::{
     tor::{ExpandedSecretKey, HiddenServicePublicKey, HiddenServiceSecretKey, Hostname, PublicKey},
     tor_ingress, tor_proxy,
 };
+use tracing_opentelemetry::OpenTelemetryLayer;
+use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt::init();
-
     let cli = &parse();
+
+    init_tracing(cli);
 
     match &cli.command {
         CliCommands::Controller(controller) => match &controller.command {
@@ -37,6 +40,32 @@ async fn main() {
             }
         },
     }
+}
+
+fn init_tracing(cli: &CliArgs) {
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(tracing_subscriber::fmt::layer())
+        .with(cli.opentelemetry_endpoint.as_ref().map(|otlp_endpoint| {
+            OpenTelemetryLayer::new(
+                opentelemetry_otlp::new_pipeline()
+                    .tracing()
+                    .with_trace_config(opentelemetry::sdk::trace::config().with_resource(
+                        opentelemetry::sdk::Resource::new([opentelemetry::KeyValue::new(
+                            "service.name",
+                            "tor-operator",
+                        )]),
+                    ))
+                    .with_exporter(
+                        opentelemetry_otlp::new_exporter()
+                            .tonic()
+                            .with_endpoint(otlp_endpoint),
+                    )
+                    .install_batch(opentelemetry::runtime::Tokio)
+                    .unwrap(),
+            )
+        }))
+        .init();
 }
 
 async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {

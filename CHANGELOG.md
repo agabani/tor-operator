@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Tor Operator observability. (tracing)
+
 ## [0.0.15] - 2023-08-25
 
 ### Changed
@@ -127,7 +131,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.15...HEAD
-
 [0.0.15]: https://github.com/agabani/tor-operator/compare/v0.0.14...v0.0.15
 [0.0.14]: https://github.com/agabani/tor-operator/compare/v0.0.13...v0.0.14
 [0.0.13]: https://github.com/agabani/tor-operator/compare/v0.0.12...v0.0.13

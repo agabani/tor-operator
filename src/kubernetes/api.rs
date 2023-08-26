@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use tracing::Instrument;
+
 use crate::{metrics::Metrics, Error, Result};
 
 use super::{subset::Subset, Object, Resource, ResourceName};
@@ -16,6 +18,7 @@ impl<R> Api<R>
 where
     R: Resource + Clone + std::fmt::Debug + serde::de::DeserializeOwned + serde::Serialize,
 {
+    #[tracing::instrument(skip_all)]
     pub async fn delete<O>(&self, object: &O, resources: Vec<R>) -> Result<()>
     where
         O: Object,
@@ -26,6 +29,7 @@ where
             Metrics::kubernetes_api_usage_count::<R>("delete");
             self.0
                 .delete(&api_resource_name, &object.delete_params())
+                .instrument(tracing::info_span!("kube:delete", resource.r#ref = %format!("{}.{}.{}/{}", R::kind(&()), R::version(&()), R::group(&()), api_resource_name)))
                 .await
                 .map_err(Error::Kube)?;
         }
@@ -33,9 +37,14 @@ where
         Ok(())
     }
 
+    #[tracing::instrument(skip_all)]
     pub async fn get_opt(&self, name: &ResourceName) -> Result<Option<R>> {
         Metrics::kubernetes_api_usage_count::<R>("get");
-        self.0.get_opt(name).await.map_err(Error::Kube)
+        self.0
+            .get_opt(name)
+            .instrument(tracing::info_span!("kube:get_opt", resource.r#ref = %format!("{}.{}.{}/{}", R::kind(&()), R::version(&()), R::group(&()), name)))
+            .await
+            .map_err(Error::Kube)
     }
 }
 
@@ -44,6 +53,7 @@ where
     R: Resource + Clone + std::fmt::Debug + serde::de::DeserializeOwned + serde::Serialize,
     R::Spec: Subset,
 {
+    #[tracing::instrument(skip_all)]
     pub async fn sync<O, I>(&self, object: &O, resources: HashMap<I, R>) -> Result<HashMap<I, R>>
     where
         I: PartialEq + Eq + std::hash::Hash,
@@ -54,6 +64,7 @@ where
         Ok(results)
     }
 
+    #[tracing::instrument(skip_all)]
     pub async fn update<O, I>(
         &self,
         object: &O,
@@ -75,7 +86,12 @@ where
             .collect::<Result<HashMap<ResourceName, (I, R)>>>()?;
 
         for (resource_name, (_, resource)) in &resources {
-            match self.0.get_opt(resource_name).await.map_err(Error::Kube)? {
+            Metrics::kubernetes_api_usage_count::<R>("get");
+            match self.0
+                .get_opt(resource_name)
+                .instrument(tracing::info_span!("kube:get_opt", resource.r#ref = %format!("{}.{}.{}/{}", R::kind(&()), R::version(&()), R::group(&()), resource_name)))
+                .await
+                .map_err(Error::Kube)? {
                 Some(api_resource)
                     if resource.spec().is_subset(api_resource.spec())
                         && resource.meta().is_subset(api_resource.meta()) => {}
@@ -87,6 +103,7 @@ where
                             &object.patch_params(),
                             &kube::api::Patch::Apply(&resource),
                         )
+                        .instrument(tracing::info_span!("kube:patch", resource.r#ref = %format!("{}.{}.{}/{}", R::kind(&()), R::version(&()), R::group(&()), resource_name)))
                         .await
                         .map_err(Error::Kube)?;
                 }
@@ -100,6 +117,7 @@ where
         for api_resource in self
             .0
             .list(&object.try_owned_list_params()?)
+            .instrument(tracing::info_span!("kube:list", resource.r#ref = %format!("{}.{}.{}/{}", R::kind(&()), R::version(&()), R::group(&()), object.try_name()?)))
             .await
             .map_err(Error::Kube)?
         {
@@ -124,6 +142,7 @@ impl<R> Api<R>
 where
     R: Resource + Clone + std::fmt::Debug + serde::de::DeserializeOwned + serde::Serialize,
 {
+    #[tracing::instrument(skip_all)]
     pub async fn update_status<O>(&self, object: &O, status: O::Status) -> Result<()>
     where
         O: Object + Resource,
@@ -138,6 +157,7 @@ where
                         &object.patch_status_params(),
                         &object.patch_status(status),
                     )
+                    .instrument(tracing::info_span!("kube:patch", resource.r#ref = %format!("{}.{}.{}/{}", R::kind(&()), R::version(&()), R::group(&()), object.try_name()?)))
                     .await
                     .map_err(Error::Kube)?;
             }

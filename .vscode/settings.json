@@ -25,6 +25,8 @@
     "onionservice",
     "onionservices",
     "openapi",
+    "opentelemetry",
+    "otlp",
     "printcolumn",
     "pubkey",
     "readyz",
