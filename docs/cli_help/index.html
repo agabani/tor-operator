@@ -78,6 +78,8 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../observability/metrics/">Metrics</a>
                   </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../observability/tracing/">Tracing</a>
+                  </li>
               </ul>
               <p class="caption"><span class="caption-text">Security</span></p>
               <ul>
@@ -129,12 +131,16 @@
 </ul>
 <h2 id="tor-operator"><code>tor-operator</code></h2>
 <p>Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress and Tor Proxy.</p>
-<p><strong>Usage:</strong> <code>tor-operator &lt;COMMAND&gt;</code></p>
+<p><strong>Usage:</strong> <code>tor-operator [OPTIONS] &lt;COMMAND&gt;</code></p>
 <h6 id="subcommands"><strong>Subcommands:</strong></h6>
 <ul>
 <li><code>controller</code> — Controller</li>
 <li><code>crd</code> — Custom Resource Definition</li>
 <li><code>onion-key</code> — Onion Key</li>
+</ul>
+<h6 id="options"><strong>Options:</strong></h6>
+<ul>
+<li><code>--opentelemetry-endpoint &lt;OPENTELEMETRY_ENDPOINT&gt;</code> — OpenTelemetry endpoint</li>
 </ul>
 <h2 id="tor-operator-controller"><code>tor-operator controller</code></h2>
 <p>Controller</p>
@@ -146,7 +152,7 @@
 <h2 id="tor-operator-controller-run"><code>tor-operator controller run</code></h2>
 <p>Run the Tor Operator</p>
 <p><strong>Usage:</strong> <code>tor-operator controller run [OPTIONS]</code></p>
-<h6 id="options"><strong>Options:</strong></h6>
+<h6 id="options_1"><strong>Options:</strong></h6>
 <ul>
 <li><code>--onion-balance-image-pull-policy &lt;ONION_BALANCE_IMAGE_PULL_POLICY&gt;</code> — Onion Balance image pull policy</li>
 </ul>
@@ -171,7 +177,7 @@
 <h2 id="tor-operator-crd-generate"><code>tor-operator crd generate</code></h2>
 <p>Generate the Tor Operator CRDs</p>
 <p><strong>Usage:</strong> <code>tor-operator crd generate [OPTIONS]</code></p>
-<h6 id="options_1"><strong>Options:</strong></h6>
+<h6 id="options_2"><strong>Options:</strong></h6>
 <ul>
 <li><code>--format &lt;FORMAT&gt;</code> — Format of the CRDs</li>
 </ul>
@@ -190,7 +196,7 @@
 <h2 id="tor-operator-onion-key-generate"><code>tor-operator onion-key generate</code></h2>
 <p>Generate a random Tor Onion Key</p>
 <p><strong>Usage:</strong> <code>tor-operator onion-key generate [OPTIONS]</code></p>
-<h6 id="options_2"><strong>Options:</strong></h6>
+<h6 id="options_3"><strong>Options:</strong></h6>
 <ul>
 <li><code>--output &lt;OUTPUT&gt;</code> — Output the Onion Keys into a directory</li>
 </ul>
