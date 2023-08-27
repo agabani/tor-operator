@@ -177,16 +177,25 @@ where
             })
             .collect::<Result<HashMap<ResourceName, (I, R)>>>()?;
 
-        for (resource_name, (_, resource)) in &resources {
-            match self.get_opt(resource_name).await? {
-                Some(api_resource)
-                    if resource.spec().is_subset(api_resource.spec())
-                        && resource.meta().is_subset(api_resource.meta()) => {}
-                _ => {
-                    self.patch(object, resource).await?;
+        futures::future::join_all(resources.iter().map(
+            move |(resource_name, (_, resource))| async {
+                match self.get_opt(resource_name).await {
+                    Ok(api_resource) => match api_resource {
+                        Some(api_resource)
+                            if resource.spec().is_subset(api_resource.spec())
+                                && resource.meta().is_subset(api_resource.meta()) =>
+                        {
+                            Ok(())
+                        }
+                        _ => self.patch(object, resource).await,
+                    },
+                    Err(err) => Err(err),
                 }
-            }
-        }
+            },
+        ))
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
 
         let mut patched = HashMap::new();
         let mut deprecated = Vec::new();
