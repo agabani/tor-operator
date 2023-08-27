@@ -1158,7 +1158,7 @@ async fn reconcile_onion_key(
     }
 
     // OnionService: deletion
-    api.delete(object, deprecated).await?;
+    api.delete_many(object, deprecated).await?;
 
     Ok(State::Initialized((
         onion_balance_onion_key,
