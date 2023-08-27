@@ -16,13 +16,17 @@ This document contains the help content for the `tor-operator` command-line prog
 
 Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress and Tor Proxy.
 
-**Usage:** `tor-operator <COMMAND>`
+**Usage:** `tor-operator [OPTIONS] <COMMAND>`
 
 ###### **Subcommands:**
 
 * `controller` — Controller
 * `crd` — Custom Resource Definition
 * `onion-key` — Onion Key
+
+###### **Options:**
+
+* `--opentelemetry-endpoint <OPENTELEMETRY_ENDPOINT>` — OpenTelemetry endpoint
 
 
 
