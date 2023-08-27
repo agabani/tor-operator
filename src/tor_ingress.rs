@@ -927,11 +927,11 @@ pub struct Config {}
  * ============================================================================
  */
 pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
-    Metrics::kubernetes_api_usage_count::<TorIngress>("watch");
-    Metrics::kubernetes_api_usage_count::<HorizontalPodAutoscaler>("watch");
-    Metrics::kubernetes_api_usage_count::<OnionBalance>("watch");
-    Metrics::kubernetes_api_usage_count::<OnionKey>("watch");
-    Metrics::kubernetes_api_usage_count::<OnionService>("watch");
+    metrics.kubernetes_api_usage_count::<TorIngress>("watch");
+    metrics.kubernetes_api_usage_count::<HorizontalPodAutoscaler>("watch");
+    metrics.kubernetes_api_usage_count::<OnionBalance>("watch");
+    metrics.kubernetes_api_usage_count::<OnionKey>("watch");
+    metrics.kubernetes_api_usage_count::<OnionService>("watch");
     Controller::new(
         kube::Api::<TorIngress>::all(client.clone()),
         WatcherConfig::default(),
@@ -1049,7 +1049,7 @@ impl From<&State> for Vec<Condition> {
  * Reconciler
  * ============================================================================
  */
-#[tracing::instrument(skip(object, ctx))]
+#[tracing::instrument(skip_all)]
 async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action> {
     let _timer = ctx
         .metrics
@@ -1063,7 +1063,10 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 
     // OnionKey
     let state = reconcile_onion_key(
-        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+        &Api::new(
+            kube::Api::namespaced(ctx.client.clone(), &namespace),
+            ctx.metrics.clone(),
+        ),
         &object,
         &annotations,
         &labels,
@@ -1073,7 +1076,10 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
     if let State::Initialized((onion_balance_onion_key, onion_service_onion_keys)) = &state {
         // OnionServices
         reconcile_onion_services(
-            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &Api::new(
+                kube::Api::namespaced(ctx.client.clone(), &namespace),
+                ctx.metrics.clone(),
+            ),
             &object,
             &annotations,
             &labels,
@@ -1083,7 +1089,10 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 
         // OnionBalance
         reconcile_onion_balance(
-            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &Api::new(
+                kube::Api::namespaced(ctx.client.clone(), &namespace),
+                ctx.metrics.clone(),
+            ),
             &object,
             &annotations,
             &labels,
@@ -1093,7 +1102,10 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 
         // HorizontalPodAutoscaler
         reconcile_horizontal_pod_autoscaler(
-            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &Api::new(
+                kube::Api::namespaced(ctx.client.clone(), &namespace),
+                ctx.metrics.clone(),
+            ),
             &object,
             &annotations,
             &labels,
@@ -1103,7 +1115,10 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
 
     // TorIngress
     reconcile_tor_ingress(
-        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+        &Api::new(
+            kube::Api::namespaced(ctx.client.clone(), &namespace),
+            ctx.metrics.clone(),
+        ),
         &object,
         &state,
     )

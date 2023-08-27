@@ -1,13 +1,13 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use axum::{extract::State, routing::get, Router};
-use metrics_exporter_prometheus::PrometheusHandle;
+use prometheus::Encoder;
 use tokio::signal;
 
 use crate::metrics::Metrics;
 
 struct AppState {
-    metrics_handle: PrometheusHandle,
+    metrics: Metrics,
 }
 
 #[allow(clippy::missing_panics_doc)]
@@ -16,9 +16,7 @@ pub async fn run(addr: SocketAddr, metrics: Metrics) {
         .route("/livez", get(handler))
         .route("/metrics", get(metrics_handler))
         .route("/readyz", get(handler))
-        .with_state(Arc::new(AppState {
-            metrics_handle: metrics.handle(),
-        }));
+        .with_state(Arc::new(AppState { metrics }));
 
     let server = hyper::Server::bind(&addr)
         .serve(app.into_make_service())
@@ -36,7 +34,11 @@ async fn handler() {}
 
 #[allow(clippy::unused_async)]
 async fn metrics_handler(State(state): State<Arc<AppState>>) -> String {
-    state.metrics_handle.render()
+    let mut buffer = vec![];
+    let encoder = prometheus::TextEncoder::new();
+    let metric_families = state.metrics.registry().gather();
+    encoder.encode(&metric_families, &mut buffer).unwrap();
+    String::from_utf8_lossy(&buffer).into()
 }
 
 async fn shutdown_signal() {

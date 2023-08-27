@@ -6,11 +6,14 @@ use crate::{metrics::Metrics, Error, Result};
 
 use super::{subset::Subset, Object, Resource, ResourceName};
 
-pub struct Api<K>(kube::Api<K>);
+pub struct Api<K> {
+    api: kube::Api<K>,
+    metrics: Metrics,
+}
 
 impl<R> Api<R> {
-    pub fn new(api: kube::Api<R>) -> Self {
-        Self(api)
+    pub fn new(api: kube::Api<R>, metrics: Metrics) -> Self {
+        Self { api, metrics }
     }
 }
 
@@ -59,8 +62,8 @@ where
     where
         O: Object,
     {
-        Metrics::kubernetes_api_usage_count::<R>("delete");
-        self.0
+        self.metrics.kubernetes_api_usage_count::<R>("delete");
+        self.api
             .delete(&resource.try_name()?, &object.delete_params())
             .await
             .map(|_| ())
@@ -74,8 +77,8 @@ where
         )
     )]
     pub async fn get_opt(&self, name: &ResourceName) -> Result<Option<R>> {
-        Metrics::kubernetes_api_usage_count::<R>("get");
-        self.0.get_opt(name).await.map_err(Error::Kube)
+        self.metrics.kubernetes_api_usage_count::<R>("get");
+        self.api.get_opt(name).await.map_err(Error::Kube)
     }
 
     #[tracing::instrument(
@@ -88,8 +91,8 @@ where
     where
         O: Object + Resource,
     {
-        Metrics::kubernetes_api_usage_count::<R>("list");
-        self.0
+        self.metrics.kubernetes_api_usage_count::<R>("list");
+        self.api
             .list(&object.try_owned_list_params()?)
             .await
             .map_err(Error::Kube)
@@ -105,8 +108,8 @@ where
     where
         O: Object + Resource,
     {
-        Metrics::kubernetes_api_usage_count::<R>("patch");
-        self.0
+        self.metrics.kubernetes_api_usage_count::<R>("patch");
+        self.api
             .patch(
                 &resource.try_name()?,
                 &object.patch_params(),
@@ -127,8 +130,8 @@ where
     where
         O: Object + Resource,
     {
-        Metrics::kubernetes_api_usage_count::<R>("patch");
-        self.0
+        self.metrics.kubernetes_api_usage_count::<R>("patch");
+        self.api
             .patch_status(
                 &object.try_name()?,
                 &object.patch_status_params(),

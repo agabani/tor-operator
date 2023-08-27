@@ -411,9 +411,9 @@ pub struct ImageConfig {
  * ============================================================================
  */
 pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
-    Metrics::kubernetes_api_usage_count::<OnionService>("watch");
-    Metrics::kubernetes_api_usage_count::<ConfigMap>("watch");
-    Metrics::kubernetes_api_usage_count::<Deployment>("watch");
+    metrics.kubernetes_api_usage_count::<OnionService>("watch");
+    metrics.kubernetes_api_usage_count::<ConfigMap>("watch");
+    metrics.kubernetes_api_usage_count::<Deployment>("watch");
     Controller::new(
         kube::Api::<OnionService>::all(client.clone()),
         WatcherConfig::default(),
@@ -514,7 +514,7 @@ impl From<&State> for Vec<Condition> {
  * Reconciler
  * ============================================================================
  */
-#[tracing::instrument(skip(object, ctx))]
+#[tracing::instrument(skip_all)]
 async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Action> {
     let _timer = ctx
         .metrics
@@ -531,7 +531,10 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
 
     // OnionKey
     let state = reconcile_onion_key(
-        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+        &Api::new(
+            kube::Api::namespaced(ctx.client.clone(), &namespace),
+            ctx.metrics.clone(),
+        ),
         &object,
     )
     .await?;
@@ -544,7 +547,10 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
 
         // ConfigMap
         reconcile_config_map(
-            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &Api::new(
+                kube::Api::namespaced(ctx.client.clone(), &namespace),
+                ctx.metrics.clone(),
+            ),
             &object,
             &annotations,
             &labels,
@@ -555,7 +561,10 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
 
         // Deployment
         reconcile_deployment(
-            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &Api::new(
+                kube::Api::namespaced(ctx.client.clone(), &namespace),
+                ctx.metrics.clone(),
+            ),
             &ctx.config,
             &object,
             &annotations,
@@ -568,7 +577,10 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
 
     // OnionService
     reconcile_onion_service(
-        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+        &Api::new(
+            kube::Api::namespaced(ctx.client.clone(), &namespace),
+            ctx.metrics.clone(),
+        ),
         &object,
         &state,
     )
