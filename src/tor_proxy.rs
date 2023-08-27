@@ -502,11 +502,11 @@ pub struct ImageConfig {
  * ============================================================================
  */
 pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
-    Metrics::kubernetes_api_usage_count::<TorProxy>("watch");
-    Metrics::kubernetes_api_usage_count::<HorizontalPodAutoscaler>("watch");
-    Metrics::kubernetes_api_usage_count::<ConfigMap>("watch");
-    Metrics::kubernetes_api_usage_count::<Deployment>("watch");
-    Metrics::kubernetes_api_usage_count::<Service>("watch");
+    metrics.kubernetes_api_usage_count::<TorProxy>("watch");
+    metrics.kubernetes_api_usage_count::<HorizontalPodAutoscaler>("watch");
+    metrics.kubernetes_api_usage_count::<ConfigMap>("watch");
+    metrics.kubernetes_api_usage_count::<Deployment>("watch");
+    metrics.kubernetes_api_usage_count::<Service>("watch");
     Controller::new(
         kube::Api::<TorProxy>::all(client.clone()),
         WatcherConfig::default(),
@@ -605,7 +605,7 @@ impl From<&State> for Vec<Condition> {
  * Reconciler
  * ============================================================================
  */
-#[tracing::instrument(skip(object, ctx))]
+#[tracing::instrument(skip_all)]
 async fn reconciler(object: Arc<TorProxy>, ctx: Arc<Context>) -> Result<Action> {
     let _timer = ctx
         .metrics
@@ -631,7 +631,10 @@ async fn reconciler(object: Arc<TorProxy>, ctx: Arc<Context>) -> Result<Action> 
     if let State::Initialized(_) = state {
         // ConfigMap
         reconcile_config_map(
-            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &Api::new(
+                kube::Api::namespaced(ctx.client.clone(), &namespace),
+                ctx.metrics.clone(),
+            ),
             &object,
             &annotations,
             &labels,
@@ -641,7 +644,10 @@ async fn reconciler(object: Arc<TorProxy>, ctx: Arc<Context>) -> Result<Action> 
 
         // Deployment
         reconcile_deployment(
-            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &Api::new(
+                kube::Api::namespaced(ctx.client.clone(), &namespace),
+                ctx.metrics.clone(),
+            ),
             &ctx.config,
             &object,
             &annotations,
@@ -652,7 +658,10 @@ async fn reconciler(object: Arc<TorProxy>, ctx: Arc<Context>) -> Result<Action> 
 
         // HorizontalPodAutoscaler
         reconcile_horizontal_pod_autoscaler(
-            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &Api::new(
+                kube::Api::namespaced(ctx.client.clone(), &namespace),
+                ctx.metrics.clone(),
+            ),
             &object,
             &annotations,
             &labels,
@@ -661,7 +670,10 @@ async fn reconciler(object: Arc<TorProxy>, ctx: Arc<Context>) -> Result<Action> 
 
         // Service
         reconcile_service(
-            &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+            &Api::new(
+                kube::Api::namespaced(ctx.client.clone(), &namespace),
+                ctx.metrics.clone(),
+            ),
             &object,
             &annotations,
             &labels,
@@ -672,7 +684,10 @@ async fn reconciler(object: Arc<TorProxy>, ctx: Arc<Context>) -> Result<Action> 
 
     // TorProxy
     reconcile_tor_proxy(
-        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+        &Api::new(
+            kube::Api::namespaced(ctx.client.clone(), &namespace),
+            ctx.metrics.clone(),
+        ),
         &object,
         &state,
     )

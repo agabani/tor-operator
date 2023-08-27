@@ -237,8 +237,8 @@ pub struct Config {}
  * ============================================================================
  */
 pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
-    Metrics::kubernetes_api_usage_count::<OnionKey>("watch");
-    Metrics::kubernetes_api_usage_count::<Secret>("watch");
+    metrics.kubernetes_api_usage_count::<OnionKey>("watch");
+    metrics.kubernetes_api_usage_count::<Secret>("watch");
     Controller::new(
         kube::Api::<OnionKey>::all(client.clone()),
         WatcherConfig::default(),
@@ -340,7 +340,7 @@ impl From<&State> for Vec<Condition> {
  * Reconciler
  * ============================================================================
  */
-#[tracing::instrument(skip(object, ctx))]
+#[tracing::instrument(skip_all)]
 async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> {
     let _timer = ctx
         .metrics
@@ -354,7 +354,10 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
 
     // Secret
     let state = reconcile_secret(
-        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+        &Api::new(
+            kube::Api::namespaced(ctx.client.clone(), &namespace),
+            ctx.metrics.clone(),
+        ),
         &object,
         &annotations,
         &labels,
@@ -363,7 +366,10 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
 
     // OnionKey
     reconcile_onion_key(
-        &Api::new(kube::Api::namespaced(ctx.client.clone(), &namespace)),
+        &Api::new(
+            kube::Api::namespaced(ctx.client.clone(), &namespace),
+            ctx.metrics.clone(),
+        ),
         &object,
         &state,
     )
