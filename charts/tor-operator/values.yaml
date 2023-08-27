@@ -101,3 +101,7 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+opentelemetry:
+  enabled: false
+  endpoint: ""

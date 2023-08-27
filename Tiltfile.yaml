@@ -11,3 +11,7 @@ tor:
   image:
     repository: agabani/tor
     tag: dev
+
+opentelemetry:
+  enabled: true
+  endpoint: http://otel-collector-opentelemetry-collector.opentelemetry.svc:4317

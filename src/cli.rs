@@ -13,6 +13,10 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 pub struct CliArgs {
     #[command(subcommand)]
     pub command: CliCommands,
+
+    /// OpenTelemetry endpoint
+    #[arg(long)]
+    pub opentelemetry_endpoint: Option<String>,
 }
 
 #[must_use]
