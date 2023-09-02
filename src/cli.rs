@@ -83,7 +83,7 @@ pub struct ControllerRunArgs {
     pub tor_image_pull_policy: String,
 
     /// Tor image uri
-    #[arg(long, default_value = "ghcr.io/agabani/tor-operator:tor-0.4.8.4")]
+    #[arg(long, default_value = "ghcr.io/agabani/tor-operator:tor-0.4.8.5")]
     pub tor_image_uri: String,
 }
 
