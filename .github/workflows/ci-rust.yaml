@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Cargo Cache
         id: cargo-cache
         uses: actions/cache@v3
@@ -53,7 +53,7 @@ jobs:
       - cargo-build
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Cargo Cache
         id: cargo-cache
         uses: actions/cache@v3
@@ -83,7 +83,7 @@ jobs:
     name: "Cargo: Deny"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: EmbarkStudios/cargo-deny-action@v1
 
   cargo-format:
@@ -93,7 +93,7 @@ jobs:
       - cargo-build
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Cargo Cache
         id: cargo-cache
         uses: actions/cache@v3
@@ -125,7 +125,7 @@ jobs:
       - cargo-build
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Cargo Cache
         id: cargo-cache
         uses: actions/cache@v3
