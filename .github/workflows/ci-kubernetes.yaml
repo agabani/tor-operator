@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: "Toolchain: Set up Docker Buildx"
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: "Toolchain: just"
         uses: extractions/setup-just@v1
         with:
