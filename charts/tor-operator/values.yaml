@@ -20,7 +20,7 @@ tor:
   image:
     repository: ghcr.io/agabani/tor-operator
     pullPolicy: IfNotPresent
-    tag: "tor-0.4.8.5"
+    tag: "tor-0.4.8.6"
 
 imagePullSecrets: []
 nameOverride: ""
