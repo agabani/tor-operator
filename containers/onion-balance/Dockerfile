@@ -9,7 +9,7 @@ RUN apt update && \
     python3 \
     python3-setuptools
 
-RUN git clone https://gitlab.torproject.org/tpo/core/onionbalance.git
+RUN git clone https://gitlab.torproject.org/tpo/onion-services/onionbalance.git
 
 WORKDIR /onionbalance
 
