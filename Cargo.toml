@@ -25,7 +25,7 @@ opentelemetry-prometheus = "0.13.0"
 prometheus = "0.13.3"
 rand_07 = { package = "rand", version = "0.7.3" }
 schemars = "0.8.15"
-serde = { version = "1.0.188", features = ["derive"] }
+serde = { version = "1.0.189", features = ["derive"] }
 serde_json = "1.0.107"
 serde_yaml = "0.9.25"
 sha2 = "0.10.8"
