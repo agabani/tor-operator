@@ -234,7 +234,7 @@ jobs:
           helm package ../charts/tor-operator/
           cd ..
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.5.0
+        uses: helm/chart-releaser-action@v1.6.0
         with:
           config: chart-releaser.yaml
           skip_packaging: true
