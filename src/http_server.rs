@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, sync::Arc};
 
-use axum::{extract::State, routing::get, Router};
+use axum::{extract::State, routing::get, Router, Server};
 use prometheus::Encoder;
 use tokio::signal;
 
@@ -18,7 +18,7 @@ pub async fn run(addr: SocketAddr, metrics: Metrics) {
         .route("/readyz", get(handler))
         .with_state(Arc::new(AppState { metrics }));
 
-    let server = hyper::Server::bind(&addr)
+    let server = Server::bind(&addr)
         .serve(app.into_make_service())
         .with_graceful_shutdown(shutdown_signal());
 
