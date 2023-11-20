@@ -50,8 +50,8 @@ fn init_tracing(cli: &CliArgs) {
             OpenTelemetryLayer::new(
                 opentelemetry_otlp::new_pipeline()
                     .tracing()
-                    .with_trace_config(opentelemetry::sdk::trace::config().with_resource(
-                        opentelemetry::sdk::Resource::new([opentelemetry::KeyValue::new(
+                    .with_trace_config(opentelemetry_sdk::trace::config().with_resource(
+                        opentelemetry_sdk::Resource::new([opentelemetry::KeyValue::new(
                             "service.name",
                             "tor-operator",
                         )]),
@@ -61,7 +61,7 @@ fn init_tracing(cli: &CliArgs) {
                             .tonic()
                             .with_endpoint(otlp_endpoint),
                     )
-                    .install_batch(opentelemetry::runtime::Tokio)
+                    .install_batch(opentelemetry_sdk::runtime::Tokio)
                     .unwrap(),
             )
         }))
