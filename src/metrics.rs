@@ -1,7 +1,8 @@
 use opentelemetry::{
-    metrics::{Counter, Histogram, MeterProvider},
+    metrics::{Counter, Histogram, MeterProvider as _},
     KeyValue,
 };
+use opentelemetry_sdk::metrics::MeterProvider;
 use prometheus::Registry;
 
 use crate::{kubernetes::Resource, Error};
@@ -26,9 +27,7 @@ impl Metrics {
             .build()
             .unwrap();
 
-        let provider = opentelemetry::sdk::metrics::MeterProvider::builder()
-            .with_reader(exporter)
-            .build();
+        let provider = MeterProvider::builder().with_reader(exporter).build();
 
         let meter = provider.meter("tor-operator");
 
