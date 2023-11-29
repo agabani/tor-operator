@@ -1,8 +1,18 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, pin::pin, sync::Arc, time::Duration};
 
-use axum::{extract::State, routing::get, Router, Server};
+use axum::{
+    extract::{Request, State},
+    routing::get,
+    Router,
+};
+use hyper::{body::Incoming, service::service_fn};
+use hyper_util::{
+    rt::{TokioExecutor, TokioIo},
+    server::conn::auto::Builder,
+};
 use prometheus::Encoder;
-use tokio::signal;
+use tokio::{net::TcpListener, signal, sync::watch, time::sleep};
+use tower::Service;
 
 use crate::metrics::Metrics;
 
@@ -18,13 +28,64 @@ pub async fn run(addr: SocketAddr, metrics: Metrics) {
         .route("/readyz", get(handler))
         .with_state(Arc::new(AppState { metrics }));
 
-    let server = Server::bind(&addr)
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(shutdown_signal());
+    let listener = TcpListener::bind(&addr).await.unwrap();
 
     tracing::info!(addr =% addr, "server started");
 
-    server.await.unwrap();
+    let (close_tx, close_rx) = watch::channel(());
+
+    loop {
+        let (tcp_stream, remote_addr) = tokio::select! {
+            result = listener.accept() => {
+                result.unwrap()
+            }
+            () = shutdown_signal() => {
+                tracing::info!("shutdown signal received, not accepting new connections");
+                break;
+            }
+        };
+
+        let tower_service = app.clone();
+        let close_rx = close_rx.clone();
+
+        tokio::spawn(async move {
+            let tcp_stream = TokioIo::new(tcp_stream);
+
+            let hyper_service =
+                service_fn(move |request: Request<Incoming>| tower_service.clone().call(request));
+
+            let builder = Builder::new(TokioExecutor::new());
+
+            let mut connection =
+                pin!(builder.serve_connection_with_upgrades(tcp_stream, hyper_service));
+
+            tokio::select! {
+                result = connection.as_mut() => {
+                    if let Err(error) = result {
+                        tracing::warn!(error =% error, "failed to serve connection");
+                    }
+                }
+                () = shutdown_signal() => {
+                    tokio::select! {
+                        result = connection.as_mut() => {
+                            if let Err(error) = result {
+                                tracing::warn!(error =% error, "failed to serve connection");
+                            }
+                        }
+                        () = sleep(Duration::from_secs(30)) => {}
+                    }
+                }
+            }
+
+            tracing::debug!(remote_addr =% remote_addr, "connection closed");
+
+            drop(close_rx);
+        });
+    }
+
+    drop(close_rx);
+    drop(listener);
+    close_tx.closed().await;
 
     tracing::info!("server stopped");
 }
@@ -63,6 +124,4 @@ async fn shutdown_signal() {
         () = ctrl_c => {},
         () = terminate => {},
     }
-
-    tracing::info!("signal received, starting graceful shutdown");
 }
