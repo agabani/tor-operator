@@ -2258,6 +2258,7 @@ dependencies = [
  "ed25519-dalek",
  "futures",
  "hyper 1.0.1",
+ "hyper-util",
  "k8s-openapi",
  "kube",
  "opentelemetry",
