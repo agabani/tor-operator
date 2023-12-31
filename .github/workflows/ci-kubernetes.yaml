@@ -34,7 +34,7 @@ jobs:
       - name: "Docker: Save"
         run: just docker-save-${{ matrix.software }}
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: images
           path: agabani-${{ matrix.software }}.tar
