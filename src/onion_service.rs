@@ -5,9 +5,10 @@ use k8s_openapi::{
     api::{
         apps::v1::{Deployment, DeploymentSpec},
         core::v1::{
-            Affinity, ConfigMap, ConfigMapVolumeSource, Container, ExecAction, KeyToPath,
-            LocalObjectReference, PodSpec, PodTemplateSpec, Probe, ResourceRequirements,
-            SecretVolumeSource, Toleration, TopologySpreadConstraint, Volume, VolumeMount,
+            Affinity, Capabilities, ConfigMap, ConfigMapVolumeSource, Container, ExecAction,
+            KeyToPath, LocalObjectReference, PodSecurityContext, PodSpec, PodTemplateSpec, Probe,
+            ResourceRequirements, SecretVolumeSource, SecurityContext, Toleration,
+            TopologySpreadConstraint, Volume, VolumeMount,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
@@ -24,7 +25,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
+        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
         Resource as KubernetesResource, ResourceName, SelectorLabels, Subset,
     },
     metrics::Metrics,
@@ -122,6 +123,9 @@ pub struct OnionServiceSpecDeployment {
 
     /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
     pub node_selector: Option<std::collections::BTreeMap<String, String>>,
+
+    /// SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
+    pub security_context: Option<PodSecurityContext>,
 
     /// If specified, the pod's tolerations.
     pub tolerations: Option<Vec<Toleration>>,
@@ -312,6 +316,18 @@ impl OnionService {
             .as_ref()
             .and_then(|f| f.node_selector.as_ref())
             .map(Clone::clone)
+    }
+
+    #[must_use]
+    pub fn deployment_security_context(&self) -> PodSecurityContext {
+        pod_security_context(
+            self.spec
+                .deployment
+                .as_ref()
+                .and_then(|f| f.security_context.as_ref())
+                .map(Clone::clone)
+                .unwrap_or_default(),
+        )
     }
 
     #[must_use]
@@ -693,7 +709,9 @@ fn generate_ob_config(object: &OnionService) -> Option<OBConfig> {
 }
 
 fn generate_torrc(object: &OnionService) -> Torrc {
-    let mut torrc = Torrc::builder().hidden_service_dir("/var/lib/tor/hidden_service");
+    let mut torrc = Torrc::builder()
+        .data_dir("<TMP_DIR>/home/.tor")
+        .hidden_service_dir("<TMP_DIR>/var/lib/tor/hidden_service");
     if object.onion_balanced() {
         torrc = torrc.hidden_service_onion_balance_instance(true);
     }
@@ -750,8 +768,18 @@ fn generate_deployment(
     Deployment {
         metadata: ObjectMeta {
             name: Some(object.deployment_name().into()),
-            annotations: Some(annotations.clone().append_reverse(object.deployment_annotations()).into()),
-            labels: Some(labels.clone().append_reverse(object.deployment_labels()).into()),
+            annotations: Some(
+                annotations
+                    .clone()
+                    .append_reverse(object.deployment_annotations())
+                    .into(),
+            ),
+            labels: Some(
+                labels
+                    .clone()
+                    .append_reverse(object.deployment_labels())
+                    .into(),
+            ),
             owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
             ..Default::default()
         },
@@ -763,8 +791,18 @@ fn generate_deployment(
             },
             template: PodTemplateSpec {
                 metadata: Some(ObjectMeta {
-                    annotations: Some(annotations.clone().append_reverse(object.deployment_annotations()).into()),
-                    labels: Some(labels.clone().append_reverse(object.deployment_labels()).into()),
+                    annotations: Some(
+                        annotations
+                            .clone()
+                            .append_reverse(object.deployment_annotations())
+                            .into(),
+                    ),
+                    labels: Some(
+                        labels
+                            .clone()
+                            .append_reverse(object.deployment_labels())
+                            .into(),
+                    ),
                     ..Default::default()
                 }),
                 spec: Some(PodSpec {
@@ -773,19 +811,27 @@ fn generate_deployment(
                         args: Some(vec![
                             "-c".into(),
                             {
-                                let mut commands = vec![
-                                    "mkdir -p /var/lib/tor/hidden_service",
-                                    "chmod 400 /var/lib/tor/hidden_service",
-                                    "cp /etc/secrets/* /var/lib/tor/hidden_service",
-                                ];
+                                let mut commands = vec!["TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)"];
 
+                                // hidden_service
+                                commands.push("mkdir -p $TMP_DIR/var/lib/tor/hidden_service");
+                                commands.push("chmod 700 $TMP_DIR/var/lib/tor/hidden_service");
+                                commands.push("cp -L /etc/secrets/* $TMP_DIR/var/lib/tor/hidden_service");
                                 if object.onion_balanced() {
-                                    commands.push("cp /etc/configs/ob_config /var/lib/tor/hidden_service/ob_config");
+                                    commands.push("cp -L /etc/configs/ob_config $TMP_DIR/var/lib/tor/hidden_service/ob_config");
                                 }
 
-                                commands.push("mkdir -p /usr/local/etc/tor");
-                                commands.push("cp /etc/configs/torrc /usr/local/etc/tor/torrc");
-                                commands.push("tor -f /usr/local/etc/tor/torrc");
+                                // torrc
+                                commands.push("mkdir -p $TMP_DIR/usr/local/etc/tor");
+                                commands.push("cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc");
+                                commands.push(r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#);
+
+                                // data directory
+                                commands.push("mkdir -p $TMP_DIR/home/.tor");
+                                commands.push("chmod 700 $TMP_DIR/home/.tor");
+
+                                // executable
+                                commands.push("tor -f $TMP_DIR/usr/local/etc/tor/torrc");
                                 commands
                             }
                             .join(" && "),
@@ -823,6 +869,13 @@ fn generate_deployment(
                             ..Default::default()
                         }),
                         resources: object.deployment_containers_tor_resources().cloned(),
+                        security_context: Some(SecurityContext {
+                            capabilities: Some(Capabilities {
+                                drop: Some(vec!["ALL".to_string()]),
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }),
                         volume_mounts: Some(vec![
                             VolumeMount {
                                 mount_path: "/etc/secrets".into(),
@@ -841,6 +894,7 @@ fn generate_deployment(
                     }],
                     image_pull_secrets: object.deployment_image_pull_secrets(),
                     node_selector: object.deployment_node_selector(),
+                    security_context: Some(object.deployment_security_context()),
                     tolerations: object.deployment_tolerations(),
                     topology_spread_constraints: object.deployment_topology_spread_constraints(),
                     volumes: Some(vec![
@@ -934,7 +988,8 @@ mod tests {
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r#"HiddenServiceDir /var/lib/tor/hidden_service
+            r#"DataDirectory <TMP_DIR>/home/.tor
+HiddenServiceDir <TMP_DIR>/var/lib/tor/hidden_service
 HiddenServicePort 80 example:80
 HiddenServicePort 443 example:443"#,
             torrc.to_string()
@@ -972,7 +1027,8 @@ HiddenServicePort 443 example:443"#,
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r#"HiddenServiceDir /var/lib/tor/hidden_service
+            r#"DataDirectory <TMP_DIR>/home/.tor
+HiddenServiceDir <TMP_DIR>/var/lib/tor/hidden_service
 HiddenServiceOnionbalanceInstance 1
 HiddenServicePort 80 example:80
 HiddenServicePort 443 example:443"#,

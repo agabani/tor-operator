@@ -13,10 +13,10 @@ use k8s_openapi::{
             HorizontalPodAutoscalerSpec, MetricSpec,
         },
         core::v1::{
-            Affinity, ConfigMap, ConfigMapVolumeSource, Container, ContainerPort, ExecAction,
-            KeyToPath, LocalObjectReference, PodSpec, PodTemplateSpec, Probe, ResourceRequirements,
-            Service, ServicePort, ServiceSpec, Toleration, TopologySpreadConstraint, Volume,
-            VolumeMount,
+            Affinity, Capabilities, ConfigMap, ConfigMapVolumeSource, Container, ContainerPort,
+            ExecAction, KeyToPath, LocalObjectReference, PodSecurityContext, PodSpec,
+            PodTemplateSpec, Probe, ResourceRequirements, SecurityContext, Service, ServicePort,
+            ServiceSpec, Toleration, TopologySpreadConstraint, Volume, VolumeMount,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
@@ -36,7 +36,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
+        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
         Resource as KubernetesResource, ResourceName, SelectorLabels,
     },
     metrics::Metrics,
@@ -129,6 +129,9 @@ pub struct TorProxySpecDeployment {
     /// Number of replicas.
     #[serde(default = "default_deployment_replicas")]
     pub replicas: i32,
+
+    /// SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
+    pub security_context: Option<PodSecurityContext>,
 
     /// If specified, the pod's tolerations.
     pub tolerations: Option<Vec<Toleration>>,
@@ -355,6 +358,18 @@ impl TorProxy {
             .deployment
             .as_ref()
             .map_or_else(default_deployment_replicas, |f| f.replicas)
+    }
+
+    #[must_use]
+    pub fn deployment_security_context(&self) -> PodSecurityContext {
+        pod_security_context(
+            self.spec
+                .deployment
+                .as_ref()
+                .and_then(|f| f.security_context.as_ref())
+                .map(Clone::clone)
+                .unwrap_or_default(),
+        )
     }
 
     #[must_use]
@@ -806,7 +821,7 @@ async fn reconcile_tor_proxy(api: &Api<TorProxy>, object: &TorProxy, state: &Sta
 }
 
 fn generate_torrc(object: &TorProxy) -> Torrc {
-    let mut torrc = Torrc::builder();
+    let mut torrc = Torrc::builder().data_dir("<TMP_DIR>/home/.tor");
     if !object.service_ports_http_tunnel().is_empty() {
         torrc = torrc.http_tunnel_port("0.0.0.0:1080");
     }
@@ -899,9 +914,19 @@ fn generate_deployment(
                         args: Some(vec![
                             "-c".into(),
                             [
-                                "mkdir -p /usr/local/etc/tor",
-                                "cp /etc/configs/torrc /usr/local/etc/tor/torrc",
-                                "tor -f /usr/local/etc/tor/torrc",
+                                "TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)",
+
+                                // torrc
+                                "mkdir -p $TMP_DIR/usr/local/etc/tor",
+                                "cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc",
+                                r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#,
+
+                                // data directory
+                                "mkdir -p $TMP_DIR/home/.tor",
+                                "chmod 700 $TMP_DIR/home/.tor",
+
+                                // executable
+                                "tor -f $TMP_DIR/usr/local/etc/tor/torrc",
                             ]
                             .join(" && "),
                         ]),
@@ -952,6 +977,13 @@ fn generate_deployment(
                             ..Default::default()
                         }),
                         resources: object.deployment_containers_tor_resources().cloned(),
+                        security_context: Some(SecurityContext {
+                            capabilities: Some(Capabilities {
+                                drop: Some(vec!["ALL".to_string()]),
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        }),
                         volume_mounts: Some(vec![VolumeMount {
                             mount_path: "/etc/configs".into(),
                             name: "etc-configs".into(),
@@ -962,6 +994,7 @@ fn generate_deployment(
                     }],
                     image_pull_secrets: object.deployment_image_pull_secrets(),
                     node_selector: object.deployment_node_selector(),
+                    security_context: Some(object.deployment_security_context()),
                     tolerations: object.deployment_tolerations(),
                     topology_spread_constraints: object.deployment_topology_spread_constraints(),
                     volumes: Some(vec![Volume {
@@ -1089,5 +1122,113 @@ fn generate_service(
             ..Default::default()
         }),
         ..Default::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn config() {
+        let object = &TorProxy {
+            spec: TorProxySpec {
+                service: TorProxySpecService {
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let torrc = generate_torrc(object);
+
+        assert_eq!(r#"DataDirectory <TMP_DIR>/home/.tor"#, torrc.to_string());
+    }
+
+    #[test]
+    fn config_http_tunnel() {
+        let object = &TorProxy {
+            spec: TorProxySpec {
+                service: TorProxySpecService {
+                    ports: vec![TorProxySpecServicePort {
+                        name: "http-tunnel".to_string(),
+                        port: 1080,
+                        protocol: "HTTP_TUNNEL".to_string(),
+                    }],
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let torrc = generate_torrc(object);
+
+        assert_eq!(
+            r#"DataDirectory <TMP_DIR>/home/.tor
+HTTPTunnelPort 0.0.0.0:1080"#,
+            torrc.to_string()
+        );
+    }
+
+    #[test]
+    fn config_socks() {
+        let object = &TorProxy {
+            spec: TorProxySpec {
+                service: TorProxySpecService {
+                    ports: vec![TorProxySpecServicePort {
+                        name: "socks".to_string(),
+                        port: 9050,
+                        protocol: "SOCKS".to_string(),
+                    }],
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let torrc = generate_torrc(object);
+
+        assert_eq!(
+            r#"DataDirectory <TMP_DIR>/home/.tor
+SocksPort 0.0.0.0:9050"#,
+            torrc.to_string()
+        );
+    }
+
+    #[test]
+    fn config_http_tunnel_socks() {
+        let object = &TorProxy {
+            spec: TorProxySpec {
+                service: TorProxySpecService {
+                    ports: vec![
+                        TorProxySpecServicePort {
+                            name: "http-tunnel".to_string(),
+                            port: 1080,
+                            protocol: "HTTP_TUNNEL".to_string(),
+                        },
+                        TorProxySpecServicePort {
+                            name: "socks".to_string(),
+                            port: 9050,
+                            protocol: "SOCKS".to_string(),
+                        },
+                    ],
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let torrc = generate_torrc(object);
+
+        assert_eq!(
+            r#"DataDirectory <TMP_DIR>/home/.tor
+HTTPTunnelPort 0.0.0.0:1080
+SocksPort 0.0.0.0:9050"#,
+            torrc.to_string()
+        );
     }
 }

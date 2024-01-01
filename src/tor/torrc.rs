@@ -41,6 +41,13 @@ impl TorrcBuilder {
         self
     }
 
+    /// `~/.tor`
+    #[must_use]
+    pub fn data_dir(mut self, dir: &str) -> Self {
+        self.0.push(format!("DataDirectory {dir}"));
+        self
+    }
+
     /// `/var/lib/tor/hidden_service`
     #[must_use]
     pub fn hidden_service_dir(mut self, dir: &str) -> Self {

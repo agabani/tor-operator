@@ -5,9 +5,10 @@ use k8s_openapi::{
     api::{
         apps::v1::{Deployment, DeploymentSpec},
         core::v1::{
-            Affinity, ConfigMap, ConfigMapVolumeSource, Container, ExecAction, KeyToPath,
-            LocalObjectReference, PodSpec, PodTemplateSpec, Probe, ResourceRequirements,
-            SecretVolumeSource, Toleration, TopologySpreadConstraint, Volume, VolumeMount,
+            Affinity, Capabilities, ConfigMap, ConfigMapVolumeSource, Container, ExecAction,
+            KeyToPath, LocalObjectReference, PodSecurityContext, PodSpec, PodTemplateSpec, Probe,
+            ResourceRequirements, SecretVolumeSource, SecurityContext, Toleration,
+            TopologySpreadConstraint, Volume, VolumeMount,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
@@ -24,7 +25,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
+        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
         Resource as KubernetesResource, ResourceName, SelectorLabels, Subset,
     },
     metrics::Metrics,
@@ -118,6 +119,9 @@ pub struct OnionBalanceSpecDeployment {
 
     /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
     pub node_selector: Option<std::collections::BTreeMap<String, String>>,
+
+    /// SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
+    pub security_context: Option<PodSecurityContext>,
 
     /// If specified, the pod's tolerations.
     pub tolerations: Option<Vec<Toleration>>,
@@ -317,6 +321,18 @@ impl OnionBalance {
             .as_ref()
             .and_then(|f| f.node_selector.as_ref())
             .map(Clone::clone)
+    }
+
+    #[must_use]
+    pub fn deployment_security_context(&self) -> PodSecurityContext {
+        pod_security_context(
+            self.spec
+                .deployment
+                .as_ref()
+                .and_then(|f| f.security_context.as_ref())
+                .map(Clone::clone)
+                .unwrap_or_default(),
+        )
     }
 
     #[must_use]
@@ -677,6 +693,7 @@ async fn reconcile_onion_balance(
 #[allow(unused_variables)]
 fn generate_torrc(object: &OnionBalance) -> Torrc {
     Torrc::builder()
+        .data_dir("<TMP_DIR>/home/.tor")
         .socks_port("9050")
         .control_port("127.0.0.1:6666")
         .build()
@@ -694,7 +711,7 @@ fn generate_config_yaml(object: &OnionBalance) -> ConfigYaml {
                     name: service.onion_key.hostname.clone(),
                 })
                 .collect(),
-            key: "/var/lib/tor/hidden_service/hs_ed25519_secret_key".into(),
+            key: "<TMP_DIR>/var/lib/tor/hidden_service/hs_ed25519_secret_key".into(),
         }],
     }
 }
@@ -766,10 +783,21 @@ fn generate_deployment(
                         Container {
                             args: Some(vec![
                                 "-c".into(),
-                                ["mkdir -p /var/lib/tor/hidden_service",
-                                    "chmod 400 /var/lib/tor/hidden_service",
-                                    "cp /etc/secrets/* /var/lib/tor/hidden_service",
-                                    "onionbalance -v info -c /usr/local/etc/onionbalance/config.yaml -p 6666"]
+                                [
+                                    "TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)",
+
+                                    // hidden_service
+                                    "mkdir -p $TMP_DIR/var/lib/tor/hidden_service",
+                                    "chmod 700 $TMP_DIR/var/lib/tor/hidden_service",
+                                    "cp -L /etc/secrets/* $TMP_DIR/var/lib/tor/hidden_service",
+
+                                    // config.yaml
+                                    "mkdir -p $TMP_DIR/usr/local/etc/onionbalance",
+                                    "cp -L /etc/configs/config.yaml $TMP_DIR/usr/local/etc/onionbalance/config.yaml",
+                                    r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/onionbalance/config.yaml"#,
+
+                                    // executable
+                                    "onionbalance -v info -c $TMP_DIR/usr/local/etc/onionbalance/config.yaml -p 6666"]
                                 .join(" && "),
                             ]),
                             command: Some(vec!["/bin/bash".into()]),
@@ -777,6 +805,13 @@ fn generate_deployment(
                             image_pull_policy: Some(config.onion_balance_image.pull_policy.clone()),
                             name: "onionbalance".into(),
                             resources: object.deployment_containers_onion_balance_resources().cloned(),
+                            security_context: Some(SecurityContext {
+                                capabilities: Some(Capabilities {
+                                    drop: Some(vec!["ALL".to_string()]),
+                                    ..Default::default()
+                                }),
+                                ..Default::default()
+                            }),
                             volume_mounts: Some(vec![
                                 VolumeMount {
                                     mount_path: "/etc/secrets".into(),
@@ -785,8 +820,8 @@ fn generate_deployment(
                                     ..Default::default()
                                 },
                                 VolumeMount {
-                                    mount_path: "/usr/local/etc/onionbalance".into(),
-                                    name: "usr-local-etc-onionbalance".into(),
+                                    mount_path: "/etc/configs".into(),
+                                    name: "etc-configs-onionbalance".into(),
                                     read_only: Some(true),
                                     ..Default::default()
                                 },
@@ -796,10 +831,25 @@ fn generate_deployment(
                         Container {
                             args: Some(vec![
                                 "-c".into(),
-                                ["mkdir -p /var/lib/tor/hidden_service",
-                                    "chmod 400 /var/lib/tor/hidden_service",
-                                    "cp /etc/secrets/* /var/lib/tor/hidden_service",
-                                    "tor -f /usr/local/etc/tor/torrc"]
+                                [
+                                    "TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)",
+
+                                    // hidden_service
+                                    "mkdir -p $TMP_DIR/var/lib/tor/hidden_service",
+                                    "chmod 700 $TMP_DIR/var/lib/tor/hidden_service",
+                                    "cp -L /etc/secrets/* $TMP_DIR/var/lib/tor/hidden_service",
+
+                                    // torrc
+                                    "mkdir -p $TMP_DIR/usr/local/etc/tor",
+                                    "cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc",
+                                    r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#,
+
+                                    // data directory
+                                    "mkdir -p $TMP_DIR/home/.tor",
+                                    "chmod 700 $TMP_DIR/home/.tor",
+
+                                    // executable
+                                    "tor -f $TMP_DIR/usr/local/etc/tor/torrc"]
                                 .join(" && "),
                             ]),
                             command: Some(vec!["/bin/bash".into()]),
@@ -835,6 +885,13 @@ fn generate_deployment(
                                 ..Default::default()
                             }),
                             resources: object.deployment_containers_tor_resources().cloned(),
+                            security_context: Some(SecurityContext {
+                                capabilities: Some(Capabilities {
+                                    drop: Some(vec!["ALL".to_string()]),
+                                    ..Default::default()
+                                }),
+                                ..Default::default()
+                            }),
                             volume_mounts: Some(vec![
                                 VolumeMount {
                                     mount_path: "/etc/secrets".into(),
@@ -843,8 +900,8 @@ fn generate_deployment(
                                     ..Default::default()
                                 },
                                 VolumeMount {
-                                    mount_path: "/usr/local/etc/tor".into(),
-                                    name: "usr-local-etc-tor".into(),
+                                    mount_path: "/etc/configs".into(),
+                                    name: "etc-configs-tor".into(),
                                     read_only: Some(true),
                                     ..Default::default()
                                 },
@@ -854,6 +911,7 @@ fn generate_deployment(
                     ],
                     image_pull_secrets: object.deployment_image_pull_secrets(),
                     node_selector: object.deployment_node_selector(),
+                    security_context: Some(object.deployment_security_context()),
                     tolerations: object.deployment_tolerations(),
                     topology_spread_constraints: object.deployment_topology_spread_constraints(),
                     volumes: Some(vec![
@@ -884,7 +942,7 @@ fn generate_deployment(
                             ..Default::default()
                         },
                         Volume {
-                            name: "usr-local-etc-onionbalance".into(),
+                            name: "etc-configs-onionbalance".into(),
                             config_map: Some(ConfigMapVolumeSource {
                                 default_mode: Some(0o400),
                                 items: Some(vec![KeyToPath {
@@ -898,7 +956,7 @@ fn generate_deployment(
                             ..Default::default()
                         },
                         Volume {
-                            name: "usr-local-etc-tor".into(),
+                            name: "etc-configs-tor".into(),
                             config_map: Some(ConfigMapVolumeSource {
                                 default_mode: Some(0o400),
                                 items: Some(vec![KeyToPath {
@@ -962,7 +1020,7 @@ mod tests {
     name: hostname2.onion
   - address: hostname3.onion
     name: hostname3.onion
-  key: /var/lib/tor/hidden_service/hs_ed25519_secret_key
+  key: <TMP_DIR>/var/lib/tor/hidden_service/hs_ed25519_secret_key
 "#,
             config_yaml.to_string()
         );
@@ -970,7 +1028,8 @@ mod tests {
         let torrc = generate_torrc(&object);
 
         assert_eq!(
-            r#"SocksPort 9050
+            r#"DataDirectory <TMP_DIR>/home/.tor
+SocksPort 9050
 ControlPort 127.0.0.1:6666"#,
             torrc.to_string()
         );

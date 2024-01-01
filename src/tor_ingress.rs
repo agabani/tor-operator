@@ -12,7 +12,7 @@ use k8s_openapi::{
             HorizontalPodAutoscalerSpec, MetricSpec,
         },
         core::v1::{
-            Affinity, LocalObjectReference, ResourceRequirements, Toleration,
+            Affinity, LocalObjectReference, PodSecurityContext, ResourceRequirements, Toleration,
             TopologySpreadConstraint,
         },
     },
@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
+        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
         Resource as KubernetesResource, ResourceName,
     },
     metrics::Metrics,
@@ -186,6 +186,9 @@ pub struct TorIngressSpecOnionBalanceDeployment {
     /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
     pub node_selector: Option<std::collections::BTreeMap<String, String>>,
 
+    /// SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
+    pub security_context: Option<PodSecurityContext>,
+
     /// If specified, the pod's tolerations.
     pub tolerations: Option<Vec<Toleration>>,
 
@@ -312,6 +315,9 @@ pub struct TorIngressSpecOnionServiceDeployment {
 
     /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
     pub node_selector: Option<std::collections::BTreeMap<String, String>>,
+
+    /// SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
+    pub security_context: Option<PodSecurityContext>,
 
     /// If specified, the pod's tolerations.
     pub tolerations: Option<Vec<Toleration>>,
@@ -581,6 +587,19 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_balance_deployment_security_context(&self) -> PodSecurityContext {
+        pod_security_context(
+            self.spec
+                .onion_balance
+                .deployment
+                .as_ref()
+                .and_then(|f| f.security_context.as_ref())
+                .map(Clone::clone)
+                .unwrap_or_default(),
+        )
+    }
+
+    #[must_use]
     pub fn onion_balance_deployment_tolerations(&self) -> Option<Vec<Toleration>> {
         self.spec
             .onion_balance
@@ -751,6 +770,19 @@ impl TorIngress {
             .as_ref()
             .and_then(|f| f.node_selector.as_ref())
             .map(Clone::clone)
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_security_context(&self) -> PodSecurityContext {
+        pod_security_context(
+            self.spec
+                .onion_service
+                .deployment
+                .as_ref()
+                .and_then(|f| f.security_context.as_ref())
+                .map(Clone::clone)
+                .unwrap_or_default(),
+        )
     }
 
     #[must_use]
@@ -1350,6 +1382,7 @@ fn generate_onion_balance(
                 ),
                 name: Some(object.onion_balance_deployment_name().into()),
                 node_selector: object.onion_balance_deployment_node_selector(),
+                security_context: Some(object.onion_balance_deployment_security_context()),
                 tolerations: object.onion_balance_deployment_tolerations(),
                 topology_spread_constraints: object
                     .onion_balance_deployment_topology_spread_constraints(),
@@ -1484,6 +1517,7 @@ fn generate_onion_service(
                 ),
                 name: Some(object.onion_service_deployment_name(instance).into()),
                 node_selector: object.onion_service_deployment_node_selector(),
+                security_context: Some(object.onion_service_deployment_security_context()),
                 tolerations: object.onion_service_deployment_tolerations(),
                 topology_spread_constraints: object
                     .onion_service_deployment_topology_spread_constraints(),

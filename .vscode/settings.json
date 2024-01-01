@@ -17,6 +17,7 @@
     "hostnames",
     "intstr",
     "livez",
+    "mktemp",
     "nindent",
     "onionbalance",
     "onionbalances",

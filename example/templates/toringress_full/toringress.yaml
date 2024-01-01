@@ -54,6 +54,10 @@ spec:
         key-l-7: value-l-7
         key-l-8: value-l-8
       name: tor-ingress-{{ include "example.fullname" . }}-full-3
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
     labels:
       key-l-3: value-l-3
       key-l-4: value-l-4
@@ -89,6 +93,10 @@ spec:
         key-l-13: value-l-13
         key-l-14: value-l-14
       namePrefix: tor-ingress-{{ include "example.fullname" . }}-full-7
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 3000
+        runAsUser: 1000
     labels:
       key-l-9: value-l-9
       key-l-10: value-l-10

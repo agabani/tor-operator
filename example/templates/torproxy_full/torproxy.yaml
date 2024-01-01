@@ -26,6 +26,10 @@ spec:
       key-l-3: value-l-3
       key-l-4: value-l-4
     name: tor-proxy-{{ include "example.fullname" . }}-full-2
+    securityContext:
+      fsGroup: 2000
+      runAsGroup: 3000
+      runAsUser: 1000
   horizontalPodAutoscaler:
     annotations:
       key-a-5: value-a-5
