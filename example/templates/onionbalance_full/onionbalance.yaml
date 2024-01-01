@@ -38,6 +38,10 @@ spec:
       key-l-3: value-l-3
       key-l-4: value-l-4
     name: onion-balance-{{ include "example.fullname" . }}-full
+    securityContext:
+      fsGroup: 2000
+      runAsGroup: 3000
+      runAsUser: 1000
   onionKey:
     name: onion-balance-{{ include "example.fullname" . }}-full
   onionServices:
