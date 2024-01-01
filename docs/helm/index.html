@@ -220,15 +220,15 @@ serviceAccount:
 podAnnotations: {}
 
 podSecurityContext:
-  {}
   # fsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 10001
 
 securityContext:
-  {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
 
