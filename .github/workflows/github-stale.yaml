@@ -4,7 +4,8 @@ on:
     - cron: "30 1 * * *"
 
 jobs:
-  close-issues:
+  close-stale:
+    name: "Close Stale"
     runs-on: ubuntu-latest
     permissions:
       issues: write
