@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+- Upgrade dependencies.
+
 ## [0.0.24] - 2024-01-27
 
 ### Changed
