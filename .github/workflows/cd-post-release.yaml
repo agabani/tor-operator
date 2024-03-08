@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Release
         id: release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
 
   release-binary:
     name: "Release: Binary"
@@ -103,7 +103,7 @@ jobs:
           fi
         shell: bash
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.archive.outputs.asset }}
 
