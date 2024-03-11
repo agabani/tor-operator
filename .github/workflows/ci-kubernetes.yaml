@@ -52,7 +52,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: "Toolchain: kubectl"
-        uses: azure/setup-kubectl@v3
+        uses: azure/setup-kubectl@v4
       - name: "Toolchain: helm"
         uses: azure/setup-helm@v4
         with:
