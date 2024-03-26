@@ -263,7 +263,7 @@ impl TorProxy {
             .config_map
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -273,7 +273,7 @@ impl TorProxy {
             .config_map
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -292,7 +292,7 @@ impl TorProxy {
             .deployment
             .as_ref()
             .and_then(|f| f.affinity.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -301,7 +301,7 @@ impl TorProxy {
             .deployment
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -321,7 +321,7 @@ impl TorProxy {
             .deployment
             .as_ref()
             .and_then(|f| f.image_pull_secrets.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -330,7 +330,7 @@ impl TorProxy {
             .deployment
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -349,7 +349,7 @@ impl TorProxy {
             .deployment
             .as_ref()
             .and_then(|f| f.node_selector.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -367,7 +367,7 @@ impl TorProxy {
                 .deployment
                 .as_ref()
                 .and_then(|f| f.security_context.as_ref())
-                .map(Clone::clone)
+                .cloned()
                 .unwrap_or_default(),
         )
     }
@@ -378,7 +378,7 @@ impl TorProxy {
             .deployment
             .as_ref()
             .and_then(|f| f.tolerations.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -387,7 +387,7 @@ impl TorProxy {
             .deployment
             .as_ref()
             .and_then(|f| f.topology_spread_constraints.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -396,7 +396,7 @@ impl TorProxy {
             .horizontal_pod_autoscaler
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -406,7 +406,7 @@ impl TorProxy {
             .horizontal_pod_autoscaler
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -421,22 +421,12 @@ impl TorProxy {
 
     #[must_use]
     pub fn service_annotations(&self) -> Option<Annotations> {
-        self.spec
-            .service
-            .annotations
-            .as_ref()
-            .map(Clone::clone)
-            .map(Into::into)
+        self.spec.service.annotations.clone().map(Into::into)
     }
 
     #[must_use]
     pub fn service_labels(&self) -> Option<Labels> {
-        self.spec
-            .service
-            .labels
-            .as_ref()
-            .map(Clone::clone)
-            .map(Into::into)
+        self.spec.service.labels.clone().map(Into::into)
     }
 
     #[must_use]
@@ -1143,7 +1133,7 @@ mod tests {
 
         let torrc = generate_torrc(object);
 
-        assert_eq!(r#"DataDirectory <TMP_DIR>/home/.tor"#, torrc.to_string());
+        assert_eq!(r"DataDirectory <TMP_DIR>/home/.tor", torrc.to_string());
     }
 
     #[test]
@@ -1166,8 +1156,8 @@ mod tests {
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r#"DataDirectory <TMP_DIR>/home/.tor
-HTTPTunnelPort 0.0.0.0:1080"#,
+            r"DataDirectory <TMP_DIR>/home/.tor
+HTTPTunnelPort 0.0.0.0:1080",
             torrc.to_string()
         );
     }
@@ -1192,8 +1182,8 @@ HTTPTunnelPort 0.0.0.0:1080"#,
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r#"DataDirectory <TMP_DIR>/home/.tor
-SocksPort 0.0.0.0:9050"#,
+            r"DataDirectory <TMP_DIR>/home/.tor
+SocksPort 0.0.0.0:9050",
             torrc.to_string()
         );
     }
@@ -1225,9 +1215,9 @@ SocksPort 0.0.0.0:9050"#,
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r#"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory <TMP_DIR>/home/.tor
 HTTPTunnelPort 0.0.0.0:1080
-SocksPort 0.0.0.0:9050"#,
+SocksPort 0.0.0.0:9050",
             torrc.to_string()
         );
     }

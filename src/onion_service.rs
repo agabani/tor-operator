@@ -229,7 +229,7 @@ impl OnionService {
             .config_map
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -239,7 +239,7 @@ impl OnionService {
             .config_map
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -258,7 +258,7 @@ impl OnionService {
             .deployment
             .as_ref()
             .and_then(|f| f.affinity.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -267,7 +267,7 @@ impl OnionService {
             .deployment
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -287,7 +287,7 @@ impl OnionService {
             .deployment
             .as_ref()
             .and_then(|f| f.image_pull_secrets.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -296,7 +296,7 @@ impl OnionService {
             .deployment
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -315,7 +315,7 @@ impl OnionService {
             .deployment
             .as_ref()
             .and_then(|f| f.node_selector.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -325,7 +325,7 @@ impl OnionService {
                 .deployment
                 .as_ref()
                 .and_then(|f| f.security_context.as_ref())
-                .map(Clone::clone)
+                .cloned()
                 .unwrap_or_default(),
         )
     }
@@ -336,7 +336,7 @@ impl OnionService {
             .deployment
             .as_ref()
             .and_then(|f| f.tolerations.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -345,7 +345,7 @@ impl OnionService {
             .deployment
             .as_ref()
             .and_then(|f| f.topology_spread_constraints.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -988,10 +988,10 @@ mod tests {
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r#"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory <TMP_DIR>/home/.tor
 HiddenServiceDir <TMP_DIR>/var/lib/tor/hidden_service
 HiddenServicePort 80 example:80
-HiddenServicePort 443 example:443"#,
+HiddenServicePort 443 example:443",
             torrc.to_string()
         );
     }
@@ -1027,11 +1027,11 @@ HiddenServicePort 443 example:443"#,
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r#"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory <TMP_DIR>/home/.tor
 HiddenServiceDir <TMP_DIR>/var/lib/tor/hidden_service
 HiddenServiceOnionbalanceInstance 1
 HiddenServicePort 80 example:80
-HiddenServicePort 443 example:443"#,
+HiddenServicePort 443 example:443",
             torrc.to_string()
         );
     }
