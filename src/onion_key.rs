@@ -160,28 +160,18 @@ impl OnionKey {
         self.status
             .as_ref()
             .and_then(|status| status.hostname.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Hostname::new)
     }
 
     #[must_use]
     pub fn secret_annotations(&self) -> Option<Annotations> {
-        self.spec
-            .secret
-            .annotations
-            .as_ref()
-            .map(Clone::clone)
-            .map(Into::into)
+        self.spec.secret.annotations.clone().map(Into::into)
     }
 
     #[must_use]
     pub fn secret_labels(&self) -> Option<Labels> {
-        self.spec
-            .secret
-            .labels
-            .as_ref()
-            .map(Clone::clone)
-            .map(Into::into)
+        self.spec.secret.labels.clone().map(Into::into)
     }
 
     #[must_use]

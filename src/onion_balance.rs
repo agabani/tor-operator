@@ -224,7 +224,7 @@ impl OnionBalance {
             .config_map
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -234,7 +234,7 @@ impl OnionBalance {
             .config_map
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -253,7 +253,7 @@ impl OnionBalance {
             .deployment
             .as_ref()
             .and_then(|f| f.affinity.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -262,7 +262,7 @@ impl OnionBalance {
             .deployment
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -292,7 +292,7 @@ impl OnionBalance {
             .deployment
             .as_ref()
             .and_then(|f| f.image_pull_secrets.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -301,7 +301,7 @@ impl OnionBalance {
             .deployment
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -320,7 +320,7 @@ impl OnionBalance {
             .deployment
             .as_ref()
             .and_then(|f| f.node_selector.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -330,7 +330,7 @@ impl OnionBalance {
                 .deployment
                 .as_ref()
                 .and_then(|f| f.security_context.as_ref())
-                .map(Clone::clone)
+                .cloned()
                 .unwrap_or_default(),
         )
     }
@@ -341,7 +341,7 @@ impl OnionBalance {
             .deployment
             .as_ref()
             .and_then(|f| f.tolerations.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -350,7 +350,7 @@ impl OnionBalance {
             .deployment
             .as_ref()
             .and_then(|f| f.topology_spread_constraints.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -1012,7 +1012,7 @@ mod tests {
         let config_yaml = generate_config_yaml(&object);
 
         assert_eq!(
-            r#"services:
+            r"services:
 - instances:
   - address: hostname1.onion
     name: hostname1.onion
@@ -1021,16 +1021,16 @@ mod tests {
   - address: hostname3.onion
     name: hostname3.onion
   key: <TMP_DIR>/var/lib/tor/hidden_service/hs_ed25519_secret_key
-"#,
+",
             config_yaml.to_string()
         );
 
         let torrc = generate_torrc(&object);
 
         assert_eq!(
-            r#"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory <TMP_DIR>/home/.tor
 SocksPort 9050
-ControlPort 127.0.0.1:6666"#,
+ControlPort 127.0.0.1:6666",
             torrc.to_string()
         );
     }

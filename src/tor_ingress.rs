@@ -433,7 +433,7 @@ impl TorIngress {
             .horizontal_pod_autoscaler
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -443,7 +443,7 @@ impl TorIngress {
             .horizontal_pod_autoscaler
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -458,12 +458,7 @@ impl TorIngress {
 
     #[must_use]
     pub fn onion_balance_annotations(&self) -> Option<Annotations> {
-        self.spec
-            .onion_balance
-            .annotations
-            .as_ref()
-            .map(Clone::clone)
-            .map(Into::into)
+        self.spec.onion_balance.annotations.clone().map(Into::into)
     }
 
     #[must_use]
@@ -473,7 +468,7 @@ impl TorIngress {
             .config_map
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -484,7 +479,7 @@ impl TorIngress {
             .config_map
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -505,7 +500,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.affinity.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -515,7 +510,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -552,7 +547,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.image_pull_secrets.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -562,7 +557,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -583,7 +578,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.node_selector.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -594,7 +589,7 @@ impl TorIngress {
                 .deployment
                 .as_ref()
                 .and_then(|f| f.security_context.as_ref())
-                .map(Clone::clone)
+                .cloned()
                 .unwrap_or_default(),
         )
     }
@@ -606,7 +601,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.tolerations.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -618,17 +613,12 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.topology_spread_constraints.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
     pub fn onion_balance_labels(&self) -> Option<Labels> {
-        self.spec
-            .onion_balance
-            .labels
-            .as_ref()
-            .map(Clone::clone)
-            .map(Into::into)
+        self.spec.onion_balance.labels.clone().map(Into::into)
     }
 
     #[must_use]
@@ -647,12 +637,7 @@ impl TorIngress {
 
     #[must_use]
     pub fn onion_service_annotations(&self) -> Option<Annotations> {
-        self.spec
-            .onion_service
-            .annotations
-            .as_ref()
-            .map(Clone::clone)
-            .map(Into::into)
+        self.spec.onion_service.annotations.clone().map(Into::into)
     }
 
     #[must_use]
@@ -662,7 +647,7 @@ impl TorIngress {
             .config_map
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -673,7 +658,7 @@ impl TorIngress {
             .config_map
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -699,7 +684,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.affinity.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -709,7 +694,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -733,7 +718,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.image_pull_secrets.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -743,7 +728,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -769,7 +754,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.node_selector.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -780,7 +765,7 @@ impl TorIngress {
                 .deployment
                 .as_ref()
                 .and_then(|f| f.security_context.as_ref())
-                .map(Clone::clone)
+                .cloned()
                 .unwrap_or_default(),
         )
     }
@@ -792,7 +777,7 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.tolerations.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
@@ -804,17 +789,12 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.topology_spread_constraints.as_ref())
-            .map(Clone::clone)
+            .cloned()
     }
 
     #[must_use]
     pub fn onion_service_labels(&self) -> Option<Labels> {
-        self.spec
-            .onion_service
-            .labels
-            .as_ref()
-            .map(Clone::clone)
-            .map(Into::into)
+        self.spec.onion_service.labels.clone().map(Into::into)
     }
 
     #[must_use]
@@ -864,7 +844,7 @@ impl TorIngress {
             .onion_key
             .as_ref()
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -875,7 +855,7 @@ impl TorIngress {
             .onion_key
             .as_ref()
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -887,7 +867,7 @@ impl TorIngress {
             .as_ref()
             .and_then(|f| f.secret.as_ref())
             .and_then(|f| f.annotations.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
@@ -899,7 +879,7 @@ impl TorIngress {
             .as_ref()
             .and_then(|f| f.secret.as_ref())
             .and_then(|f| f.labels.as_ref())
-            .map(Clone::clone)
+            .cloned()
             .map(Into::into)
     }
 
