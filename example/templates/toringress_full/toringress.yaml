@@ -34,7 +34,7 @@ spec:
         key-a-7: value-a-7
         key-a-8: value-a-8
       containers:
-        onionBalance:
+        onionbalance:
           resources:
             limits:
               cpu: 200m

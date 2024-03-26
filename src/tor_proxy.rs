@@ -15,8 +15,8 @@ use k8s_openapi::{
         core::v1::{
             Affinity, Capabilities, ConfigMap, ConfigMapVolumeSource, Container, ContainerPort,
             ExecAction, KeyToPath, LocalObjectReference, PodSecurityContext, PodSpec,
-            PodTemplateSpec, Probe, ResourceRequirements, SecurityContext, Service, ServicePort,
-            ServiceSpec, Toleration, TopologySpreadConstraint, Volume, VolumeMount,
+            PodTemplateSpec, Probe, SecurityContext, Service, ServicePort, ServiceSpec, Toleration,
+            TopologySpreadConstraint, Volume, VolumeMount,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
@@ -36,8 +36,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
-        Resource as KubernetesResource, ResourceName, SelectorLabels,
+        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
+        Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
+        ResourceName, SelectorLabels,
     },
     metrics::Metrics,
     tor::Torrc,
@@ -110,7 +111,7 @@ pub struct TorProxySpecDeployment {
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
-    pub containers: Option<TorProxySpecDeploymentContainers>,
+    pub containers: Option<BTreeMap<String, KubernetesContainer>>,
 
     /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
     pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
@@ -142,22 +143,6 @@ pub struct TorProxySpecDeployment {
 
 fn default_deployment_replicas() -> i32 {
     3
-}
-
-#[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct TorProxySpecDeploymentContainers {
-    /// Tor container.
-    pub tor: Option<TorProxySpecDeploymentContainersTor>,
-}
-
-#[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct TorProxySpecDeploymentContainersTor {
-    /// Resources of the container.
-    pub resources: Option<ResourceRequirements>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -306,13 +291,103 @@ impl TorProxy {
     }
 
     #[must_use]
-    pub fn deployment_containers_tor_resources(&self) -> Option<&ResourceRequirements> {
-        self.spec
+    pub fn deployment_containers(&self, config: &Config) -> Vec<Container> {
+        let mut containers = self
+            .spec
             .deployment
             .as_ref()
             .and_then(|f| f.containers.as_ref())
-            .and_then(|f| f.tor.as_ref())
-            .and_then(|f| f.resources.as_ref())
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|(k, v)| (k.clone(), v.to_container(k)))
+            .collect::<BTreeMap<_, _>>();
+
+        {
+            let container = containers.entry("tor".to_string()).or_default();
+            container.args = Some(vec![
+                "-c".into(),
+                [
+                    "TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)",
+                    // torrc
+                    "mkdir -p $TMP_DIR/usr/local/etc/tor",
+                    "cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc",
+                    r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#,
+                    // data directory
+                    "mkdir -p $TMP_DIR/home/.tor",
+                    "chmod 700 $TMP_DIR/home/.tor",
+                    // executable
+                    "tor -f $TMP_DIR/usr/local/etc/tor/torrc",
+                ]
+                .join(" && "),
+            ]);
+            container.command = Some(vec!["/bin/bash".into()]);
+            container.image = Some(config.tor_image.uri.clone());
+            container.image_pull_policy = Some(config.tor_image.pull_policy.clone());
+            container.liveness_probe = Some(Probe {
+                exec: Some(ExecAction {
+                    command: Some(vec![
+                        "/bin/bash".to_string(),
+                        "-c".to_string(),
+                        "echo > /dev/tcp/127.0.0.1/9050".to_string(),
+                    ]),
+                }),
+                failure_threshold: Some(3),
+                period_seconds: Some(10),
+                success_threshold: Some(1),
+                timeout_seconds: Some(1),
+                ..Default::default()
+            });
+            container.name = "tor".into();
+            container.ports = Some(vec![
+                ContainerPort {
+                    container_port: 1080,
+                    name: Some("http-tunnel".to_string()),
+                    protocol: Some("TCP".to_string()),
+                    ..Default::default()
+                },
+                ContainerPort {
+                    container_port: 9050,
+                    name: Some("socks".to_string()),
+                    protocol: Some("TCP".to_string()),
+                    ..Default::default()
+                },
+            ]);
+            container.readiness_probe = Some(Probe {
+                exec: Some(ExecAction {
+                    command: Some(vec![
+                        "/bin/bash".to_string(),
+                        "-c".to_string(),
+                        "echo > /dev/tcp/127.0.0.1/9050".to_string(),
+                    ]),
+                }),
+                failure_threshold: Some(3),
+                period_seconds: Some(10),
+                success_threshold: Some(1),
+                timeout_seconds: Some(1),
+                ..Default::default()
+            });
+            container.volume_mounts = Some(vec![VolumeMount {
+                mount_path: "/etc/configs".into(),
+                name: "etc-configs".into(),
+                read_only: Some(true),
+                ..Default::default()
+            }]);
+        }
+
+        for container in containers.values_mut() {
+            container.security_context = Some(SecurityContext {
+                capabilities: Some(Capabilities {
+                    drop: Some(vec!["ALL".to_string()]),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            });
+        }
+
+        let mut containers = containers.into_values().collect::<Vec<_>>();
+        containers.sort_by(|a, b| a.name.cmp(&b.name));
+        containers
     }
 
     #[must_use]
@@ -900,88 +975,7 @@ fn generate_deployment(
                 }),
                 spec: Some(PodSpec {
                     affinity: object.deployment_affinity(),
-                    containers: vec![Container {
-                        args: Some(vec![
-                            "-c".into(),
-                            [
-                                "TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)",
-
-                                // torrc
-                                "mkdir -p $TMP_DIR/usr/local/etc/tor",
-                                "cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc",
-                                r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#,
-
-                                // data directory
-                                "mkdir -p $TMP_DIR/home/.tor",
-                                "chmod 700 $TMP_DIR/home/.tor",
-
-                                // executable
-                                "tor -f $TMP_DIR/usr/local/etc/tor/torrc",
-                            ]
-                            .join(" && "),
-                        ]),
-                        command: Some(vec!["/bin/bash".into()]),
-                        image: Some(config.tor_image.uri.clone()),
-                        image_pull_policy: Some(config.tor_image.pull_policy.clone()),
-                        liveness_probe: Some(Probe {
-                            exec: Some(ExecAction {
-                                command: Some(vec![
-                                    "/bin/bash".to_string(),
-                                    "-c".to_string(),
-                                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
-                                ]),
-                            }),
-                            failure_threshold: Some(3),
-                            period_seconds: Some(10),
-                            success_threshold: Some(1),
-                            timeout_seconds: Some(1),
-                            ..Default::default()
-                        }),
-                        name: "tor".into(),
-                        ports: Some(vec![
-                            ContainerPort {
-                                container_port: 1080,
-                                name: Some("http-tunnel".to_string()),
-                                protocol: Some("TCP".to_string()),
-                                ..Default::default()
-                            },
-                            ContainerPort {
-                                container_port: 9050,
-                                name: Some("socks".to_string()),
-                                protocol: Some("TCP".to_string()),
-                                ..Default::default()
-                            },
-                        ]),
-                        readiness_probe: Some(Probe {
-                            exec: Some(ExecAction {
-                                command: Some(vec![
-                                    "/bin/bash".to_string(),
-                                    "-c".to_string(),
-                                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
-                                ]),
-                            }),
-                            failure_threshold: Some(3),
-                            period_seconds: Some(10),
-                            success_threshold: Some(1),
-                            timeout_seconds: Some(1),
-                            ..Default::default()
-                        }),
-                        resources: object.deployment_containers_tor_resources().cloned(),
-                        security_context: Some(SecurityContext {
-                            capabilities: Some(Capabilities {
-                                drop: Some(vec!["ALL".to_string()]),
-                                ..Default::default()
-                            }),
-                            ..Default::default()
-                        }),
-                        volume_mounts: Some(vec![VolumeMount {
-                            mount_path: "/etc/configs".into(),
-                            name: "etc-configs".into(),
-                            read_only: Some(true),
-                            ..Default::default()
-                        }]),
-                        ..Default::default()
-                    }],
+                    containers: object.deployment_containers(config),
                     image_pull_secrets: object.deployment_image_pull_secrets(),
                     node_selector: object.deployment_node_selector(),
                     security_context: Some(object.deployment_security_context()),

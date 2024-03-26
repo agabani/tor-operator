@@ -30,20 +30,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
-        Resource as KubernetesResource, ResourceName,
+        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
+        Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
+        ResourceName,
     },
     metrics::Metrics,
     onion_balance::{
         OnionBalance, OnionBalanceSpec, OnionBalanceSpecConfigMap, OnionBalanceSpecDeployment,
-        OnionBalanceSpecDeploymentContainers, OnionBalanceSpecDeploymentContainersOnionBalance,
-        OnionBalanceSpecDeploymentContainersTor, OnionBalanceSpecOnionKey,
-        OnionBalanceSpecOnionService, OnionBalanceSpecOnionServiceOnionKey,
+        OnionBalanceSpecOnionKey, OnionBalanceSpecOnionService,
+        OnionBalanceSpecOnionServiceOnionKey,
     },
     onion_key::{OnionKey, OnionKeySpec, OnionKeySpecSecret},
     onion_service::{
         OnionService, OnionServiceSpec, OnionServiceSpecConfigMap, OnionServiceSpecDeployment,
-        OnionServiceSpecDeploymentContainers, OnionServiceSpecDeploymentContainersTor,
         OnionServiceSpecHiddenServicePort, OnionServiceSpecOnionBalance,
         OnionServiceSpecOnionBalanceOnionKey, OnionServiceSpecOnionKey,
     },
@@ -170,7 +169,7 @@ pub struct TorIngressSpecOnionBalanceDeployment {
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
-    pub containers: Option<TorIngressSpecOnionBalanceDeploymentContainers>,
+    pub containers: Option<BTreeMap<String, KubernetesContainer>>,
 
     /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
     pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
@@ -300,7 +299,7 @@ pub struct TorIngressSpecOnionServiceDeployment {
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
-    pub containers: Option<TorIngressSpecOnionServiceDeploymentContainers>,
+    pub containers: Option<BTreeMap<String, KubernetesContainer>>,
 
     /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
     pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
@@ -515,29 +514,14 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_balance_deployment_containers_onion_balance_resources(
+    pub fn onion_balance_deployment_containers(
         &self,
-    ) -> Option<&ResourceRequirements> {
+    ) -> Option<&BTreeMap<String, KubernetesContainer>> {
         self.spec
             .onion_balance
             .deployment
             .as_ref()
             .and_then(|f| f.containers.as_ref())
-            .and_then(|f| f.onion_balance.as_ref())
-            .and_then(|f| f.resources.as_ref())
-    }
-
-    #[must_use]
-    pub fn onion_balance_deployment_containers_tor_resources(
-        &self,
-    ) -> Option<&ResourceRequirements> {
-        self.spec
-            .onion_balance
-            .deployment
-            .as_ref()
-            .and_then(|f| f.containers.as_ref())
-            .and_then(|f| f.tor.as_ref())
-            .and_then(|f| f.resources.as_ref())
     }
 
     #[must_use]
@@ -699,16 +683,14 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_deployment_containers_tor_resources(
+    pub fn onion_service_deployment_containers(
         &self,
-    ) -> Option<&ResourceRequirements> {
+    ) -> Option<&BTreeMap<String, KubernetesContainer>> {
         self.spec
             .onion_service
             .deployment
             .as_ref()
             .and_then(|f| f.containers.as_ref())
-            .and_then(|f| f.tor.as_ref())
-            .and_then(|f| f.resources.as_ref())
     }
 
     #[must_use]
@@ -1341,18 +1323,7 @@ fn generate_onion_balance(
                         .append_reverse(object.onion_balance_deployment_annotations())
                         .into(),
                 ),
-                containers: Some(OnionBalanceSpecDeploymentContainers {
-                    onion_balance: Some(OnionBalanceSpecDeploymentContainersOnionBalance {
-                        resources: object
-                            .onion_balance_deployment_containers_onion_balance_resources()
-                            .cloned(),
-                    }),
-                    tor: Some(OnionBalanceSpecDeploymentContainersTor {
-                        resources: object
-                            .onion_balance_deployment_containers_tor_resources()
-                            .cloned(),
-                    }),
-                }),
+                containers: object.onion_balance_deployment_containers().cloned(),
                 image_pull_secrets: object.onion_balance_deployment_image_pull_secrets(),
                 labels: Some(
                     labels
@@ -1481,13 +1452,7 @@ fn generate_onion_service(
                         .append_reverse(object.onion_service_deployment_annotations())
                         .into(),
                 ),
-                containers: Some(OnionServiceSpecDeploymentContainers {
-                    tor: Some(OnionServiceSpecDeploymentContainersTor {
-                        resources: object
-                            .onion_service_deployment_containers_tor_resources()
-                            .cloned(),
-                    }),
-                }),
+                containers: object.onion_service_deployment_containers().cloned(),
                 image_pull_secrets: object.onion_service_deployment_image_pull_secrets(),
                 labels: Some(
                     labels
