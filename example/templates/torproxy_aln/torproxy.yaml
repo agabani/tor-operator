@@ -17,6 +17,11 @@ spec:
     annotations:
       key-a-3: value-a-3
       key-a-4: value-a-4
+    containers:
+      tor:
+        resources:
+          requests:
+            cpu: 100m
     labels:
       key-l-3: value-l-3
       key-l-4: value-l-4
