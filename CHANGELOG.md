@@ -2,6 +2,14 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Exposed partial container configuration.
+
+### Changed
+
+- `*.spec.**.deployment.containers.onionBalance` renamed to `*.spec.**.deployment.containers.onionbalance`.
+
 ## [0.0.25] - 2024-03-05
 
 - Upgrade dependencies.
