@@ -1,5 +1,5 @@
 use k8s_openapi::api::core::v1::{
-    ContainerPort, EnvFromSource, EnvVar, Probe, ResourceRequirements,
+    ContainerPort, EnvFromSource, EnvVar, Probe, ResourceRequirements, VolumeMount,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -40,6 +40,9 @@ pub struct Container {
 
     /// StartupProbe indicates that the Pod has successfully initialized. If specified, no other probes are executed until this completes successfully. If this probe fails, the Pod will be restarted, just as if the livenessProbe failed. This can be used to provide different probe parameters at the beginning of a Pod's lifecycle, when it might take a long time to load data or warm a cache, than during steady-state operation. This cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
     pub startup_probe: Option<Probe>,
+
+    /// Pod volumes to mount into the container's filesystem. Cannot be updated.
+    pub volume_mounts: Option<Vec<VolumeMount>>,
 }
 
 impl Container {
@@ -57,6 +60,7 @@ impl Container {
             readiness_probe: self.readiness_probe,
             resources: self.resources,
             startup_probe: self.startup_probe,
+            volume_mounts: self.volume_mounts,
             ..Default::default()
         }
     }
