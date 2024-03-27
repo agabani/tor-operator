@@ -1,7 +1,7 @@
 apiVersion: tor.agabani.co.uk/v1
 kind: TorProxy
 metadata:
-  name: tor-proxy-{{ include "example.fullname" . }}
+  name: tor-proxy-{{ include "example.fullname" . }}-minimal
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:

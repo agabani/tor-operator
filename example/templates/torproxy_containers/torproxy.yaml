@@ -1,0 +1,63 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: TorProxy
+metadata:
+  name: tor-proxy-{{ include "example.fullname" . }}-containers
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  deployment:
+    containers:
+      tor:
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      ubuntu:
+        args:
+          - -c
+          - sleep infinity
+        command:
+          - /bin/bash
+        image: ubuntu:latest
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: HOST
+            value: "127.0.0.1"
+          - name: PORT
+            value: "9050"
+        livenessProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - echo > /dev/tcp/$${HOST}/$${PORT}
+        readinessProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - echo > /dev/tcp/$${HOST}/$${PORT}
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        startupProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - echo > /dev/tcp/$${HOST}/$${PORT}
+  service:
+    ports:
+      - name: http-tunnel
+        port: 1080
+        protocol: HTTP_TUNNEL
+      - name: socks
+        port: 9050
+        protocol: SOCKS

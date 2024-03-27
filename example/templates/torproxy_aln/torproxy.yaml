@@ -1,7 +1,7 @@
 apiVersion: tor.agabani.co.uk/v1
 kind: TorProxy
 metadata:
-  name: tor-proxy-{{ include "example.fullname" . }}-full
+  name: tor-proxy-{{ include "example.fullname" . }}-aln
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
@@ -12,36 +12,25 @@ spec:
     labels:
       key-l-1: value-l-1
       key-l-2: value-l-2
-    name: tor-proxy-{{ include "example.fullname" . }}-full-1
+    name: tor-proxy-{{ include "example.fullname" . }}-aln-1
   deployment:
     annotations:
       key-a-3: value-a-3
       key-a-4: value-a-4
-    containers:
-      tor:
-        resources:
-          requests:
-            cpu: 100m
     labels:
       key-l-3: value-l-3
       key-l-4: value-l-4
-    name: tor-proxy-{{ include "example.fullname" . }}-full-2
-    securityContext:
-      fsGroup: 2000
-      runAsGroup: 3000
-      runAsUser: 1000
+    name: tor-proxy-{{ include "example.fullname" . }}-aln-2
   horizontalPodAutoscaler:
     annotations:
       key-a-5: value-a-5
       key-a-6: value-a-6
-    # behavior:
     labels:
       key-l-5: value-l-5
       key-l-6: value-l-6
-    name: tor-proxy-{{ include "example.fullname" . }}-full-3
     maxReplicas: 4
     minReplicas: 2
-    # metrics:
+    name: tor-proxy-{{ include "example.fullname" . }}-aln-3
   service:
     annotations:
       key-a-7: value-a-7
@@ -49,7 +38,7 @@ spec:
     labels:
       key-l-7: value-l-7
       key-l-8: value-l-8
-    name: tor-proxy-{{ include "example.fullname" . }}-full-4
+    name: tor-proxy-{{ include "example.fullname" . }}-aln-4
     ports:
       - name: http-tunnel-1
         port: 1080
