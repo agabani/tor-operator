@@ -36,7 +36,10 @@ spec:
             - name: HOST
               value: "127.0.0.1"
             - name: PORT
-              value: "9050"
+              valueFrom:
+                configMapKeyRef:
+                  name: tor-ingress-{{ include "example.fullname" . }}-containers-env
+                  key: port
           livenessProbe:
             exec:
               command:
@@ -87,7 +90,10 @@ spec:
             - name: HOST
               value: "127.0.0.1"
             - name: PORT
-              value: "9050"
+              valueFrom:
+                configMapKeyRef:
+                  name: tor-ingress-{{ include "example.fullname" . }}-containers-env
+                  key: port
           livenessProbe:
             exec:
               command:

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: onion-service-{{ include "example.fullname" . }}-containers-env
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+data:
+  port: "9050"

@@ -31,6 +31,11 @@ The Tor Operator will create an TorProxy using custom annotations, labels and na
 The Tor Operator will partially configure existing containers and add additional containers to each Pod in the Deployment.
 
 ```
+# configmap.yaml
+{% include "../../example/templates/torproxy_containers/configmap.yaml" %}
+```
+
+```
 # torproxy.yaml
 {% include "../../example/templates/torproxy_containers/torproxy.yaml" %}
 ```

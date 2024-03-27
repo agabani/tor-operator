@@ -45,6 +45,11 @@ The Tor Operator will create an OnionService using custom annotations, labels an
 The Tor Operator will partially configure existing containers and add additional containers to each Pod in the Deployment.
 
 ```
+# configmap.yaml
+{% include "../../example/templates/onionservice_containers/configmap.yaml" %}
+```
+
+```
 # onionkey.yaml
 {% include "../../example/templates/onionservice_containers/onionkey.yaml" %}
 ```

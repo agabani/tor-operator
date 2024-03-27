@@ -45,6 +45,11 @@ The Tor Operator will create an TorIngress using custom annotations, labels and 
 The Tor Operator will partially configure existing containers and add additional containers to each Pod in the Deployment.
 
 ```
+# configmap.yaml
+{% include "../../example/templates/toringress_containers/configmap.yaml" %}
+```
+
+```
 # onionkey.yaml
 {% include "../../example/templates/toringress_containers/onionkey.yaml" %}
 ```

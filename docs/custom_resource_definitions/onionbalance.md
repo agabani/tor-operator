@@ -46,6 +46,11 @@ The Tor Operator will create an OnionBalance using custom annotations, labels an
 The Tor Operator will partially configure existing containers and add additional containers to each Pod in the Deployment.
 
 ```
+# configmap.yaml
+{% include "../../example/templates/onionbalance_containers/configmap.yaml" %}
+```
+
+```
 # onionkey.yaml
 {% include "../../example/templates/onionbalance_containers/onionkey.yaml" %}
 ```
