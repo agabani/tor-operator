@@ -1,13 +1,13 @@
 apiVersion: tor.agabani.co.uk/v1
 kind: TorIngress
 metadata:
-  name: tor-ingress-{{ include "example.fullname" . }}
+  name: tor-ingress-{{ include "example.fullname" . }}-minimal
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
   onionBalance:
     onionKey:
-      name: tor-ingress-{{ include "example.fullname" . }}
+      name: tor-ingress-{{ include "example.fullname" . }}-minimal
   onionService:
     ports:
       - target: example:80
