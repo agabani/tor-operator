@@ -1,0 +1,9 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionKey
+metadata:
+  name: onion-key-{{ include "example.fullname" . }}-minimal
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  secret:
+    name: onion-key-{{ include "example.fullname" . }}-minimal

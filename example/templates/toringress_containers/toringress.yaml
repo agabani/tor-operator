@@ -1,0 +1,124 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: TorIngress
+metadata:
+  name: tor-ingress-{{ include "example.fullname" . }}-containers
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  onionBalance:
+    deployment:
+      containers:
+        onionbalance:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        tor:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        ubuntu:
+          args:
+            - -c
+            - sleep infinity
+          command:
+            - /bin/bash
+          image: ubuntu:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HOST
+              value: "127.0.0.1"
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: tor-ingress-{{ include "example.fullname" . }}-containers-env
+                  key: port
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+    onionKey:
+      name: tor-ingress-{{ include "example.fullname" . }}-containers
+  onionService:
+    deployment:
+      containers:
+        tor:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+        ubuntu:
+          args:
+            - -c
+            - sleep infinity
+          command:
+            - /bin/bash
+          image: ubuntu:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HOST
+              value: "127.0.0.1"
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: tor-ingress-{{ include "example.fullname" . }}-containers-env
+                  key: port
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+    ports:
+      - target: example:80
+        virtport: 80

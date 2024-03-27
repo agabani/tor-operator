@@ -12,18 +12,65 @@ the added privacy benefits of Tor.
 
 ## Examples
 
-### Basic
+### Minimal
 
 The Tor Operator will create an OnionService using an auto generated OnionKey.
 
 ```
-#onionkey.yaml
-{% include "../../example/templates/onionservice/onionkey.yaml" %}
+# onionkey.yaml
+{% include "../../example/templates/onionservice_minimal/onionkey.yaml" %}
 ```
 
 ```
-#onionservice.yaml
-{% include "../../example/templates/onionservice/onionservice.yaml" %}
+# onionservice.yaml
+{% include "../../example/templates/onionservice_minimal/onionservice.yaml" %}
+```
+
+### Annotations, Labels and Names
+
+The Tor Operator will create an OnionService using custom annotations, labels and names.
+
+```
+# onionkey.yaml
+{% include "../../example/templates/onionservice_aln/onionkey.yaml" %}
+```
+
+```
+# onionservice.yaml
+{% include "../../example/templates/onionservice_aln/onionservice.yaml" %}
+```
+
+### Containers
+
+The Tor Operator will partially configure existing containers and add additional containers to each Pod in the Deployment.
+
+```
+# configmap.yaml
+{% include "../../example/templates/onionservice_containers/configmap.yaml" %}
+```
+
+```
+# onionkey.yaml
+{% include "../../example/templates/onionservice_containers/onionkey.yaml" %}
+```
+
+```
+# onionservice.yaml
+{% include "../../example/templates/onionservice_containers/onionservice.yaml" %}
+```
+
+### Deployment
+
+The Tor Operator will configure the Deployment.
+
+```
+# onionkey.yaml
+{% include "../../example/templates/onionservice_deployment/onionkey.yaml" %}
+```
+
+```
+# onionservice.yaml
+{% include "../../example/templates/onionservice_deployment/onionservice.yaml" %}
 ```
 
 ### OnionBalance
@@ -31,27 +78,13 @@ The Tor Operator will create an OnionService using an auto generated OnionKey.
 The Tor Operator will create an OnionService registered with an OnionBalance using an auto generated OnionKey.
 
 ```
-#onionkey.yaml
+# onionkey.yaml
 {% include "../../example/templates/onionservice_onionbalance/onionkey.yaml" %}
 ```
 
 ```
-#onionservice.yaml
+# onionservice.yaml
 {% include "../../example/templates/onionservice_onionbalance/onionservice.yaml" %}
-```
-
-### Full
-
-The Tor Operator will create an OnionService registered with an OnionBalance using an auto generated OnionKey.
-
-```
-#onionkey.yaml
-{% include "../../example/templates/onionservice_full/onionkey.yaml" %}
-```
-
-```
-#onionservice.yaml
-{% include "../../example/templates/onionservice_full/onionservice.yaml" %}
 ```
 
 ## Conditions

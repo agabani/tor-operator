@@ -1,0 +1,15 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: TorProxy
+metadata:
+  name: tor-proxy-{{ include "example.fullname" . }}-minimal
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  service:
+    ports:
+      - name: http-tunnel
+        port: 1080
+        protocol: HTTP_TUNNEL
+      - name: socks
+        port: 9050
+        protocol: SOCKS
