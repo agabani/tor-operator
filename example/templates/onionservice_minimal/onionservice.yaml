@@ -1,12 +1,12 @@
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionService
 metadata:
-  name: onion-service-{{ include "example.fullname" . }}
+  name: onion-service-{{ include "example.fullname" . }}-minimal
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
   onionKey:
-    name: onion-service-{{ include "example.fullname" . }}
+    name: onion-service-{{ include "example.fullname" . }}-minimal
   ports:
     - target: example:80
       virtport: 80
