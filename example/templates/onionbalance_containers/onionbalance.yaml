@@ -1,0 +1,69 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionBalance
+metadata:
+  name: onion-balance-{{ include "example.fullname" . }}-containers
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  deployment:
+    containers:
+      onionbalance:
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      tor:
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      ubuntu:
+        args:
+          - -c
+          - sleep infinity
+        command:
+          - /bin/bash
+        image: ubuntu:latest
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: HOST
+            value: "127.0.0.1"
+          - name: PORT
+            value: "9050"
+        livenessProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - echo > /dev/tcp/$${HOST}/$${PORT}
+        readinessProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - echo > /dev/tcp/$${HOST}/$${PORT}
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        startupProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - echo > /dev/tcp/$${HOST}/$${PORT}
+
+  onionKey:
+    name: onion-balance-{{ include "example.fullname" . }}-containers
+  onionServices:
+    - onionKey:
+        hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
