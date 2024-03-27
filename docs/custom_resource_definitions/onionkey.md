@@ -26,18 +26,27 @@ auto generate feature controlled by `.autoGenerate`.
 
 ## Examples
 
-### Basic
+### Minimal
 
-The Tor Operator will use the Onion Key provided in the `Secret`.
-
-```
-#secret.yaml
-{% include "../../example/templates/onionkey/secret.yaml" %}
-```
+The Tor Operator will use the OnionKey provided in the `Secret`.
 
 ```
-#onionkey.yaml
-{% include "../../example/templates/onionkey/onionkey.yaml" %}
+# secret.yaml
+{% include "../../example/templates/onionkey_minimal/secret.yaml" %}
+```
+
+```
+# onionkey.yaml
+{% include "../../example/templates/onionkey_minimal/onionkey.yaml" %}
+```
+
+### Annotations, Labels and Names
+
+The Tor Operator will create an OnionKey using custom annotations, labels and names.
+
+```
+# onionkey.yaml
+{% include "../../example/templates/onionkey_aln/onionkey.yaml" %}
 ```
 
 ### Auto Generate
@@ -45,17 +54,8 @@ The Tor Operator will use the Onion Key provided in the `Secret`.
 The Tor Operator will auto generated a random OnionKey and store it in a `Secret` on your behalf.
 
 ```
-#onionkey.yaml
+# onionkey.yaml
 {% include "../../example/templates/onionkey_auto_generate/onionkey.yaml" %}
-```
-
-### Full
-
-The Tor Operator will auto generated a random OnionKey and store it in a `Secret` on your behalf.
-
-```
-#onionkey.yaml
-{% include "../../example/templates/onionkey_full/onionkey.yaml" %}
 ```
 
 ## Conditions

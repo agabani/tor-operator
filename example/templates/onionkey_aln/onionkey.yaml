@@ -1,7 +1,7 @@
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
 metadata:
-  name: onion-key-{{ include "example.fullname" . }}-full
+  name: onion-key-{{ include "example.fullname" . }}-aln
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
@@ -13,4 +13,4 @@ spec:
     labels:
       key-l-1: value-l-1
       key-l-2: value-l-2
-    name: onion-key-{{ include "example.fullname" . }}-full
+    name: onion-key-{{ include "example.fullname" . }}-aln
