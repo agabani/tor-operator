@@ -516,12 +516,13 @@ impl TorIngress {
     #[must_use]
     pub fn onion_balance_deployment_containers(
         &self,
-    ) -> Option<&BTreeMap<String, KubernetesContainer>> {
+    ) -> Option<BTreeMap<String, KubernetesContainer>> {
         self.spec
             .onion_balance
             .deployment
             .as_ref()
             .and_then(|f| f.containers.as_ref())
+            .cloned()
     }
 
     #[must_use]
@@ -685,12 +686,13 @@ impl TorIngress {
     #[must_use]
     pub fn onion_service_deployment_containers(
         &self,
-    ) -> Option<&BTreeMap<String, KubernetesContainer>> {
+    ) -> Option<BTreeMap<String, KubernetesContainer>> {
         self.spec
             .onion_service
             .deployment
             .as_ref()
             .and_then(|f| f.containers.as_ref())
+            .cloned()
     }
 
     #[must_use]
@@ -1323,7 +1325,7 @@ fn generate_onion_balance(
                         .append_reverse(object.onion_balance_deployment_annotations())
                         .into(),
                 ),
-                containers: object.onion_balance_deployment_containers().cloned(),
+                containers: object.onion_balance_deployment_containers(),
                 image_pull_secrets: object.onion_balance_deployment_image_pull_secrets(),
                 labels: Some(
                     labels
@@ -1452,7 +1454,7 @@ fn generate_onion_service(
                         .append_reverse(object.onion_service_deployment_annotations())
                         .into(),
                 ),
-                containers: object.onion_service_deployment_containers().cloned(),
+                containers: object.onion_service_deployment_containers(),
                 image_pull_secrets: object.onion_service_deployment_image_pull_secrets(),
                 labels: Some(
                     labels

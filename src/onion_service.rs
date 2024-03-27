@@ -257,109 +257,13 @@ impl OnionService {
     }
 
     #[must_use]
-    pub fn deployment_containers(&self, config: &Config) -> Vec<Container> {
-        let mut containers = self
-            .spec
+    pub fn deployment_containers(&self) -> BTreeMap<String, KubernetesContainer> {
+        self.spec
             .deployment
             .as_ref()
             .and_then(|f| f.containers.as_ref())
             .cloned()
             .unwrap_or_default()
-            .into_iter()
-            .map(|(k, v)| (k.clone(), v.to_container(k)))
-            .collect::<BTreeMap<_, _>>();
-
-        {
-            let container = containers.entry("tor".to_string()).or_default();
-            container.args = Some(vec![
-                "-c".into(),
-                {
-                    let mut commands = vec!["TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)"];
-
-                    // hidden_service
-                    commands.push("mkdir -p $TMP_DIR/var/lib/tor/hidden_service");
-                    commands.push("chmod 700 $TMP_DIR/var/lib/tor/hidden_service");
-                    commands.push("cp -L /etc/secrets/* $TMP_DIR/var/lib/tor/hidden_service");
-                    if self.onion_balanced() {
-                        commands.push("cp -L /etc/configs/ob_config $TMP_DIR/var/lib/tor/hidden_service/ob_config");
-                    }
-
-                    // torrc
-                    commands.push("mkdir -p $TMP_DIR/usr/local/etc/tor");
-                    commands.push("cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc");
-                    commands.push(r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#);
-
-                    // data directory
-                    commands.push("mkdir -p $TMP_DIR/home/.tor");
-                    commands.push("chmod 700 $TMP_DIR/home/.tor");
-
-                    // executable
-                    commands.push("tor -f $TMP_DIR/usr/local/etc/tor/torrc");
-                    commands
-                }
-                .join(" && "),
-            ]);
-            container.command = Some(vec!["/bin/bash".into()]);
-            container.image = Some(config.tor_image.uri.clone());
-            container.image_pull_policy = Some(config.tor_image.pull_policy.clone());
-            container.liveness_probe = Some(Probe {
-                exec: Some(ExecAction {
-                    command: Some(vec![
-                        "/bin/bash".to_string(),
-                        "-c".to_string(),
-                        "echo > /dev/tcp/127.0.0.1/9050".to_string(),
-                    ]),
-                }),
-                failure_threshold: Some(3),
-                period_seconds: Some(10),
-                success_threshold: Some(1),
-                timeout_seconds: Some(1),
-                ..Default::default()
-            });
-            container.name = "tor".into();
-            container.readiness_probe = Some(Probe {
-                exec: Some(ExecAction {
-                    command: Some(vec![
-                        "/bin/bash".to_string(),
-                        "-c".to_string(),
-                        "echo > /dev/tcp/127.0.0.1/9050".to_string(),
-                    ]),
-                }),
-                failure_threshold: Some(3),
-                period_seconds: Some(10),
-                success_threshold: Some(1),
-                timeout_seconds: Some(1),
-                ..Default::default()
-            });
-            container.volume_mounts = Some(vec![
-                VolumeMount {
-                    mount_path: "/etc/secrets".into(),
-                    name: "etc-secrets".into(),
-                    read_only: Some(true),
-                    ..Default::default()
-                },
-                VolumeMount {
-                    mount_path: "/etc/configs".into(),
-                    name: "etc-configs".into(),
-                    read_only: Some(true),
-                    ..Default::default()
-                },
-            ]);
-        }
-
-        for container in containers.values_mut() {
-            container.security_context = Some(SecurityContext {
-                capabilities: Some(Capabilities {
-                    drop: Some(vec!["ALL".to_string()]),
-                    ..Default::default()
-                }),
-                ..Default::default()
-            });
-        }
-
-        let mut containers = containers.into_values().collect::<Vec<_>>();
-        containers.sort_by(|a, b| a.name.cmp(&b.name));
-        containers
     }
 
     #[must_use]
@@ -889,7 +793,7 @@ fn generate_deployment(
                 }),
                 spec: Some(PodSpec {
                     affinity: object.deployment_affinity(),
-                    containers: object.deployment_containers(config),
+                    containers: generate_deployment_containers(object, config),
                     image_pull_secrets: object.deployment_image_pull_secrets(),
                     node_selector: object.deployment_node_selector(),
                     security_context: Some(object.deployment_security_context()),
@@ -954,6 +858,106 @@ fn generate_deployment(
         }),
         ..Default::default()
     }
+}
+
+fn generate_deployment_containers(object: &OnionService, config: &Config) -> Vec<Container> {
+    let mut containers = object
+        .deployment_containers()
+        .into_iter()
+        .map(|(k, v)| (k.clone(), v.to_container(k)))
+        .collect::<BTreeMap<_, _>>();
+
+    {
+        let container = containers.entry("tor".to_string()).or_default();
+        container.args = Some(vec![
+            "-c".into(),
+            {
+                let mut commands = vec!["TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)"];
+
+                // hidden_service
+                commands.push("mkdir -p $TMP_DIR/var/lib/tor/hidden_service");
+                commands.push("chmod 700 $TMP_DIR/var/lib/tor/hidden_service");
+                commands.push("cp -L /etc/secrets/* $TMP_DIR/var/lib/tor/hidden_service");
+                if object.onion_balanced() {
+                    commands.push("cp -L /etc/configs/ob_config $TMP_DIR/var/lib/tor/hidden_service/ob_config");
+                }
+
+                // torrc
+                commands.push("mkdir -p $TMP_DIR/usr/local/etc/tor");
+                commands.push("cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc");
+                commands.push(r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#);
+
+                // data directory
+                commands.push("mkdir -p $TMP_DIR/home/.tor");
+                commands.push("chmod 700 $TMP_DIR/home/.tor");
+
+                // executable
+                commands.push("tor -f $TMP_DIR/usr/local/etc/tor/torrc");
+                commands
+            }
+            .join(" && "),
+        ]);
+        container.command = Some(vec!["/bin/bash".into()]);
+        container.image = Some(config.tor_image.uri.clone());
+        container.image_pull_policy = Some(config.tor_image.pull_policy.clone());
+        container.liveness_probe = Some(Probe {
+            exec: Some(ExecAction {
+                command: Some(vec![
+                    "/bin/bash".to_string(),
+                    "-c".to_string(),
+                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
+                ]),
+            }),
+            failure_threshold: Some(3),
+            period_seconds: Some(10),
+            success_threshold: Some(1),
+            timeout_seconds: Some(1),
+            ..Default::default()
+        });
+        container.name = "tor".into();
+        container.readiness_probe = Some(Probe {
+            exec: Some(ExecAction {
+                command: Some(vec![
+                    "/bin/bash".to_string(),
+                    "-c".to_string(),
+                    "echo > /dev/tcp/127.0.0.1/9050".to_string(),
+                ]),
+            }),
+            failure_threshold: Some(3),
+            period_seconds: Some(10),
+            success_threshold: Some(1),
+            timeout_seconds: Some(1),
+            ..Default::default()
+        });
+        container.volume_mounts = Some(vec![
+            VolumeMount {
+                mount_path: "/etc/secrets".into(),
+                name: "etc-secrets".into(),
+                read_only: Some(true),
+                ..Default::default()
+            },
+            VolumeMount {
+                mount_path: "/etc/configs".into(),
+                name: "etc-configs".into(),
+                read_only: Some(true),
+                ..Default::default()
+            },
+        ]);
+    }
+
+    for container in containers.values_mut() {
+        container.security_context = Some(SecurityContext {
+            capabilities: Some(Capabilities {
+                drop: Some(vec!["ALL".to_string()]),
+                ..Default::default()
+            }),
+            ..Default::default()
+        });
+    }
+
+    let mut containers = containers.into_values().collect::<Vec<_>>();
+    containers.sort_by(|a, b| a.name.cmp(&b.name));
+    containers
 }
 
 #[cfg(test)]
