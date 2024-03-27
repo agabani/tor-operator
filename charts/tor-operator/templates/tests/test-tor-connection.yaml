@@ -30,6 +30,42 @@ spec:
     maxReplicas: 4
     minReplicas: 2
   onionBalance:
+    deployment:
+      containers:
+        ubuntu:
+          args:
+            - -c
+            - sleep infinity
+          command:
+            - /bin/bash
+          image: ubuntu:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HOST
+              value: "127.0.0.1"
+            - name: PORT
+              value: "9050"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+          resources:
+            requests:
+              cpu: 100m
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
     onionKey:
       name: {{ include "tor-operator.fullname" . }}-test-tor-ingress-onion-key
   onionService:
@@ -39,6 +75,40 @@ spec:
           resources:
             requests:
               cpu: 100m
+        ubuntu:
+          args:
+            - -c
+            - sleep infinity
+          command:
+            - /bin/bash
+          image: ubuntu:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HOST
+              value: "127.0.0.1"
+            - name: PORT
+              value: "9050"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
+          resources:
+            requests:
+              cpu: 100m
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - echo > /dev/tcp/$${HOST}/$${PORT}
     ports:
       - target: "{{ include "tor-operator.fullname" . }}:{{ .Values.service.port }}"
         virtport: 80
@@ -61,6 +131,40 @@ spec:
         resources:
           requests:
             cpu: 100m
+      ubuntu:
+        args:
+          - -c
+          - sleep infinity
+        command:
+          - /bin/bash
+        image: ubuntu:latest
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: HOST
+            value: "127.0.0.1"
+          - name: PORT
+            value: "9050"
+        livenessProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - echo > /dev/tcp/$${HOST}/$${PORT}
+        readinessProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - echo > /dev/tcp/$${HOST}/$${PORT}
+        resources:
+          requests:
+            cpu: 100m
+        startupProbe:
+          exec:
+            command:
+              - /bin/bash
+              - -c
+              - echo > /dev/tcp/$${HOST}/$${PORT}
   horizontalPodAutoscaler:
     maxReplicas: 4
     minReplicas: 2
