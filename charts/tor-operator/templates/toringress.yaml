@@ -1787,6 +1787,15 @@ spec:
                     required:
                     - name
                     type: object
+                  torrc:
+                    description: Tor torrc settings.
+                    nullable: true
+                    properties:
+                      template:
+                        description: The template to be prepended to the torrc file.
+                        nullable: true
+                        type: string
+                    type: object
                 required:
                 - onionKey
                 type: object
@@ -3180,6 +3189,15 @@ spec:
                     description: Number of replicas.
                     format: int32
                     type: integer
+                  torrc:
+                    description: Tor torrc settings.
+                    nullable: true
+                    properties:
+                      template:
+                        description: The template to be prepended to the torrc file.
+                        nullable: true
+                        type: string
+                    type: object
                 required:
                 - ports
                 type: object

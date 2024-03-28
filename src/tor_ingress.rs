@@ -32,7 +32,7 @@ use crate::{
     kubernetes::{
         self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
         Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
-        ResourceName,
+        ResourceName, Torrc as KubernetesTorrc,
     },
     metrics::Metrics,
     onion_balance::{
@@ -140,6 +140,9 @@ pub struct TorIngressSpecOnionBalance {
 
     /// OnionKey settings.
     pub onion_key: TorIngressSpecOnionBalanceOnionKey,
+
+    /// Tor torrc settings.
+    pub torrc: Option<KubernetesTorrc>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -266,6 +269,9 @@ pub struct TorIngressSpecOnionService {
     /// Number of replicas.
     #[serde(default = "default_onion_service_replicas")]
     pub replicas: i32,
+
+    /// Tor torrc settings.
+    pub torrc: Option<KubernetesTorrc>,
 }
 
 fn default_onion_service_replicas() -> i32 {
@@ -621,6 +627,11 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_balance_torrc(&self) -> Option<KubernetesTorrc> {
+        self.spec.onion_balance.torrc.clone()
+    }
+
+    #[must_use]
     pub fn onion_service_annotations(&self) -> Option<Annotations> {
         self.spec.onion_service.annotations.clone().map(Into::into)
     }
@@ -879,6 +890,11 @@ impl TorIngress {
     #[must_use]
     pub fn onion_service_replicas(&self) -> i32 {
         self.spec.onion_service.replicas
+    }
+
+    #[must_use]
+    pub fn onion_service_torrc(&self) -> Option<KubernetesTorrc> {
+        self.spec.onion_service.torrc.clone()
     }
 
     #[must_use]
@@ -1354,7 +1370,7 @@ fn generate_onion_balance(
                     },
                 })
                 .collect(),
-            torrc: None,
+            torrc: object.onion_balance_torrc(),
         },
         status: None,
     }
@@ -1488,7 +1504,7 @@ fn generate_onion_service(
                     virtport: f.virtport,
                 })
                 .collect(),
-            torrc: None,
+            torrc: object.onion_service_torrc(),
         },
         status: None,
     }

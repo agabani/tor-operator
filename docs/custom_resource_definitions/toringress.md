@@ -120,6 +120,25 @@ The Tor Operator will create a load balanced OnionService using an auto generate
 {% include "../../example/templates/toringress_replica/toringress.yaml" %}
 ```
 
+### Torrc
+
+The Tor Operator will prepend the template to the torrc file and substitute in the environment variables during container runtime.
+
+```
+# configmap.yaml
+{% include "../../example/templates/toringress_torrc/configmap.yaml" %}
+```
+
+```
+# onionkey.yaml
+{% include "../../example/templates/toringress_torrc/onionkey.yaml" %}
+```
+
+```
+# toringress.yaml
+{% include "../../example/templates/toringress_torrc/toringress.yaml" %}
+```
+
 ## Conditions
 
 {%

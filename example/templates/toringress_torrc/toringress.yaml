@@ -1,0 +1,44 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: TorIngress
+metadata:
+  name: tor-ingress-{{ include "example.fullname" . }}-torrc
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  onionBalance:
+    deployment:
+      containers:
+        tor:
+          env:
+            - name: TOR_METRIC_PORT
+              value: "127.0.0.1:9035"
+            - name: TOR_METRIC_PORT_POLICY
+              valueFrom:
+                configMapKeyRef:
+                  name: tor-ingress-{{ include "example.fullname" . }}-torrc-env
+                  key: metrics_port_policy
+    onionKey:
+      name: tor-ingress-{{ include "example.fullname" . }}-torrc
+    torrc:
+      template: |
+        MetricsPort ${TOR_METRIC_PORT}
+        MetricsPortPolicy ${TOR_METRIC_PORT_POLICY}
+  onionService:
+    deployment:
+      containers:
+        tor:
+          env:
+            - name: TOR_METRIC_PORT
+              value: "127.0.0.1:9035"
+            - name: TOR_METRIC_PORT_POLICY
+              valueFrom:
+                configMapKeyRef:
+                  name: tor-ingress-{{ include "example.fullname" . }}-torrc-env
+                  key: metrics_port_policy
+    ports:
+      - target: example:80
+        virtport: 80
+    torrc:
+      template: |
+        MetricsPort ${TOR_METRIC_PORT}
+        MetricsPortPolicy ${TOR_METRIC_PORT_POLICY}
