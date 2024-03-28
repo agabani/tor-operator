@@ -1,0 +1,30 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: TorProxy
+metadata:
+  name: tor-proxy-{{ include "example.fullname" . }}-torrc
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  deployment:
+    containers:
+      tor:
+        env:
+          - name: TOR_METRIC_PORT
+            value: "127.0.0.1:9035"
+          - name: TOR_METRIC_PORT_POLICY
+            valueFrom:
+              configMapKeyRef:
+                name: tor-proxy-{{ include "example.fullname" . }}-torrc-env
+                key: metrics_port_policy
+  service:
+    ports:
+      - name: http-tunnel
+        port: 1080
+        protocol: HTTP_TUNNEL
+      - name: socks
+        port: 9050
+        protocol: SOCKS
+  torrc:
+    template: |
+      MetricsPort ${TOR_METRIC_PORT}
+      MetricsPortPolicy ${TOR_METRIC_PORT_POLICY}

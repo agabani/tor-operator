@@ -81,6 +81,25 @@ The Tor Operator will create a load balanced TorProxy instance with a custom num
 {% include "../../example/templates/torproxy_replica/torproxy.yaml" %}
 ```
 
+### Torrc
+
+The Tor Operator will prepend the template to the torrc file and substitute in the environment variables during container runtime.
+
+```
+# configmap.yaml
+{% include "../../example/templates/torproxy_torrc/configmap.yaml" %}
+```
+
+```
+# onionkey.yaml
+{% include "../../example/templates/torproxy_torrc/onionkey.yaml" %}
+```
+
+```
+# torproxy.yaml
+{% include "../../example/templates/torproxy_torrc/torproxy.yaml" %}
+```
+
 ## Conditions
 
 {%
