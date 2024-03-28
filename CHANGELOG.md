@@ -6,6 +6,8 @@
 
 - Exposed partial container configuration.
 - Exposed torrc configuration.
+- Packaged gettext in Third party Onion Balance v0.2.2 container image. (linux/amd64, linux/arm64)
+- Packaged gettext in Third party Tor v0.4.8.9 container image. (linux/amd64, linux/arm64)
 
 ### Changed
 

@@ -15,6 +15,7 @@
     "csprng",
     "dalek",
     "envsubst",
+    "gettext",
     "hasher",
     "hostnames",
     "intstr",
