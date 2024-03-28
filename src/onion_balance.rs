@@ -1020,7 +1020,7 @@ mod tests {
     name: hostname2.onion
   - address: hostname3.onion
     name: hostname3.onion
-  key: <TMP_DIR>/var/lib/tor/hidden_service/hs_ed25519_secret_key
+  key: ${TOR_TMP_DIR}/var/lib/tor/hidden_service/hs_ed25519_secret_key
 ",
             config_yaml.to_string()
         );
@@ -1028,8 +1028,7 @@ mod tests {
         let torrc = generate_torrc(&object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
-SocksPort 9050
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
 ControlPort 127.0.0.1:6666",
             torrc.to_string()
         );

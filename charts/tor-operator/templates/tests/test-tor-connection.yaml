@@ -32,6 +32,12 @@ spec:
   onionBalance:
     deployment:
       containers:
+        tor:
+          env:
+            - name: TOR_METRIC_PORT
+              value: "127.0.0.1:9035"
+            - name: TOR_METRIC_PORT_POLICY
+              value: "accept 127.0.0.1"
         ubuntu:
           args:
             - -c
@@ -68,10 +74,19 @@ spec:
                 - echo > /dev/tcp/$${HOST}/$${PORT}
     onionKey:
       name: {{ include "tor-operator.fullname" . }}-test-tor-ingress-onion-key
+    torrc:
+      template: |
+        MetricsPort ${TOR_METRIC_PORT}
+        MetricsPortPolicy ${TOR_METRIC_PORT_POLICY}
   onionService:
     deployment:
       containers:
         tor:
+          env:
+            - name: TOR_METRIC_PORT
+              value: "127.0.0.1:9035"
+            - name: TOR_METRIC_PORT_POLICY
+              value: "accept 127.0.0.1"
           resources:
             requests:
               cpu: 100m
@@ -112,6 +127,10 @@ spec:
     ports:
       - target: "{{ include "tor-operator.fullname" . }}:{{ .Values.service.port }}"
         virtport: 80
+    torrc:
+      template: |
+        MetricsPort ${TOR_METRIC_PORT}
+        MetricsPortPolicy ${TOR_METRIC_PORT_POLICY}
 
 ---
 apiVersion: tor.agabani.co.uk/v1
@@ -128,6 +147,11 @@ spec:
   deployment:
     containers:
       tor:
+        env:
+          - name: TOR_METRIC_PORT
+            value: "127.0.0.1:9035"
+          - name: TOR_METRIC_PORT_POLICY
+            value: "accept 127.0.0.1"
         resources:
           requests:
             cpu: 100m
@@ -176,7 +200,10 @@ spec:
       - name: socks
         port: 9050
         protocol: SOCKS
-
+  torrc:
+    template: |
+      MetricsPort ${TOR_METRIC_PORT}
+      MetricsPortPolicy ${TOR_METRIC_PORT_POLICY}
 ---
 apiVersion: v1
 kind: Pod

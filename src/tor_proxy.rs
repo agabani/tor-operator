@@ -1146,7 +1146,7 @@ mod tests {
 
         let torrc = generate_torrc(object);
 
-        assert_eq!(r"DataDirectory <TMP_DIR>/home/.tor", torrc.to_string());
+        assert_eq!(r"DataDirectory ${TOR_TMP_DIR}/home/.tor", torrc.to_string());
     }
 
     #[test]
@@ -1169,7 +1169,7 @@ mod tests {
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
 HTTPTunnelPort 0.0.0.0:1080",
             torrc.to_string()
         );
@@ -1195,7 +1195,7 @@ HTTPTunnelPort 0.0.0.0:1080",
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
 SocksPort 0.0.0.0:9050",
             torrc.to_string()
         );
@@ -1228,7 +1228,7 @@ SocksPort 0.0.0.0:9050",
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
 HTTPTunnelPort 0.0.0.0:1080
 SocksPort 0.0.0.0:9050",
             torrc.to_string()

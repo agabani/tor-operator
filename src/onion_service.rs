@@ -1007,8 +1007,8 @@ mod tests {
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
-HiddenServiceDir <TMP_DIR>/var/lib/tor/hidden_service
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
+HiddenServiceDir ${TOR_TMP_DIR}/var/lib/tor/hidden_service
 HiddenServicePort 80 example:80
 HiddenServicePort 443 example:443",
             torrc.to_string()
@@ -1046,8 +1046,8 @@ HiddenServicePort 443 example:443",
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
-HiddenServiceDir <TMP_DIR>/var/lib/tor/hidden_service
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
+HiddenServiceDir ${TOR_TMP_DIR}/var/lib/tor/hidden_service
 HiddenServiceOnionbalanceInstance 1
 HiddenServicePort 80 example:80
 HiddenServicePort 443 example:443",
