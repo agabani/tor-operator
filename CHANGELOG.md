@@ -5,6 +5,7 @@
 ### Added
 
 - Exposed partial container configuration.
+- Exposed torrc configuration.
 
 ### Changed
 
