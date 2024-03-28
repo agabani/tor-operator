@@ -1,0 +1,28 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionService
+metadata:
+  name: onion-service-{{ include "example.fullname" . }}-torrc
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  deployment:
+    containers:
+      tor:
+        env:
+          - name: TOR_CONTROL_PORT
+            value: "127.0.0.1:6666"
+          - name: TOR_HASHED_CONTROL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: onion-service-{{ include "example.fullname" . }}-torrc-env
+                key: hashed_control_password
+  onionKey:
+    name: onion-service-{{ include "example.fullname" . }}-torrc
+  ports:
+    - target: example:80
+      virtport: 80
+  torrc:
+    template: |
+      ControlPort ${TOR_CONTROL_PORT}
+      CookieAuthentication 1
+      HashedControlPassword ${TOR_HASHED_CONTROL_PASSWORD}
