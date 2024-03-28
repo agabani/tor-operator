@@ -1,0 +1,27 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionBalance
+metadata:
+  name: onion-balance-{{ include "example.fullname" . }}-torrc
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  deployment:
+    containers:
+      tor:
+        env:
+          - name: TOR_METRIC_PORT
+            value: "127.0.0.1:9035"
+          - name: TOR_METRIC_PORT_POLICY
+            valueFrom:
+              configMapKeyRef:
+                name: onion-balance-{{ include "example.fullname" . }}-torrc-env
+                key: metrics_port_policy
+  onionKey:
+    name: onion-balance-{{ include "example.fullname" . }}-torrc
+  onionServices:
+    - onionKey:
+        hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
+  torrc:
+    template: |
+      MetricsPort ${TOR_METRIC_PORT}
+      MetricsPortPolicy ${TOR_METRIC_PORT_POLICY}

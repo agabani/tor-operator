@@ -74,6 +74,25 @@ The Tor Operator will configure the Deployment.
 {% include "../../example/templates/onionbalance_deployment/onionbalance.yaml" %}
 ```
 
+### Torrc
+
+The Tor Operator will prepend the template to the torrc file and substitute in the environment variables during container runtime.
+
+```
+# configmap.yaml
+{% include "../../example/templates/onionbalance_torrc/configmap.yaml" %}
+```
+
+```
+# onionkey.yaml
+{% include "../../example/templates/onionbalance_torrc/onionkey.yaml" %}
+```
+
+```
+# onionservice.yaml
+{% include "../../example/templates/onionbalance_torrc/onionbalance.yaml" %}
+```
+
 ## Conditions
 
 {%

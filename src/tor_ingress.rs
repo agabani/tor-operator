@@ -1354,6 +1354,7 @@ fn generate_onion_balance(
                     },
                 })
                 .collect(),
+            torrc: None,
         },
         status: None,
     }

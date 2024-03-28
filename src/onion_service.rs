@@ -27,7 +27,7 @@ use crate::{
     kubernetes::{
         self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
         Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
-        ResourceName, SelectorLabels, Subset,
+        ResourceName, SelectorLabels, Subset, Torrc as KubernetesTorrc,
     },
     metrics::Metrics,
     onion_key::OnionKey,
@@ -81,8 +81,8 @@ pub struct OnionServiceSpec {
     /// Onion Service Hidden Service ports.
     pub ports: Vec<OnionServiceSpecHiddenServicePort>,
 
-    /// Onion Service torrc settings.
-    pub torrc: Option<OnionServiceSpecTorrc>,
+    /// Tor torrc settings.
+    pub torrc: Option<KubernetesTorrc>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -177,14 +177,6 @@ pub struct OnionServiceSpecHiddenServicePort {
     ///
     /// Example: 80
     pub virtport: i32,
-}
-
-#[allow(clippy::module_name_repetitions)]
-#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct OnionServiceSpecTorrc {
-    /// The template to be prepended to the torrc file.
-    pub template: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
