@@ -14,6 +14,7 @@
     "crds",
     "csprng",
     "dalek",
+    "envsubst",
     "hasher",
     "hostnames",
     "intstr",

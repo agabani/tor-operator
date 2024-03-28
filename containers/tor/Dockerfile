@@ -73,6 +73,10 @@ FROM ubuntu:22.04
 
 ARG TOR_VERSION=0.4.8.9
 
+RUN apt-get update && \
+    apt-get install -y gettext && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /tor-${TOR_VERSION}/LICENSE /licenses/tor/LICENSE
 COPY --from=build /tor-${TOR_VERSION}/install/bin/tor /usr/local/bin/tor
 

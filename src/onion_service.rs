@@ -80,6 +80,9 @@ pub struct OnionServiceSpec {
 
     /// Onion Service Hidden Service ports.
     pub ports: Vec<OnionServiceSpecHiddenServicePort>,
+
+    /// Onion Service torrc settings.
+    pub torrc: Option<OnionServiceSpecTorrc>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -174,6 +177,14 @@ pub struct OnionServiceSpecHiddenServicePort {
     ///
     /// Example: 80
     pub virtport: i32,
+}
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct OnionServiceSpecTorrc {
+    /// The template to be prepended to the torrc file.
+    pub template: Option<String>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -355,6 +366,15 @@ impl OnionService {
     #[must_use]
     pub fn ports(&self) -> &[OnionServiceSpecHiddenServicePort] {
         &self.spec.ports
+    }
+
+    #[must_use]
+    pub fn torrc_template(&self) -> Option<&str> {
+        self.spec
+            .torrc
+            .as_ref()
+            .and_then(|f| f.template.as_ref())
+            .map(String::as_str)
     }
 
     #[must_use]
@@ -694,9 +714,13 @@ fn generate_ob_config(object: &OnionService) -> Option<OBConfig> {
 }
 
 fn generate_torrc(object: &OnionService) -> Torrc {
-    let mut torrc = Torrc::builder()
-        .data_dir("<TMP_DIR>/home/.tor")
-        .hidden_service_dir("<TMP_DIR>/var/lib/tor/hidden_service");
+    let mut torrc = Torrc::builder();
+    if let Some(template) = object.torrc_template() {
+        torrc = torrc.template(template);
+    }
+    torrc = torrc
+        .data_dir("${TOR_TMP_DIR}/home/.tor")
+        .hidden_service_dir("${TOR_TMP_DIR}/var/lib/tor/hidden_service");
     if object.onion_balanced() {
         torrc = torrc.hidden_service_onion_balance_instance(true);
     }
@@ -872,27 +896,28 @@ fn generate_deployment_containers(object: &OnionService, config: &Config) -> Vec
         container.args = Some(vec![
             "-c".into(),
             {
-                let mut commands = vec!["TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)"];
+                let mut commands = vec!["export TOR_TMP_DIR=${TOR_TMP_DIR:-$(mktemp -d --suffix=.tor -p /tmp)}"];
 
                 // hidden_service
-                commands.push("mkdir -p $TMP_DIR/var/lib/tor/hidden_service");
-                commands.push("chmod 700 $TMP_DIR/var/lib/tor/hidden_service");
-                commands.push("cp -L /etc/secrets/* $TMP_DIR/var/lib/tor/hidden_service");
+                commands.push("mkdir -p $TOR_TMP_DIR/var/lib/tor/hidden_service");
+                commands.push("chmod 700 $TOR_TMP_DIR/var/lib/tor/hidden_service");
+                commands.push("cp -L /etc/secrets/* $TOR_TMP_DIR/var/lib/tor/hidden_service");
+
+                // ob_config
                 if object.onion_balanced() {
-                    commands.push("cp -L /etc/configs/ob_config $TMP_DIR/var/lib/tor/hidden_service/ob_config");
+                    commands.push("cp -L /etc/configs/ob_config $TOR_TMP_DIR/var/lib/tor/hidden_service/ob_config");
                 }
 
                 // torrc
-                commands.push("mkdir -p $TMP_DIR/usr/local/etc/tor");
-                commands.push("cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc");
-                commands.push(r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#);
+                commands.push("mkdir -p $TOR_TMP_DIR/usr/local/etc/tor");
+                commands.push("envsubst < /etc/configs/torrc > $TOR_TMP_DIR/usr/local/etc/tor/torrc");
 
                 // data directory
-                commands.push("mkdir -p $TMP_DIR/home/.tor");
-                commands.push("chmod 700 $TMP_DIR/home/.tor");
+                commands.push("mkdir -p $TOR_TMP_DIR/home/.tor");
+                commands.push("chmod 700 $TOR_TMP_DIR/home/.tor");
 
                 // executable
-                commands.push("tor -f $TMP_DIR/usr/local/etc/tor/torrc");
+                commands.push("tor -f $TOR_TMP_DIR/usr/local/etc/tor/torrc");
                 commands
             }
             .join(" && "),

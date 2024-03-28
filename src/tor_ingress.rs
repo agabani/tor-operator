@@ -1487,6 +1487,7 @@ fn generate_onion_service(
                     virtport: f.virtport,
                 })
                 .collect(),
+            torrc: None,
         },
         status: None,
     }

@@ -87,6 +87,25 @@ The Tor Operator will create an OnionService registered with an OnionBalance usi
 {% include "../../example/templates/onionservice_onionbalance/onionservice.yaml" %}
 ```
 
+### Torrc
+
+The Tor Operator will prepend the template to the torrc file and substitute in the environment variables during container runtime.
+
+```
+# configmap.yaml
+{% include "../../example/templates/onionservice_torrc/configmap.yaml" %}
+```
+
+```
+# onionkey.yaml
+{% include "../../example/templates/onionservice_torrc/onionkey.yaml" %}
+```
+
+```
+# onionservice.yaml
+{% include "../../example/templates/onionservice_torrc/onionservice.yaml" %}
+```
+
 ## Conditions
 
 {%

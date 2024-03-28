@@ -86,4 +86,10 @@ impl TorrcBuilder {
         self.0.push(format!("SocksPort {addr}"));
         self
     }
+
+    #[must_use]
+    pub fn template(mut self, template: &str) -> Self {
+        self.0.push(template.to_string());
+        self
+    }
 }
