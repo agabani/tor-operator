@@ -1392,7 +1392,7 @@ spec:
                   type: object
                 type: array
               torrc:
-                description: Onion Service torrc settings.
+                description: Tor torrc settings.
                 nullable: true
                 properties:
                   template:

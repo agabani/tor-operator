@@ -1,0 +1,32 @@
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionBalance
+metadata:
+  name: onion-balance-{{ include "example.fullname" . }}-torrc
+  labels:
+    {{- include "example.labels" . | nindent 4 }}
+spec:
+  deployment:
+    containers:
+      onionbalance:
+        env:
+          - name: TOR_CONTROL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: onion-balance-{{ include "example.fullname" . }}-torrc-env
+                key: hashed_control_password
+      tor:
+        env:
+          - name: TOR_HASHED_CONTROL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: onion-balance-{{ include "example.fullname" . }}-torrc-env
+                key: hashed_control_password
+  onionKey:
+    name: onion-balance-{{ include "example.fullname" . }}-torrc
+  onionServices:
+    - onionKey:
+        hostname: 3evpjb3a5qxaubnzodlxlgn3ccp3achwwwtirgpznnl752oyg2oxekid.onion
+  torrc:
+    template: |
+      CookieAuthentication 1
+      HashedControlPassword ${TOR_HASHED_CONTROL_PASSWORD}

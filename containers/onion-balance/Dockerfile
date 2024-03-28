@@ -22,6 +22,7 @@ FROM ubuntu:22.04
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive \
     apt install -y \
+    gettext \
     python3 \
     && rm -rf /var/lib/apt/lists/*
 

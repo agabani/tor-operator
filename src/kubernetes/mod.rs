@@ -15,6 +15,7 @@ mod resource_namespace;
 mod resource_uid;
 mod selector_labels;
 mod subset;
+mod tor;
 
 pub use annotation::Annotation;
 pub use annotations::Annotations;
@@ -32,3 +33,4 @@ pub use resource_namespace::ObjectNamespace;
 pub use resource_uid::ResourceUid;
 pub use selector_labels::SelectorLabels;
 pub use subset::Subset;
+pub use tor::Torrc;
