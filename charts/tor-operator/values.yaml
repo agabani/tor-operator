@@ -14,13 +14,13 @@ onionBalance:
   image:
     repository: ghcr.io/agabani/tor-operator
     pullPolicy: IfNotPresent
-    tag: "onion-balance-0.2.2"
+    tag: "onion-balance-0.2.2.1"
 
 tor:
   image:
     repository: ghcr.io/agabani/tor-operator
     pullPolicy: IfNotPresent
-    tag: "tor-0.4.8.9"
+    tag: "tor-0.4.8.9.1"
 
 imagePullSecrets: []
 nameOverride: ""

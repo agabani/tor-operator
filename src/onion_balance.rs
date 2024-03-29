@@ -27,7 +27,7 @@ use crate::{
     kubernetes::{
         self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
         Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
-        ResourceName, SelectorLabels, Subset,
+        ResourceName, SelectorLabels, Subset, Torrc as KubernetesTorrc,
     },
     metrics::Metrics,
     onion_key::OnionKey,
@@ -76,6 +76,9 @@ pub struct OnionBalanceSpec {
 
     /// OnionService part of the OnionBalance load balancing.
     pub onion_services: Vec<OnionBalanceSpecOnionService>,
+
+    /// Tor torrc settings.
+    pub torrc: Option<KubernetesTorrc>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -320,6 +323,15 @@ impl OnionBalance {
     #[must_use]
     pub fn onion_key_name(&self) -> ResourceName {
         ResourceName::from(&self.spec.onion_key.name)
+    }
+
+    #[must_use]
+    pub fn torrc_template(&self) -> Option<&str> {
+        self.spec
+            .torrc
+            .as_ref()
+            .and_then(|f| f.template.as_ref())
+            .map(String::as_str)
     }
 
     #[must_use]
@@ -656,9 +668,12 @@ async fn reconcile_onion_balance(
 
 #[allow(unused_variables)]
 fn generate_torrc(object: &OnionBalance) -> Torrc {
-    Torrc::builder()
-        .data_dir("<TMP_DIR>/home/.tor")
-        .socks_port("9050")
+    let mut torrc = Torrc::builder();
+    if let Some(template) = object.torrc_template() {
+        torrc = torrc.template(template);
+    }
+    torrc
+        .data_dir("${TOR_TMP_DIR}/home/.tor")
         .control_port("127.0.0.1:6666")
         .build()
 }
@@ -675,7 +690,7 @@ fn generate_config_yaml(object: &OnionBalance) -> ConfigYaml {
                     name: service.onion_key.hostname.clone(),
                 })
                 .collect(),
-            key: "<TMP_DIR>/var/lib/tor/hidden_service/hs_ed25519_secret_key".into(),
+            key: "${TOR_TMP_DIR}/var/lib/tor/hidden_service/hs_ed25519_secret_key".into(),
         }],
     }
 }
@@ -847,20 +862,16 @@ fn generate_deployment_containers(object: &OnionBalance, config: &Config) -> Vec
         container.args= Some(vec![
             "-c".into(),
             [
-                "TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)",
-
+                "export TOR_TMP_DIR=${TOR_TMP_DIR:-$(mktemp -d --suffix=.tor -p /tmp)}",
                 // hidden_service
-                "mkdir -p $TMP_DIR/var/lib/tor/hidden_service",
-                "chmod 700 $TMP_DIR/var/lib/tor/hidden_service",
-                "cp -L /etc/secrets/* $TMP_DIR/var/lib/tor/hidden_service",
-
+                "mkdir -p $TOR_TMP_DIR/var/lib/tor/hidden_service",
+                "chmod 700 $TOR_TMP_DIR/var/lib/tor/hidden_service",
+                "cp -L /etc/secrets/* $TOR_TMP_DIR/var/lib/tor/hidden_service",
                 // config.yaml
-                "mkdir -p $TMP_DIR/usr/local/etc/onionbalance",
-                "cp -L /etc/configs/config.yaml $TMP_DIR/usr/local/etc/onionbalance/config.yaml",
-                r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/onionbalance/config.yaml"#,
-
+                "mkdir -p $TOR_TMP_DIR/usr/local/etc/onionbalance",
+                "envsubst < /etc/configs/config.yaml > $TOR_TMP_DIR/usr/local/etc/onionbalance/config.yaml",
                 // executable
-                "onionbalance -v info -c $TMP_DIR/usr/local/etc/onionbalance/config.yaml -p 6666"]
+                "onionbalance -v info -c $TOR_TMP_DIR/usr/local/etc/onionbalance/config.yaml -p 6666"]
             .join(" && "),
         ]);
         container.command = Some(vec!["/bin/bash".into()]);
@@ -888,20 +899,19 @@ fn generate_deployment_containers(object: &OnionBalance, config: &Config) -> Vec
         container.args = Some(vec![
             "-c".into(),
             [
-                "TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)",
+                "export TOR_TMP_DIR=${TOR_TMP_DIR:-$(mktemp -d --suffix=.tor -p /tmp)}",
                 // hidden_service
-                "mkdir -p $TMP_DIR/var/lib/tor/hidden_service",
-                "chmod 700 $TMP_DIR/var/lib/tor/hidden_service",
-                "cp -L /etc/secrets/* $TMP_DIR/var/lib/tor/hidden_service",
+                "mkdir -p $TOR_TMP_DIR/var/lib/tor/hidden_service",
+                "chmod 700 $TOR_TMP_DIR/var/lib/tor/hidden_service",
+                "cp -L /etc/secrets/* $TOR_TMP_DIR/var/lib/tor/hidden_service",
                 // torrc
-                "mkdir -p $TMP_DIR/usr/local/etc/tor",
-                "cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc",
-                r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#,
+                "mkdir -p $TOR_TMP_DIR/usr/local/etc/tor",
+                "envsubst < /etc/configs/torrc > $TOR_TMP_DIR/usr/local/etc/tor/torrc",
                 // data directory
-                "mkdir -p $TMP_DIR/home/.tor",
-                "chmod 700 $TMP_DIR/home/.tor",
+                "mkdir -p $TOR_TMP_DIR/home/.tor",
+                "chmod 700 $TOR_TMP_DIR/home/.tor",
                 // executable
-                "tor -f $TMP_DIR/usr/local/etc/tor/torrc",
+                "tor -f $TOR_TMP_DIR/usr/local/etc/tor/torrc",
             ]
             .join(" && "),
         ]);
@@ -1009,7 +1019,7 @@ mod tests {
     name: hostname2.onion
   - address: hostname3.onion
     name: hostname3.onion
-  key: <TMP_DIR>/var/lib/tor/hidden_service/hs_ed25519_secret_key
+  key: ${TOR_TMP_DIR}/var/lib/tor/hidden_service/hs_ed25519_secret_key
 ",
             config_yaml.to_string()
         );
@@ -1017,8 +1027,7 @@ mod tests {
         let torrc = generate_torrc(&object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
-SocksPort 9050
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
 ControlPort 127.0.0.1:6666",
             torrc.to_string()
         );

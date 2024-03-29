@@ -38,7 +38,7 @@ use crate::{
     kubernetes::{
         self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
         Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
-        ResourceName, SelectorLabels,
+        ResourceName, SelectorLabels, Torrc as KubernetesTorrc,
     },
     metrics::Metrics,
     tor::Torrc,
@@ -82,6 +82,9 @@ pub struct TorProxySpec {
 
     /// Service settings.
     pub service: TorProxySpecService,
+
+    /// Tor torrc settings.
+    pub torrc: Option<KubernetesTorrc>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -444,6 +447,15 @@ impl TorProxy {
     }
 
     #[must_use]
+    pub fn torrc_template(&self) -> Option<&str> {
+        self.spec
+            .torrc
+            .as_ref()
+            .and_then(|f| f.template.as_ref())
+            .map(String::as_str)
+    }
+
+    #[must_use]
     pub fn status_conditions(&self) -> Option<&Vec<Condition>> {
         self.status.as_ref().map(|f| f.conditions.as_ref())
     }
@@ -796,7 +808,11 @@ async fn reconcile_tor_proxy(api: &Api<TorProxy>, object: &TorProxy, state: &Sta
 }
 
 fn generate_torrc(object: &TorProxy) -> Torrc {
-    let mut torrc = Torrc::builder().data_dir("<TMP_DIR>/home/.tor");
+    let mut torrc = Torrc::builder();
+    if let Some(template) = object.torrc_template() {
+        torrc = torrc.template(template);
+    }
+    torrc = torrc.data_dir("${TOR_TMP_DIR}/home/.tor");
     if !object.service_ports_http_tunnel().is_empty() {
         torrc = torrc.http_tunnel_port("0.0.0.0:1080");
     }
@@ -926,16 +942,15 @@ fn generate_deployment_containers(object: &TorProxy, config: &Config) -> Vec<Con
         container.args = Some(vec![
             "-c".into(),
             [
-                "TMP_DIR=$(mktemp -d --suffix=.tor -p /tmp)",
+                "export TOR_TMP_DIR=${TOR_TMP_DIR:-$(mktemp -d --suffix=.tor -p /tmp)}",
                 // torrc
-                "mkdir -p $TMP_DIR/usr/local/etc/tor",
-                "cp -L /etc/configs/torrc $TMP_DIR/usr/local/etc/tor/torrc",
-                r#"sed -i "s@<TMP_DIR>@$TMP_DIR@g" $TMP_DIR/usr/local/etc/tor/torrc"#,
+                "mkdir -p $TOR_TMP_DIR/usr/local/etc/tor",
+                "envsubst < /etc/configs/torrc > $TOR_TMP_DIR/usr/local/etc/tor/torrc",
                 // data directory
-                "mkdir -p $TMP_DIR/home/.tor",
-                "chmod 700 $TMP_DIR/home/.tor",
+                "mkdir -p $TOR_TMP_DIR/home/.tor",
+                "chmod 700 $TOR_TMP_DIR/home/.tor",
                 // executable
-                "tor -f $TMP_DIR/usr/local/etc/tor/torrc",
+                "tor -f $TOR_TMP_DIR/usr/local/etc/tor/torrc",
             ]
             .join(" && "),
         ]);
@@ -1131,7 +1146,7 @@ mod tests {
 
         let torrc = generate_torrc(object);
 
-        assert_eq!(r"DataDirectory <TMP_DIR>/home/.tor", torrc.to_string());
+        assert_eq!(r"DataDirectory ${TOR_TMP_DIR}/home/.tor", torrc.to_string());
     }
 
     #[test]
@@ -1154,7 +1169,7 @@ mod tests {
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
 HTTPTunnelPort 0.0.0.0:1080",
             torrc.to_string()
         );
@@ -1180,7 +1195,7 @@ HTTPTunnelPort 0.0.0.0:1080",
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
 SocksPort 0.0.0.0:9050",
             torrc.to_string()
         );
@@ -1213,7 +1228,7 @@ SocksPort 0.0.0.0:9050",
         let torrc = generate_torrc(object);
 
         assert_eq!(
-            r"DataDirectory <TMP_DIR>/home/.tor
+            r"DataDirectory ${TOR_TMP_DIR}/home/.tor
 HTTPTunnelPort 0.0.0.0:1080
 SocksPort 0.0.0.0:9050",
             torrc.to_string()

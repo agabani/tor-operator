@@ -196,5 +196,9 @@ release-dryrun version: generate
 release-execute version: generate
   @cargo release {{version}} --execute --no-publish
 
+# test unit
+test-unit:
+  @cargo test
+
 # test e2e
 test-e2e: docker-build kube-load kube-test
