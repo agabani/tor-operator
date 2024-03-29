@@ -69,11 +69,11 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a>
+    <li class="toctree-l3"><a class="reference internal" href="#minimal">Minimal</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#annotations-labels-and-names">Annotations, Labels and Names</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#auto-generate">Auto Generate</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#full">Full</a>
     </li>
         </ul>
     </li>
@@ -161,13 +161,15 @@ auto generate feature controlled by <code>.autoGenerate</code>.</p>
 <h2 id="screenshots">Screenshots</h2>
 <p><img alt="OnionKey" src="../onionkey.svg" /></p>
 <h2 id="examples">Examples</h2>
-<h3 id="basic">Basic</h3>
-<p>The Tor Operator will use the Onion Key provided in the <code>Secret</code>.</p>
-<pre><code>#secret.yaml
+<h3 id="minimal">Minimal</h3>
+<p>The Tor Operator will use the OnionKey provided in the <code>Secret</code>.</p>
+<pre><code># secret.yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: onion-key-{{ include &quot;example.fullname&quot; . }}
+  name: onion-key-{{ include &quot;example.fullname&quot; . }}-minimal
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
 data:
   hostname: |
     {{ .Files.Get &quot;secrets/onionkey/hostname&quot; | b64enc }}
@@ -177,40 +179,25 @@ data:
     {{ .Files.Get &quot;secrets/onionkey/hs_ed25519_secret_key&quot; | b64enc }}
 
 </code></pre>
-<pre><code>#onionkey.yaml
+<pre><code># onionkey.yaml
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
 metadata:
-  name: onion-key-{{ include &quot;example.fullname&quot; . }}
+  name: onion-key-{{ include &quot;example.fullname&quot; . }}-minimal
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
   secret:
-    name: onion-key-{{ include &quot;example.fullname&quot; . }}
+    name: onion-key-{{ include &quot;example.fullname&quot; . }}-minimal
 
 </code></pre>
-<h3 id="auto-generate">Auto Generate</h3>
-<p>The Tor Operator will auto generated a random OnionKey and store it in a <code>Secret</code> on your behalf.</p>
-<pre><code>#onionkey.yaml
+<h3 id="annotations-labels-and-names">Annotations, Labels and Names</h3>
+<p>The Tor Operator will create an OnionKey using custom annotations, labels and names.</p>
+<pre><code># onionkey.yaml
 apiVersion: tor.agabani.co.uk/v1
 kind: OnionKey
 metadata:
-  name: onion-key-{{ include &quot;example.fullname&quot; . }}-auto-generate
-  labels:
-    {{- include &quot;example.labels&quot; . | nindent 4 }}
-spec:
-  autoGenerate: true
-  secret:
-    name: onion-key-{{ include &quot;example.fullname&quot; . }}-auto-generate
-
-</code></pre>
-<h3 id="full">Full</h3>
-<p>The Tor Operator will auto generated a random OnionKey and store it in a <code>Secret</code> on your behalf.</p>
-<pre><code>#onionkey.yaml
-apiVersion: tor.agabani.co.uk/v1
-kind: OnionKey
-metadata:
-  name: onion-key-{{ include &quot;example.fullname&quot; . }}-full
+  name: onion-key-{{ include &quot;example.fullname&quot; . }}-aln
   labels:
     {{- include &quot;example.labels&quot; . | nindent 4 }}
 spec:
@@ -222,7 +209,22 @@ spec:
     labels:
       key-l-1: value-l-1
       key-l-2: value-l-2
-    name: onion-key-{{ include &quot;example.fullname&quot; . }}-full
+    name: onion-key-{{ include &quot;example.fullname&quot; . }}-aln
+
+</code></pre>
+<h3 id="auto-generate">Auto Generate</h3>
+<p>The Tor Operator will auto generated a random OnionKey and store it in a <code>Secret</code> on your behalf.</p>
+<pre><code># onionkey.yaml
+apiVersion: tor.agabani.co.uk/v1
+kind: OnionKey
+metadata:
+  name: onion-key-{{ include &quot;example.fullname&quot; . }}-auto-generate
+  labels:
+    {{- include &quot;example.labels&quot; . | nindent 4 }}
+spec:
+  autoGenerate: true
+  secret:
+    name: onion-key-{{ include &quot;example.fullname&quot; . }}-auto-generate
 
 </code></pre>
 <h2 id="conditions">Conditions</h2>
