@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-cargo install --git https://github.com/agabani/tor-operator --tag v0.0.25
+cargo install --git https://github.com/agabani/tor-operator --tag v0.0.26
 ```
 
 {%
