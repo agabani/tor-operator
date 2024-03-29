@@ -6,8 +6,8 @@
 
 - Exposed partial container configuration.
 - Exposed torrc configuration.
-- Packaged gettext in Third party Onion Balance v0.2.2 container image. (linux/amd64, linux/arm64)
-- Packaged gettext in Third party Tor v0.4.8.9 container image. (linux/amd64, linux/arm64)
+- Distributed gettext in third party Onion Balance v0.2.2 container image. (linux/amd64, linux/arm64)
+- Distributed gettext in third party Tor v0.4.8.9 container image. (linux/amd64, linux/arm64)
 
 ### Changed
 
@@ -198,9 +198,7 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.25...HEAD
-
 [0.0.25]: https://github.com/agabani/tor-operator/compare/v0.0.24...v0.0.25
-
 [0.0.24]: https://github.com/agabani/tor-operator/compare/v0.0.23...v0.0.24
 [0.0.23]: https://github.com/agabani/tor-operator/compare/v0.0.22...v0.0.23
 [0.0.22]: https://github.com/agabani/tor-operator/compare/v0.0.21...v0.0.22

@@ -91,11 +91,6 @@ The Tor Operator will prepend the template to the torrc file and substitute in t
 ```
 
 ```
-# onionkey.yaml
-{% include "../../example/templates/torproxy_torrc/onionkey.yaml" %}
-```
-
-```
 # torproxy.yaml
 {% include "../../example/templates/torproxy_torrc/torproxy.yaml" %}
 ```
