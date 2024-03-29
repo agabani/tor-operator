@@ -674,7 +674,6 @@ fn generate_torrc(object: &OnionBalance) -> Torrc {
     }
     torrc
         .data_dir("${TOR_TMP_DIR}/home/.tor")
-        // .socks_port("9050")
         .control_port("127.0.0.1:6666")
         .build()
 }
