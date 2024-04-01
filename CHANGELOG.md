@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.27] - 2024-04-01
+
 ### Added
 
 - Exposed partial volume configuration.
@@ -213,7 +215,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.26...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.27...HEAD
+
+[0.0.27]: https://github.com/agabani/tor-operator/compare/v0.0.26...v0.0.27
 
 [0.0.26]: https://github.com/agabani/tor-operator/compare/v0.0.25...v0.0.26
 [0.0.25]: https://github.com/agabani/tor-operator/compare/v0.0.24...v0.0.25
