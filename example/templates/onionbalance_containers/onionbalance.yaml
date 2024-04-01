@@ -15,6 +15,9 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi
+        volumeMounts:
+          tmp-shared:
+            mountPath: /tmp/shared
       tor:
         resources:
           limits:
@@ -23,6 +26,9 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi
+        volumeMounts:
+          tmp-shared:
+            mountPath: /tmp/shared
       ubuntu:
         args:
           - -c
@@ -32,9 +38,9 @@ spec:
         image: ubuntu:latest
         imagePullPolicy: IfNotPresent
         env:
-          - name: HOST
+          HOST:
             value: "127.0.0.1"
-          - name: PORT
+          PORT:
             valueFrom:
               configMapKeyRef:
                 name: onion-balance-{{ include "example.fullname" . }}-containers-env
@@ -64,7 +70,13 @@ spec:
               - /bin/bash
               - -c
               - echo > /dev/tcp/$${HOST}/$${PORT}
-
+        volumeMounts:
+          tmp-shared:
+            mountPath: /tmp/shared
+    volumes:
+      tmp-shared:
+        emptyDir:
+          sizeLimit: 32Mi
   onionKey:
     name: onion-balance-{{ include "example.fullname" . }}-containers
   onionServices:

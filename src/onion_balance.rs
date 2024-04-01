@@ -8,7 +8,6 @@ use k8s_openapi::{
             Affinity, Capabilities, ConfigMap, ConfigMapVolumeSource, Container, ExecAction,
             KeyToPath, LocalObjectReference, PodSecurityContext, PodSpec, PodTemplateSpec, Probe,
             SecretVolumeSource, SecurityContext, Toleration, TopologySpreadConstraint, Volume,
-            VolumeMount,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
@@ -27,7 +26,7 @@ use crate::{
     kubernetes::{
         self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
         Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
-        ResourceName, SelectorLabels, Subset, Torrc as KubernetesTorrc,
+        ResourceName, SelectorLabels, Subset, Torrc as KubernetesTorrc, Volume as KubernetesVolume,
     },
     metrics::Metrics,
     onion_key::OnionKey,
@@ -132,6 +131,9 @@ pub struct OnionBalanceSpecDeployment {
 
     /// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
     pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
+
+    /// List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes
+    pub volumes: Option<BTreeMap<String, KubernetesVolume>>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -318,6 +320,16 @@ impl OnionBalance {
             .as_ref()
             .and_then(|f| f.topology_spread_constraints.as_ref())
             .cloned()
+    }
+
+    #[must_use]
+    pub fn deployment_volumes(&self) -> BTreeMap<String, KubernetesVolume> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.volumes.as_ref())
+            .cloned()
+            .unwrap_or_default()
     }
 
     #[must_use]
@@ -728,7 +740,6 @@ fn generate_config_map(
     }
 }
 
-#[allow(clippy::too_many_lines)]
 fn generate_deployment(
     object: &OnionBalance,
     config: &Config,
@@ -785,62 +796,7 @@ fn generate_deployment(
                     security_context: Some(object.deployment_security_context()),
                     tolerations: object.deployment_tolerations(),
                     topology_spread_constraints: object.deployment_topology_spread_constraints(),
-                    volumes: Some(vec![
-                        Volume {
-                            name: "etc-secrets".into(),
-                            secret: Some(SecretVolumeSource {
-                                default_mode: Some(0o400),
-                                items: Some(vec![
-                                    KeyToPath {
-                                        key: "hostname".into(),
-                                        mode: Some(0o400),
-                                        path: "hostname".into(),
-                                    },
-                                    KeyToPath {
-                                        key: "hs_ed25519_public_key".into(),
-                                        mode: Some(0o400),
-                                        path: "hs_ed25519_public_key".into(),
-                                    },
-                                    KeyToPath {
-                                        key: "hs_ed25519_secret_key".into(),
-                                        mode: Some(0o400),
-                                        path: "hs_ed25519_secret_key".into(),
-                                    },
-                                ]),
-                                optional: Some(false),
-                                secret_name: Some(onion_key.secret_name().into()),
-                            }),
-                            ..Default::default()
-                        },
-                        Volume {
-                            name: "etc-configs-onionbalance".into(),
-                            config_map: Some(ConfigMapVolumeSource {
-                                default_mode: Some(0o400),
-                                items: Some(vec![KeyToPath {
-                                    key: "config.yaml".into(),
-                                    mode: Some(0o400),
-                                    path: "config.yaml".into(),
-                                }]),
-                                name: Some(object.config_map_name().into()),
-                                optional: Some(false),
-                            }),
-                            ..Default::default()
-                        },
-                        Volume {
-                            name: "etc-configs-tor".into(),
-                            config_map: Some(ConfigMapVolumeSource {
-                                default_mode: Some(0o400),
-                                items: Some(vec![KeyToPath {
-                                    key: "torrc".into(),
-                                    mode: Some(0o400),
-                                    path: "torrc".into(),
-                                }]),
-                                name: Some(object.config_map_name().into()),
-                                optional: Some(false),
-                            }),
-                            ..Default::default()
-                        },
-                    ]),
+                    volumes: Some(generate_deployment_volumes(object, onion_key)),
                     ..Default::default()
                 }),
             },
@@ -851,11 +807,7 @@ fn generate_deployment(
 }
 
 fn generate_deployment_containers(object: &OnionBalance, config: &Config) -> Vec<Container> {
-    let mut containers = object
-        .deployment_containers()
-        .into_iter()
-        .map(|(k, v)| (k.clone(), v.to_container(k)))
-        .collect::<BTreeMap<_, _>>();
+    let mut containers = object.deployment_containers();
 
     {
         let container = containers.entry("onionbalance".to_string()).or_default();
@@ -877,21 +829,22 @@ fn generate_deployment_containers(object: &OnionBalance, config: &Config) -> Vec
         container.command = Some(vec!["/bin/bash".into()]);
         container.image = Some(config.onion_balance_image.uri.clone());
         container.image_pull_policy = Some(config.onion_balance_image.pull_policy.clone());
-        container.name = "onionbalance".into();
-        container.volume_mounts = Some(vec![
-            VolumeMount {
-                mount_path: "/etc/secrets".into(),
-                name: "etc-secrets".into(),
-                read_only: Some(true),
-                ..Default::default()
-            },
-            VolumeMount {
-                mount_path: "/etc/configs".into(),
-                name: "etc-configs-onionbalance".into(),
-                read_only: Some(true),
-                ..Default::default()
-            },
-        ]);
+
+        let volume_mounts = container.volume_mounts.get_or_insert_with(Default::default);
+
+        {
+            let volume_mount = volume_mounts.entry("etc-secrets".to_string()).or_default();
+            volume_mount.mount_path = "/etc/secrets".into();
+            volume_mount.read_only = Some(true);
+        }
+
+        {
+            let volume_mount = volume_mounts
+                .entry("etc-configs-onionbalance".to_string())
+                .or_default();
+            volume_mount.mount_path = "/etc/configs".into();
+            volume_mount.read_only = Some(true);
+        }
     }
 
     {
@@ -932,7 +885,6 @@ fn generate_deployment_containers(object: &OnionBalance, config: &Config) -> Vec
             timeout_seconds: Some(1),
             ..Default::default()
         });
-        container.name = "tor".into();
         container.readiness_probe = Some(Probe {
             exec: Some(ExecAction {
                 command: Some(vec![
@@ -947,35 +899,108 @@ fn generate_deployment_containers(object: &OnionBalance, config: &Config) -> Vec
             timeout_seconds: Some(1),
             ..Default::default()
         });
-        container.volume_mounts = Some(vec![
-            VolumeMount {
-                mount_path: "/etc/secrets".into(),
-                name: "etc-secrets".into(),
-                read_only: Some(true),
-                ..Default::default()
-            },
-            VolumeMount {
-                mount_path: "/etc/configs".into(),
-                name: "etc-configs-tor".into(),
-                read_only: Some(true),
-                ..Default::default()
-            },
-        ]);
+
+        let volume_mounts = container.volume_mounts.get_or_insert_with(Default::default);
+
+        {
+            let volume_mount = volume_mounts.entry("etc-secrets".to_string()).or_default();
+            volume_mount.mount_path = "/etc/secrets".into();
+            volume_mount.read_only = Some(true);
+        }
+
+        {
+            let volume_mount = volume_mounts
+                .entry("etc-configs-tor".to_string())
+                .or_default();
+            volume_mount.mount_path = "/etc/configs".into();
+            volume_mount.read_only = Some(true);
+        }
     }
 
-    for container in containers.values_mut() {
-        container.security_context = Some(SecurityContext {
-            capabilities: Some(Capabilities {
-                drop: Some(vec!["ALL".to_string()]),
+    let mut containers = containers
+        .into_iter()
+        .map(|(name, value)| value.into_container(name))
+        .map(|mut container| {
+            container.security_context = Some(SecurityContext {
+                capabilities: Some(Capabilities {
+                    drop: Some(vec!["ALL".to_string()]),
+                    ..Default::default()
+                }),
                 ..Default::default()
-            }),
-            ..Default::default()
+            });
+            container
+        })
+        .collect::<Vec<_>>();
+    containers.sort_by(|a, b| a.name.cmp(&b.name));
+    containers
+}
+
+#[must_use]
+pub fn generate_deployment_volumes(object: &OnionBalance, onion_key: &OnionKey) -> Vec<Volume> {
+    let mut volumes = object.deployment_volumes();
+
+    {
+        let volume = volumes.entry("etc-secrets".to_string()).or_default();
+        volume.secret = Some(SecretVolumeSource {
+            default_mode: Some(0o400),
+            items: Some(vec![
+                KeyToPath {
+                    key: "hostname".into(),
+                    mode: Some(0o400),
+                    path: "hostname".into(),
+                },
+                KeyToPath {
+                    key: "hs_ed25519_public_key".into(),
+                    mode: Some(0o400),
+                    path: "hs_ed25519_public_key".into(),
+                },
+                KeyToPath {
+                    key: "hs_ed25519_secret_key".into(),
+                    mode: Some(0o400),
+                    path: "hs_ed25519_secret_key".into(),
+                },
+            ]),
+            optional: Some(false),
+            secret_name: Some(onion_key.secret_name().into()),
         });
     }
 
-    let mut containers = containers.into_values().collect::<Vec<_>>();
-    containers.sort_by(|a, b| a.name.cmp(&b.name));
-    containers
+    {
+        let volume = volumes
+            .entry("etc-configs-onionbalance".to_string())
+            .or_default();
+        volume.config_map = Some(ConfigMapVolumeSource {
+            default_mode: Some(0o400),
+            items: Some(vec![KeyToPath {
+                key: "config.yaml".into(),
+                mode: Some(0o400),
+                path: "config.yaml".into(),
+            }]),
+            name: Some(object.config_map_name().into()),
+            optional: Some(false),
+        });
+    }
+
+    {
+        let volume = volumes.entry("etc-configs-tor".to_string()).or_default();
+        volume.config_map = Some(ConfigMapVolumeSource {
+            default_mode: Some(0o400),
+            items: Some(vec![KeyToPath {
+                key: "torrc".into(),
+                mode: Some(0o400),
+                path: "torrc".into(),
+            }]),
+            name: Some(object.config_map_name().into()),
+            optional: Some(false),
+        });
+    }
+
+    let mut volumes = volumes
+        .into_iter()
+        .map(|(name, value)| value.into_volume(name))
+        .collect::<Vec<_>>();
+    volumes.sort_by(|a, b| a.name.cmp(&b.name));
+    volumes
 }
 
 #[cfg(test)]
