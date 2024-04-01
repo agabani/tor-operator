@@ -32,12 +32,25 @@ spec:
   onionBalance:
     deployment:
       containers:
+        onionbalance:
+          resources:
+            requests:
+              cpu: 100m
+          volumeMounts:
+            tmp-shared:
+              mountPath: /tmp/shared
         tor:
           env:
-            - name: TOR_METRIC_PORT
+            TOR_METRIC_PORT:
               value: "127.0.0.1:9035"
-            - name: TOR_METRIC_PORT_POLICY
+            TOR_METRIC_PORT_POLICY:
               value: "accept 127.0.0.1"
+          resources:
+            requests:
+              cpu: 100m
+          volumeMounts:
+            tmp-shared:
+              mountPath: /tmp/shared
         ubuntu:
           args:
             - -c
@@ -47,9 +60,9 @@ spec:
           image: ubuntu:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: HOST
+            HOST:
               value: "127.0.0.1"
-            - name: PORT
+            PORT:
               value: "9050"
           livenessProbe:
             exec:
@@ -72,6 +85,13 @@ spec:
                 - /bin/bash
                 - -c
                 - echo > /dev/tcp/$${HOST}/$${PORT}
+          volumeMounts:
+            tmp-shared:
+              mountPath: /tmp/shared
+      volumes:
+        tmp-shared:
+          emptyDir:
+            sizeLimit: 32Mi
     onionKey:
       name: {{ include "tor-operator.fullname" . }}-test-tor-ingress-onion-key
     torrc:
@@ -83,13 +103,16 @@ spec:
       containers:
         tor:
           env:
-            - name: TOR_METRIC_PORT
+            TOR_METRIC_PORT:
               value: "127.0.0.1:9035"
-            - name: TOR_METRIC_PORT_POLICY
+            TOR_METRIC_PORT_POLICY:
               value: "accept 127.0.0.1"
           resources:
             requests:
               cpu: 100m
+          volumeMounts:
+            tmp-shared:
+              mountPath: /tmp/shared
         ubuntu:
           args:
             - -c
@@ -99,9 +122,9 @@ spec:
           image: ubuntu:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: HOST
+            HOST:
               value: "127.0.0.1"
-            - name: PORT
+            PORT:
               value: "9050"
           livenessProbe:
             exec:
@@ -124,6 +147,13 @@ spec:
                 - /bin/bash
                 - -c
                 - echo > /dev/tcp/$${HOST}/$${PORT}
+          volumeMounts:
+            tmp-shared:
+              mountPath: /tmp/shared
+      volumes:
+        tmp-shared:
+          emptyDir:
+            sizeLimit: 32Mi
     ports:
       - target: "{{ include "tor-operator.fullname" . }}:{{ .Values.service.port }}"
         virtport: 80
@@ -148,13 +178,16 @@ spec:
     containers:
       tor:
         env:
-          - name: TOR_METRIC_PORT
+          TOR_METRIC_PORT:
             value: "127.0.0.1:9035"
-          - name: TOR_METRIC_PORT_POLICY
+          TOR_METRIC_PORT_POLICY:
             value: "accept 127.0.0.1"
         resources:
           requests:
             cpu: 100m
+        volumeMounts:
+          tmp-shared:
+            mountPath: /tmp/shared
       ubuntu:
         args:
           - -c
@@ -164,9 +197,9 @@ spec:
         image: ubuntu:latest
         imagePullPolicy: IfNotPresent
         env:
-          - name: HOST
+          HOST:
             value: "127.0.0.1"
-          - name: PORT
+          PORT:
             value: "9050"
         livenessProbe:
           exec:
@@ -189,6 +222,13 @@ spec:
               - /bin/bash
               - -c
               - echo > /dev/tcp/$${HOST}/$${PORT}
+        volumeMounts:
+          tmp-shared:
+            mountPath: /tmp/shared
+    volumes:
+      tmp-shared:
+        emptyDir:
+          sizeLimit: 32Mi
   horizontalPodAutoscaler:
     maxReplicas: 4
     minReplicas: 2
@@ -204,6 +244,7 @@ spec:
     template: |
       MetricsPort ${TOR_METRIC_PORT}
       MetricsPortPolicy ${TOR_METRIC_PORT_POLICY}
+
 ---
 apiVersion: v1
 kind: Pod
@@ -214,6 +255,7 @@ metadata:
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "0"
 spec:
   containers:
     - name: curl
@@ -253,6 +295,7 @@ metadata:
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "0"
 spec:
   containers:
     - name: curl
