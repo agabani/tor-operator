@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Exposed partial volume configuration.
+
 ### Changed
 
 -  `*.spec.**.deployment.containers.*.env` configuration from array to map.

@@ -32,7 +32,7 @@ use crate::{
     kubernetes::{
         self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
         Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
-        ResourceName, Torrc as KubernetesTorrc,
+        ResourceName, Torrc as KubernetesTorrc, Volume as KubernetesVolume,
     },
     metrics::Metrics,
     onion_balance::{
@@ -196,6 +196,9 @@ pub struct TorIngressSpecOnionBalanceDeployment {
 
     /// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
     pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
+
+    /// List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes
+    pub volumes: Option<BTreeMap<String, KubernetesVolume>>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -329,6 +332,9 @@ pub struct TorIngressSpecOnionServiceDeployment {
 
     /// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
     pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
+
+    /// List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes
+    pub volumes: Option<BTreeMap<String, KubernetesVolume>>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -608,6 +614,16 @@ impl TorIngress {
     }
 
     #[must_use]
+    pub fn onion_balance_deployment_volumes(&self) -> Option<BTreeMap<String, KubernetesVolume>> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.volumes.as_ref())
+            .cloned()
+    }
+
+    #[must_use]
     pub fn onion_balance_labels(&self) -> Option<Labels> {
         self.spec.onion_balance.labels.clone().map(Into::into)
     }
@@ -784,6 +800,16 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.topology_spread_constraints.as_ref())
+            .cloned()
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_volumes(&self) -> Option<BTreeMap<String, KubernetesVolume>> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.volumes.as_ref())
             .cloned()
     }
 
@@ -1355,6 +1381,7 @@ fn generate_onion_balance(
                 tolerations: object.onion_balance_deployment_tolerations(),
                 topology_spread_constraints: object
                     .onion_balance_deployment_topology_spread_constraints(),
+                volumes: object.onion_balance_deployment_volumes(),
             }),
             onion_key: OnionBalanceSpecOnionKey {
                 name: object.onion_balance_onion_key_name().into(),
@@ -1485,6 +1512,7 @@ fn generate_onion_service(
                 tolerations: object.onion_service_deployment_tolerations(),
                 topology_spread_constraints: object
                     .onion_service_deployment_topology_spread_constraints(),
+                volumes: object.onion_service_deployment_volumes(),
             }),
             onion_balance: Some(OnionServiceSpecOnionBalance {
                 onion_key: OnionServiceSpecOnionBalanceOnionKey {

@@ -45,13 +45,13 @@ pub struct Container {
 }
 
 impl Container {
-    pub fn to_container(self, name: String) -> k8s_openapi::api::core::v1::Container {
+    pub fn into_container(self, name: String) -> k8s_openapi::api::core::v1::Container {
         k8s_openapi::api::core::v1::Container {
             args: self.args,
             command: self.command,
             env: self.env.map(|f| {
                 f.into_iter()
-                    .map(|(name, value)| value.to_env_var(name))
+                    .map(|(name, value)| value.into_env_var(name))
                     .collect()
             }),
             image: self.image,
@@ -60,7 +60,7 @@ impl Container {
             name,
             ports: self.ports.map(|f| {
                 f.into_iter()
-                    .map(|(name, value)| value.to_container_port(name))
+                    .map(|(name, value)| value.into_container_port(name))
                     .collect()
             }),
             readiness_probe: self.readiness_probe,
@@ -68,7 +68,7 @@ impl Container {
             startup_probe: self.startup_probe,
             volume_mounts: self.volume_mounts.map(|f| {
                 f.into_iter()
-                    .map(|(name, value)| value.to_volume_mount(name))
+                    .map(|(name, value)| value.into_volume_mount(name))
                     .collect()
             }),
             ..Default::default()

@@ -15,6 +15,9 @@ spec:
           requests:
             cpu: 100m
             memory: 128Mi
+        volumeMounts:
+          tmp-shared:
+            mountPath: /tmp/shared
       ubuntu:
         args:
           - -c
@@ -56,6 +59,13 @@ spec:
               - /bin/bash
               - -c
               - echo > /dev/tcp/$${HOST}/$${PORT}
+        volumeMounts:
+          tmp-shared:
+            mountPath: /tmp/shared
+    volumes:
+      tmp-shared:
+        emptyDir:
+          sizeLimit: 32Mi
   service:
     ports:
       - name: http-tunnel

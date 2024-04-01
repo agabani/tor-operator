@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// VolumeMount describes a mounting of a Volume within a container.
+#[allow(clippy::doc_markdown)]
 #[derive(JsonSchema, Deserialize, Serialize, Clone, Debug, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct VolumeMount {
@@ -22,7 +23,7 @@ pub struct VolumeMount {
 }
 
 impl VolumeMount {
-    pub fn to_volume_mount(self, name: String) -> k8s_openapi::api::core::v1::VolumeMount {
+    pub fn into_volume_mount(self, name: String) -> k8s_openapi::api::core::v1::VolumeMount {
         k8s_openapi::api::core::v1::VolumeMount {
             mount_path: self.mount_path,
             mount_propagation: self.mount_propagation,

@@ -18,6 +18,7 @@ mod resource_uid;
 mod selector_labels;
 mod subset;
 mod tor;
+mod volume;
 mod volume_mount;
 
 pub use annotation::Annotation;
@@ -39,4 +40,5 @@ pub use resource_uid::ResourceUid;
 pub use selector_labels::SelectorLabels;
 pub use subset::Subset;
 pub use tor::Torrc;
+pub use volume::Volume;
 pub use volume_mount::VolumeMount;

@@ -3,6 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// EnvVar represents an environment variable present in a Container.
+#[allow(clippy::doc_markdown)]
 #[derive(JsonSchema, Deserialize, Serialize, Clone, Debug, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvVar {
@@ -14,7 +15,7 @@ pub struct EnvVar {
 }
 
 impl EnvVar {
-    pub fn to_env_var(self, name: String) -> k8s_openapi::api::core::v1::EnvVar {
+    pub fn into_env_var(self, name: String) -> k8s_openapi::api::core::v1::EnvVar {
         k8s_openapi::api::core::v1::EnvVar {
             name,
             value: self.value,

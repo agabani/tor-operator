@@ -2,10 +2,12 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// ContainerPort represents a network port in a single container.
+#[allow(clippy::doc_markdown)]
 #[derive(JsonSchema, Deserialize, Serialize, Clone, Debug, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ContainerPort {
     /// Number of port to expose on the pod's IP address. This must be a valid port number, 0 \< x \< 65536.
+    #[allow(clippy::struct_field_names)]
     pub container_port: i32,
 
     /// What host IP to bind the external port to.
@@ -19,7 +21,7 @@ pub struct ContainerPort {
 }
 
 impl ContainerPort {
-    pub fn to_container_port(self, name: String) -> k8s_openapi::api::core::v1::ContainerPort {
+    pub fn into_container_port(self, name: String) -> k8s_openapi::api::core::v1::ContainerPort {
         k8s_openapi::api::core::v1::ContainerPort {
             container_port: self.container_port,
             host_ip: self.host_ip,
