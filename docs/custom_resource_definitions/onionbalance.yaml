@@ -592,18 +592,16 @@ spec:
                           nullable: true
                           type: array
                         env:
-                          description: List of environment variables to set in the container. Cannot be updated.
-                          items:
+                          additionalProperties:
                             description: EnvVar represents an environment variable present in a Container.
                             properties:
-                              name:
-                                description: Name of the environment variable. Must be a C_IDENTIFIER.
-                                type: string
                               value:
                                 description: 'Variable references $(VAR_NAME) are expanded using the previously defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".'
+                                nullable: true
                                 type: string
                               valueFrom:
                                 description: Source for the environment variable's value. Cannot be used if value is not empty.
+                                nullable: true
                                 properties:
                                   configMapKeyRef:
                                     description: Selects a key of a ConfigMap.
@@ -663,42 +661,10 @@ spec:
                                     - key
                                     type: object
                                 type: object
-                            required:
-                            - name
                             type: object
+                          description: List of environment variables to set in the container. Cannot be updated.
                           nullable: true
-                          type: array
-                        envFrom:
-                          description: List of sources to populate environment variables in the container. The keys defined within a source must be a C_IDENTIFIER. All invalid keys will be reported as an event when the container is starting. When a key exists in multiple sources, the value associated with the last source will take precedence. Values defined by an Env with a duplicate key will take precedence. Cannot be updated.
-                          items:
-                            description: EnvFromSource represents the source of a set of ConfigMaps
-                            properties:
-                              configMapRef:
-                                description: The ConfigMap to select from
-                                properties:
-                                  name:
-                                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                                    type: string
-                                  optional:
-                                    description: Specify whether the ConfigMap must be defined
-                                    type: boolean
-                                type: object
-                              prefix:
-                                description: An optional identifier to prepend to each key in the ConfigMap. Must be a C_IDENTIFIER.
-                                type: string
-                              secretRef:
-                                description: The Secret to select from
-                                properties:
-                                  name:
-                                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                                    type: string
-                                  optional:
-                                    description: Specify whether the Secret must be defined
-                                    type: boolean
-                                type: object
-                            type: object
-                          nullable: true
-                          type: array
+                          type: object
                         image:
                           description: 'Container image name. More info: https://kubernetes.io/docs/concepts/containers/images This field is optional to allow higher level config management to default or override container images in workload controllers like Deployments and StatefulSets.'
                           nullable: true
@@ -808,32 +774,32 @@ spec:
                               type: integer
                           type: object
                         ports:
-                          description: List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
-                          items:
+                          additionalProperties:
                             description: ContainerPort represents a network port in a single container.
                             properties:
                               containerPort:
-                                description: Number of port to expose on the pod's IP address. This must be a valid port number, 0 < x < 65536.
+                                description: Number of port to expose on the pod's IP address. This must be a valid port number, 0 \< x \< 65536.
                                 format: int32
                                 type: integer
-                              hostIP:
+                              hostIp:
                                 description: What host IP to bind the external port to.
+                                nullable: true
                                 type: string
                               hostPort:
-                                description: Number of port to expose on the host. If specified, this must be a valid port number, 0 < x < 65536. If HostNetwork is specified, this must match ContainerPort. Most containers do not need this.
+                                description: Number of port to expose on the host. If specified, this must be a valid port number, 0 \< x \< 65536. If HostNetwork is specified, this must match ContainerPort. Most containers do not need this.
                                 format: int32
+                                nullable: true
                                 type: integer
-                              name:
-                                description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
-                                type: string
                               protocol:
                                 description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
+                                nullable: true
                                 type: string
                             required:
                             - containerPort
                             type: object
+                          description: List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
                           nullable: true
-                          type: array
+                          type: object
                         readinessProbe:
                           description: 'Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                           nullable: true
@@ -1069,8 +1035,7 @@ spec:
                               type: integer
                           type: object
                         volumeMounts:
-                          description: Pod volumes to mount into the container's filesystem. Cannot be updated.
-                          items:
+                          additionalProperties:
                             description: VolumeMount describes a mounting of a Volume within a container.
                             properties:
                               mountPath:
@@ -1078,25 +1043,26 @@ spec:
                                 type: string
                               mountPropagation:
                                 description: mountPropagation determines how mounts are propagated from the host to container and the other way around. When not set, MountPropagationNone is used. This field is beta in 1.10.
-                                type: string
-                              name:
-                                description: This must match the Name of a Volume.
+                                nullable: true
                                 type: string
                               readOnly:
                                 description: Mounted read-only if true, read-write otherwise (false or unspecified). Defaults to false.
+                                nullable: true
                                 type: boolean
                               subPath:
                                 description: Path within the volume from which the container's volume should be mounted. Defaults to "" (volume's root).
+                                nullable: true
                                 type: string
                               subPathExpr:
                                 description: Expanded path within the volume from which the container's volume should be mounted. Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment. Defaults to "" (volume's root). SubPathExpr and SubPath are mutually exclusive.
+                                nullable: true
                                 type: string
                             required:
                             - mountPath
-                            - name
                             type: object
+                          description: Pod volumes to mount into the container's filesystem. Cannot be updated.
                           nullable: true
-                          type: array
+                          type: object
                       type: object
                     description: Containers of the Deployment.
                     nullable: true

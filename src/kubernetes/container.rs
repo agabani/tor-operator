@@ -1,8 +1,10 @@
-use k8s_openapi::api::core::v1::{
-    ContainerPort, EnvFromSource, EnvVar, Probe, ResourceRequirements, VolumeMount,
-};
+use std::collections::BTreeMap;
+
+use k8s_openapi::api::core::v1::{Probe, ResourceRequirements};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use super::{ContainerPort, EnvVar, VolumeMount};
 
 /// A single application container that you want to run within a pod.
 #[derive(JsonSchema, Deserialize, Serialize, Clone, Debug, Default, PartialEq)]
@@ -15,10 +17,7 @@ pub struct Container {
     pub command: Option<Vec<String>>,
 
     /// List of environment variables to set in the container. Cannot be updated.
-    pub env: Option<Vec<EnvVar>>,
-
-    /// List of sources to populate environment variables in the container. The keys defined within a source must be a C_IDENTIFIER. All invalid keys will be reported as an event when the container is starting. When a key exists in multiple sources, the value associated with the last source will take precedence. Values defined by an Env with a duplicate key will take precedence. Cannot be updated.
-    pub env_from: Option<Vec<EnvFromSource>>,
+    pub env: Option<BTreeMap<String, EnvVar>>,
 
     /// Container image name. More info: https://kubernetes.io/docs/concepts/containers/images This field is optional to allow higher level config management to default or override container images in workload controllers like Deployments and StatefulSets.
     pub image: Option<String>,
@@ -30,7 +29,7 @@ pub struct Container {
     pub liveness_probe: Option<Probe>,
 
     /// List of ports to expose from the container. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Modifying this array with strategic merge patch may corrupt the data. For more information See https://github.com/kubernetes/kubernetes/issues/108255. Cannot be updated.
-    pub ports: Option<Vec<ContainerPort>>,
+    pub ports: Option<BTreeMap<String, ContainerPort>>,
 
     /// Periodic probe of container service readiness. Container will be removed from service endpoints if the probe fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
     pub readiness_probe: Option<Probe>,
@@ -42,25 +41,36 @@ pub struct Container {
     pub startup_probe: Option<Probe>,
 
     /// Pod volumes to mount into the container's filesystem. Cannot be updated.
-    pub volume_mounts: Option<Vec<VolumeMount>>,
+    pub volume_mounts: Option<BTreeMap<String, VolumeMount>>,
 }
 
 impl Container {
-    pub fn to_container(self: Container, name: String) -> k8s_openapi::api::core::v1::Container {
+    pub fn to_container(self, name: String) -> k8s_openapi::api::core::v1::Container {
         k8s_openapi::api::core::v1::Container {
             args: self.args,
             command: self.command,
-            env: self.env,
-            env_from: self.env_from,
+            env: self.env.map(|f| {
+                f.into_iter()
+                    .map(|(name, value)| value.to_env_var(name))
+                    .collect()
+            }),
             image: self.image,
             image_pull_policy: self.image_pull_policy,
             liveness_probe: self.liveness_probe,
             name,
-            ports: self.ports,
+            ports: self.ports.map(|f| {
+                f.into_iter()
+                    .map(|(name, value)| value.to_container_port(name))
+                    .collect()
+            }),
             readiness_probe: self.readiness_probe,
             resources: self.resources,
             startup_probe: self.startup_probe,
-            volume_mounts: self.volume_mounts,
+            volume_mounts: self.volume_mounts.map(|f| {
+                f.into_iter()
+                    .map(|(name, value)| value.to_volume_mount(name))
+                    .collect()
+            }),
             ..Default::default()
         }
     }

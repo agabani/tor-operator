@@ -32,9 +32,9 @@ spec:
         image: ubuntu:latest
         imagePullPolicy: IfNotPresent
         env:
-          - name: HOST
+          HOST:
             value: "127.0.0.1"
-          - name: PORT
+          PORT:
             valueFrom:
               configMapKeyRef:
                 name: onion-balance-{{ include "example.fullname" . }}-containers-env

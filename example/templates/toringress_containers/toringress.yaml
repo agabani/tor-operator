@@ -33,9 +33,9 @@ spec:
           image: ubuntu:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: HOST
+            HOST:
               value: "127.0.0.1"
-            - name: PORT
+            PORT:
               valueFrom:
                 configMapKeyRef:
                   name: tor-ingress-{{ include "example.fullname" . }}-containers-env
@@ -87,9 +87,9 @@ spec:
           image: ubuntu:latest
           imagePullPolicy: IfNotPresent
           env:
-            - name: HOST
+            HOST:
               value: "127.0.0.1"
-            - name: PORT
+            PORT:
               valueFrom:
                 configMapKeyRef:
                   name: tor-ingress-{{ include "example.fullname" . }}-containers-env

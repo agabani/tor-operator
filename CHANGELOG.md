@@ -2,6 +2,16 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+-  `*.spec.**.deployment.containers.*.env` configuration from array to map.
+-  `*.spec.**.deployment.containers.*.ports` configuration from array to map.
+-  `*.spec.**.deployment.containers.*.volumeMounts` configuration from array to map.
+
+### Removed
+
+- `*.spec.**.deployment.containers.*.envFrom`.
+
 ## [0.0.26] - 2024-03-29
 
 ### Added

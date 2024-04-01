@@ -9,9 +9,9 @@ spec:
     containers:
       tor:
         env:
-          - name: TOR_METRIC_PORT
+          TOR_METRIC_PORT:
             value: "127.0.0.1:9035"
-          - name: TOR_METRIC_PORT_POLICY
+          TOR_METRIC_PORT_POLICY:
             valueFrom:
               configMapKeyRef:
                 name: tor-proxy-{{ include "example.fullname" . }}-torrc-env
