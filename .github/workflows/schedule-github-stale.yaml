@@ -1,11 +1,11 @@
-name: "GitHub: Stale"
+name: "Schedule: GitHub Stale"
 on:
   schedule:
     - cron: "30 1 * * *"
 
 jobs:
-  close-stale:
-    name: "Close Stale"
+  github-stale:
+    name: "GitHub: Stale"
     runs-on: ubuntu-latest
     permissions:
       issues: write
