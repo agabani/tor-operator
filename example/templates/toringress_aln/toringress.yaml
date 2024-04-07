@@ -58,7 +58,7 @@ spec:
         key-a-13: value-a-13
         key-a-14: value-a-14
       containers:
-        tor:
+        - name: tor
           resources:
             requests:
               cpu: 100m

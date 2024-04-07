@@ -12,8 +12,8 @@ use k8s_openapi::{
             HorizontalPodAutoscalerSpec, MetricSpec,
         },
         core::v1::{
-            Affinity, LocalObjectReference, PodSecurityContext, ResourceRequirements, Toleration,
-            TopologySpreadConstraint,
+            Affinity, Container, LocalObjectReference, PodSecurityContext, ResourceRequirements,
+            Toleration, TopologySpreadConstraint, Volume,
         },
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
@@ -30,9 +30,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     kubernetes::{
-        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
-        Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
-        ResourceName, Torrc as KubernetesTorrc, Volume as KubernetesVolume,
+        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
+        Resource as KubernetesResource, ResourceName, Torrc as KubernetesTorrc,
     },
     metrics::Metrics,
     onion_balance::{
@@ -172,10 +171,13 @@ pub struct TorIngressSpecOnionBalanceDeployment {
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
-    pub containers: Option<BTreeMap<String, KubernetesContainer>>,
+    pub containers: Option<Vec<Container>>,
 
     /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
     pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
+
+    /// List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    pub init_containers: Option<Vec<Container>>,
 
     /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
     pub labels: Option<BTreeMap<String, String>>,
@@ -198,7 +200,7 @@ pub struct TorIngressSpecOnionBalanceDeployment {
     pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
 
     /// List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes
-    pub volumes: Option<BTreeMap<String, KubernetesVolume>>,
+    pub volumes: Option<Vec<Volume>>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -308,10 +310,13 @@ pub struct TorIngressSpecOnionServiceDeployment {
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
-    pub containers: Option<BTreeMap<String, KubernetesContainer>>,
+    pub containers: Option<Vec<Container>>,
 
     /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
     pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
+
+    /// List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    pub init_containers: Option<Vec<Container>>,
 
     /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
     pub labels: Option<BTreeMap<String, String>>,
@@ -334,7 +339,7 @@ pub struct TorIngressSpecOnionServiceDeployment {
     pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
 
     /// List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes
-    pub volumes: Option<BTreeMap<String, KubernetesVolume>>,
+    pub volumes: Option<Vec<Volume>>,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -526,9 +531,7 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_balance_deployment_containers(
-        &self,
-    ) -> Option<BTreeMap<String, KubernetesContainer>> {
+    pub fn onion_balance_deployment_containers(&self) -> Option<Vec<Container>> {
         self.spec
             .onion_balance
             .deployment
@@ -544,6 +547,16 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.image_pull_secrets.as_ref())
+            .cloned()
+    }
+
+    #[must_use]
+    pub fn onion_balance_deployment_init_containers(&self) -> Option<Vec<Container>> {
+        self.spec
+            .onion_balance
+            .deployment
+            .as_ref()
+            .and_then(|f| f.init_containers.as_ref())
             .cloned()
     }
 
@@ -614,7 +627,7 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_balance_deployment_volumes(&self) -> Option<BTreeMap<String, KubernetesVolume>> {
+    pub fn onion_balance_deployment_volumes(&self) -> Option<Vec<Volume>> {
         self.spec
             .onion_balance
             .deployment
@@ -711,9 +724,7 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_deployment_containers(
-        &self,
-    ) -> Option<BTreeMap<String, KubernetesContainer>> {
+    pub fn onion_service_deployment_containers(&self) -> Option<Vec<Container>> {
         self.spec
             .onion_service
             .deployment
@@ -729,6 +740,16 @@ impl TorIngress {
             .deployment
             .as_ref()
             .and_then(|f| f.image_pull_secrets.as_ref())
+            .cloned()
+    }
+
+    #[must_use]
+    pub fn onion_service_deployment_init_containers(&self) -> Option<Vec<Container>> {
+        self.spec
+            .onion_service
+            .deployment
+            .as_ref()
+            .and_then(|f| f.init_containers.as_ref())
             .cloned()
     }
 
@@ -804,7 +825,7 @@ impl TorIngress {
     }
 
     #[must_use]
-    pub fn onion_service_deployment_volumes(&self) -> Option<BTreeMap<String, KubernetesVolume>> {
+    pub fn onion_service_deployment_volumes(&self) -> Option<Vec<Volume>> {
         self.spec
             .onion_service
             .deployment
@@ -1369,6 +1390,7 @@ fn generate_onion_balance(
                 ),
                 containers: object.onion_balance_deployment_containers(),
                 image_pull_secrets: object.onion_balance_deployment_image_pull_secrets(),
+                init_containers: object.onion_balance_deployment_init_containers(),
                 labels: Some(
                     labels
                         .clone()
@@ -1500,6 +1522,7 @@ fn generate_onion_service(
                 ),
                 containers: object.onion_service_deployment_containers(),
                 image_pull_secrets: object.onion_service_deployment_image_pull_secrets(),
+                init_containers: object.onion_service_deployment_init_containers(),
                 labels: Some(
                     labels
                         .clone()

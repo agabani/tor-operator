@@ -7,11 +7,11 @@ metadata:
 spec:
   deployment:
     containers:
-      tor:
+      - name: tor
         env:
-          TOR_METRIC_PORT:
+          - name: TOR_METRIC_PORT
             value: "127.0.0.1:9035"
-          TOR_METRIC_PORT_POLICY:
+          - name: TOR_METRIC_PORT_POLICY
             valueFrom:
               configMapKeyRef:
                 name: tor-proxy-{{ include "example.fullname" . }}-torrc-env
