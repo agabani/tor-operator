@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.29] - 2024-04-08
+
 ### Added
 
 - Exposed partial init container configuration.
@@ -232,7 +234,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.28...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.29...HEAD
+
+[0.0.29]: https://github.com/agabani/tor-operator/compare/v0.0.28...v0.0.29
 
 [0.0.28]: https://github.com/agabani/tor-operator/compare/v0.0.27...v0.0.28
 
