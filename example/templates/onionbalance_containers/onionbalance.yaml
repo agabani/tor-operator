@@ -7,7 +7,7 @@ metadata:
 spec:
   deployment:
     containers:
-      onionbalance:
+      - name: onionbalance
         resources:
           limits:
             cpu: 200m
@@ -16,9 +16,9 @@ spec:
             cpu: 100m
             memory: 128Mi
         volumeMounts:
-          tmp-shared:
+          - name: tmp-shared
             mountPath: /tmp/shared
-      tor:
+      - name: tor
         resources:
           limits:
             cpu: 200m
@@ -27,9 +27,9 @@ spec:
             cpu: 100m
             memory: 128Mi
         volumeMounts:
-          tmp-shared:
+          - name: tmp-shared
             mountPath: /tmp/shared
-      ubuntu:
+      - name: ubuntu
         args:
           - -c
           - sleep infinity
@@ -38,9 +38,9 @@ spec:
         image: ubuntu:latest
         imagePullPolicy: IfNotPresent
         env:
-          HOST:
+          - name: HOST
             value: "127.0.0.1"
-          PORT:
+          - name: PORT
             valueFrom:
               configMapKeyRef:
                 name: onion-balance-{{ include "example.fullname" . }}-containers-env
@@ -71,10 +71,21 @@ spec:
               - -c
               - echo > /dev/tcp/$${HOST}/$${PORT}
         volumeMounts:
-          tmp-shared:
+          - name: tmp-shared
+            mountPath: /tmp/shared
+    initContainers:
+      - name: ubuntu-file
+        args:
+          - -c
+          - echo "content" > /tmp/shared/file
+        command:
+          - /bin/bash
+        image: ubuntu:latest
+        volumeMounts:
+          - name: tmp-shared
             mountPath: /tmp/shared
     volumes:
-      tmp-shared:
+      - name: tmp-shared
         emptyDir:
           sizeLimit: 32Mi
   onionKey:

@@ -1,6 +1,7 @@
 #![warn(clippy::pedantic)]
 
 pub mod cli;
+mod collections;
 pub mod http_server;
 mod kubernetes;
 pub mod metrics;

@@ -83,7 +83,7 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
           onionService:
             deployment:
               containers:
-                tor:
+                - name: tor
                   resources:
                     requests:
                       cpu: 100m
@@ -105,7 +105,7 @@ Tor Operator is a Kubernetes Operator that manages [Onion Balances](https://agab
         spec:
           deployment:
             containers:
-              tor:
+              - name: tor
                 resources:
                   requests:
                     cpu: 100m

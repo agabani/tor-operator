@@ -14,7 +14,7 @@ spec:
   onionService:
     deployment:
       containers:
-        tor:
+        - name: tor
           resources:
             requests:
               cpu: 100m

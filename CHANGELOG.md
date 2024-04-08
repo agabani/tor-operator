@@ -2,6 +2,17 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Exposed partial init container configuration.
+
+### Changed
+
+-  `*.spec.**.deployment.containers` configuration from map to array.
+-  `*.spec.**.deployment.containers.*.env` configuration from map to array.
+-  `*.spec.**.deployment.containers.*.ports` configuration from map to array.
+-  `*.spec.**.deployment.containers.*.volumeMounts` configuration from map to array.
+
 ## [0.0.28] - 2024-04-06
 
 ### Changed

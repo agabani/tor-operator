@@ -35,10 +35,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    collections::vec_get_or_insert,
     kubernetes::{
-        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt,
-        Container as KubernetesContainer, Labels, Object, Resource as KubernetesResource,
-        ResourceName, SelectorLabels, Torrc as KubernetesTorrc, Volume as KubernetesVolume,
+        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
+        Resource as KubernetesResource, ResourceName, SelectorLabels, Torrc as KubernetesTorrc,
     },
     metrics::Metrics,
     tor::Torrc,
@@ -114,10 +114,13 @@ pub struct TorProxySpecDeployment {
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
-    pub containers: Option<BTreeMap<String, KubernetesContainer>>,
+    pub containers: Option<Vec<Container>>,
 
     /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
     pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
+
+    /// List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    pub init_containers: Option<Vec<Container>>,
 
     /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
     pub labels: Option<BTreeMap<String, String>>,
@@ -144,7 +147,7 @@ pub struct TorProxySpecDeployment {
     pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
 
     /// List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes
-    pub volumes: Option<BTreeMap<String, KubernetesVolume>>,
+    pub volumes: Option<Vec<Volume>>,
 }
 
 fn default_deployment_replicas() -> i32 {
@@ -297,7 +300,7 @@ impl TorProxy {
     }
 
     #[must_use]
-    pub fn deployment_containers(&self) -> BTreeMap<String, KubernetesContainer> {
+    pub fn deployment_containers(&self) -> Vec<Container> {
         self.spec
             .deployment
             .as_ref()
@@ -313,6 +316,16 @@ impl TorProxy {
             .as_ref()
             .and_then(|f| f.image_pull_secrets.as_ref())
             .cloned()
+    }
+
+    #[must_use]
+    pub fn deployment_init_containers(&self) -> Vec<Container> {
+        self.spec
+            .deployment
+            .as_ref()
+            .and_then(|f| f.init_containers.as_ref())
+            .cloned()
+            .unwrap_or_default()
     }
 
     #[must_use]
@@ -382,7 +395,7 @@ impl TorProxy {
     }
 
     #[must_use]
-    pub fn deployment_volumes(&self) -> BTreeMap<String, KubernetesVolume> {
+    pub fn deployment_volumes(&self) -> Vec<Volume> {
         self.spec
             .deployment
             .as_ref()
@@ -916,6 +929,7 @@ fn generate_deployment(
                     affinity: object.deployment_affinity(),
                     containers: generate_deployment_containers(object, config),
                     image_pull_secrets: object.deployment_image_pull_secrets(),
+                    init_containers: Some(generate_deployment_init_containers(object)),
                     node_selector: object.deployment_node_selector(),
                     security_context: Some(object.deployment_security_context()),
                     tolerations: object.deployment_tolerations(),
@@ -934,7 +948,8 @@ fn generate_deployment_containers(object: &TorProxy, config: &Config) -> Vec<Con
     let mut containers = object.deployment_containers();
 
     {
-        let container = containers.entry("tor".to_string()).or_default();
+        let container = vec_get_or_insert(&mut containers, |f| f.name == "tor");
+        container.name = "tor".to_string();
         container.args = Some(vec![
             "-c".into(),
             [
@@ -971,13 +986,21 @@ fn generate_deployment_containers(object: &TorProxy, config: &Config) -> Vec<Con
         let ports = container.ports.get_or_insert_with(Default::default);
 
         {
-            let port = ports.entry("http-tunnel".to_string()).or_default();
+            let port = vec_get_or_insert(ports, |f| match &f.name {
+                Some(name) => name == "http-tunnel",
+                None => false,
+            });
+            port.name = Some("http-tunnel".to_string());
             port.container_port = 1080;
             port.protocol = Some("TCP".to_string());
         }
 
         {
-            let port = ports.entry("socks".to_string()).or_default();
+            let port = vec_get_or_insert(ports, |f| match &f.name {
+                Some(name) => name == "socks",
+                None => false,
+            });
+            port.name = Some("socks".to_string());
             port.container_port = 9050;
             port.protocol = Some("TCP".to_string());
         }
@@ -1000,27 +1023,39 @@ fn generate_deployment_containers(object: &TorProxy, config: &Config) -> Vec<Con
         let volume_mounts = container.volume_mounts.get_or_insert_with(Default::default);
 
         {
-            let volume_mount = volume_mounts.entry("etc-configs".to_string()).or_default();
+            let volume_mount = vec_get_or_insert(volume_mounts, |f| f.name == "etc-configs");
+            volume_mount.name = "etc-configs".to_string();
             volume_mount.mount_path = "/etc/configs".into();
             volume_mount.read_only = Some(true);
         }
     }
 
-    let mut containers = containers
-        .into_iter()
-        .map(|(name, value)| value.into_container(name))
-        .map(|mut container| {
-            container.security_context = Some(SecurityContext {
-                capabilities: Some(Capabilities {
-                    drop: Some(vec!["ALL".to_string()]),
-                    ..Default::default()
-                }),
+    for container in &mut containers {
+        container.security_context = Some(SecurityContext {
+            capabilities: Some(Capabilities {
+                drop: Some(vec!["ALL".to_string()]),
                 ..Default::default()
-            });
-            container
-        })
-        .collect::<Vec<_>>();
-    containers.sort_by(|a, b| a.name.cmp(&b.name));
+            }),
+            ..Default::default()
+        });
+    }
+
+    containers
+}
+
+fn generate_deployment_init_containers(object: &TorProxy) -> Vec<Container> {
+    let mut containers = object.deployment_init_containers();
+
+    for container in &mut containers {
+        container.security_context = Some(SecurityContext {
+            capabilities: Some(Capabilities {
+                drop: Some(vec!["ALL".to_string()]),
+                ..Default::default()
+            }),
+            ..Default::default()
+        });
+    }
+
     containers
 }
 
@@ -1028,7 +1063,8 @@ fn generate_deployment_volumes(object: &TorProxy) -> Vec<Volume> {
     let mut volumes = object.deployment_volumes();
 
     {
-        let volume = volumes.entry("etc-configs".to_string()).or_default();
+        let volume = vec_get_or_insert(&mut volumes, |f| f.name == "etc-configs");
+        volume.name = "etc-configs".to_string();
         volume.config_map = Some(ConfigMapVolumeSource {
             default_mode: Some(0o400),
             items: Some(vec![KeyToPath {
@@ -1041,11 +1077,6 @@ fn generate_deployment_volumes(object: &TorProxy) -> Vec<Volume> {
         });
     }
 
-    let mut volumes = volumes
-        .into_iter()
-        .map(|(name, value)| value.into_volume(name))
-        .collect::<Vec<_>>();
-    volumes.sort_by(|a, b| a.name.cmp(&b.name));
     volumes
 }
 
