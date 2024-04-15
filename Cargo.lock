@@ -2293,7 +2293,7 @@ dependencies = [
 
 [[package]]
 name = "tor-operator"
-version = "0.0.29"
+version = "0.0.30"
 dependencies = [
  "axum 0.7.5",
  "base32",
