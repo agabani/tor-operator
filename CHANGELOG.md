@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Third party Tor v0.4.8.11 container image with OpenSSL 3.3.0. (linux/amd64, linux/arm64)
+
 ## [0.0.30] - 2024-04-15
 
 ### Changed
