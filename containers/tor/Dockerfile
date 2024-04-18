@@ -3,8 +3,8 @@ FROM ubuntu:22.04 as build
 ARG LIBEVENT_SHA=92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb
 ARG LIBEVENT_VERSION=2.1.12
 
-ARG OPENSSL_SHA=cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8
-ARG OPENSSL_VERSION=1.1.1w
+ARG OPENSSL_SHA=53e66b043322a606abf0087e7699a0e033a37fa13feb9742df35c3a33b18fb02
+ARG OPENSSL_VERSION=3.3.0
 
 ARG TOR_SHA=8f2bdf90e63380781235aa7d604e159570f283ecee674670873d8bb7052c8e07
 ARG TOR_VERSION=0.4.8.11
@@ -49,7 +49,7 @@ RUN cd openssl-${OPENSSL_VERSION} && \
     cd ..
 
 RUN cd libevent-${LIBEVENT_VERSION}-stable && \
-    ./configure CFLAGS="-I/openssl-${OPENSSL_VERSION}/install/include" LDFLAGS="-L/openssl-${OPENSSL_VERSION}/install/lib" --prefix=$PWD/install --disable-shared --enable-static --with-pic && \
+    ./configure CFLAGS="-I/openssl-${OPENSSL_VERSION}/install/include" LDFLAGS="-L/openssl-${OPENSSL_VERSION}/install/lib64" --prefix=$PWD/install --disable-shared --enable-static --with-pic && \
     make -j$(nproc) && \
     make install && \
     cd ..
@@ -61,9 +61,9 @@ RUN cd zlib-${ZLIB_VERSION} && \
     cd ..
 
 RUN cd tor-${TOR_VERSION} && \
-    ./configure --prefix=$PWD/install --enable-static-tor \
+    ./configure CFLAGS="-I/openssl-${OPENSSL_VERSION}/install/include" LDFLAGS="-L/openssl-${OPENSSL_VERSION}/install/lib64" --prefix=$PWD/install --enable-static-tor \
     --with-libevent-dir=/libevent-${LIBEVENT_VERSION}-stable/install \
-    --with-openssl-dir=/openssl-${OPENSSL_VERSION}/install \
+    --with-openssl-dir=/openssl-${OPENSSL_VERSION}/install/lib64 \
     --with-zlib-dir=/zlib-${ZLIB_VERSION}/install &&  \
     make -j$(nproc) && \
     make install && \
