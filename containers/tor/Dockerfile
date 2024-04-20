@@ -43,13 +43,13 @@ RUN curl -fsSLO "https://dist.torproject.org/tor-${TOR_VERSION}.tar.gz" && \
 
 # build dependencies
 RUN cd openssl-${OPENSSL_VERSION} && \
-    ./config --prefix=$PWD/install no-shared no-dso && \
+    ./config --prefix=$PWD/install --libdir=lib no-shared no-dso && \
     make -j$(nproc) && \
     make install && \
     cd ..
 
 RUN cd libevent-${LIBEVENT_VERSION}-stable && \
-    ./configure CFLAGS="-I/openssl-${OPENSSL_VERSION}/install/include" LDFLAGS="-L/openssl-${OPENSSL_VERSION}/install/lib64" --prefix=$PWD/install --disable-shared --enable-static --with-pic && \
+    ./configure CFLAGS="-I/openssl-${OPENSSL_VERSION}/install/include" LDFLAGS="-L/openssl-${OPENSSL_VERSION}/install/lib" --prefix=$PWD/install --disable-shared --enable-static --with-pic && \
     make -j$(nproc) && \
     make install && \
     cd ..
@@ -61,9 +61,9 @@ RUN cd zlib-${ZLIB_VERSION} && \
     cd ..
 
 RUN cd tor-${TOR_VERSION} && \
-    ./configure CFLAGS="-I/openssl-${OPENSSL_VERSION}/install/include" LDFLAGS="-L/openssl-${OPENSSL_VERSION}/install/lib64" --prefix=$PWD/install --enable-static-tor \
+    ./configure --prefix=$PWD/install --enable-static-tor \
     --with-libevent-dir=/libevent-${LIBEVENT_VERSION}-stable/install \
-    --with-openssl-dir=/openssl-${OPENSSL_VERSION}/install/lib64 \
+    --with-openssl-dir=/openssl-${OPENSSL_VERSION}/install \
     --with-zlib-dir=/zlib-${ZLIB_VERSION}/install &&  \
     make -j$(nproc) && \
     make install && \
