@@ -46,20 +46,20 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>'
                     nullable: true
                     type: object
                   labels:
                     additionalProperties:
                       type: string
-                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>'
                     nullable: true
                     type: object
                   name:
                     description: |-
                       Name of the Config Map.
 
-                      Default: name of the OnionService
+                      Default: name of the `OnionService`
                     nullable: true
                     type: string
                 type: object
@@ -572,7 +572,7 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>'
                     nullable: true
                     type: object
                   containers:
@@ -1378,7 +1378,7 @@ spec:
                     nullable: true
                     type: array
                   imagePullSecrets:
-                    description: 'ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod'
+                    description: '`ImagePullSecrets` is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this `PodSpec`. If specified, these secrets will be passed to individual puller implementations for them to use. More info: <https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod>'
                     items:
                       description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
                       properties:
@@ -1389,7 +1389,7 @@ spec:
                     nullable: true
                     type: array
                   initContainers:
-                    description: 'List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/'
+                    description: 'List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: <https://kubernetes.io/docs/concepts/workloads/pods/init-containers/>'
                     items:
                       description: A single application container that you want to run within a pod.
                       properties:
@@ -2193,24 +2193,24 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
-                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>'
                     nullable: true
                     type: object
                   name:
                     description: |-
                       Name of the Deployment.
 
-                      Default: name of the OnionService
+                      Default: name of the `OnionService`
                     nullable: true
                     type: string
                   nodeSelector:
                     additionalProperties:
                       type: string
-                    description: 'NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node''s labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/'
+                    description: '`NodeSelector` is a selector which must be true for the pod to fit on a node. Selector which must match a node''s labels for the pod to be scheduled on that node. More info: <https://kubernetes.io/docs/concepts/configuration/assign-pod-node/>'
                     nullable: true
                     type: object
                   securityContext:
-                    description: 'SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.'
+                    description: '`SecurityContext` holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.'
                     nullable: true
                     properties:
                       fsGroup:
@@ -2331,7 +2331,7 @@ spec:
                     nullable: true
                     type: array
                   topologySpreadConstraints:
-                    description: TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
+                    description: '`TopologySpreadConstraints` describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are `ANDed`.'
                     items:
                       description: TopologySpreadConstraint specifies how to spread matching pods among the given topology.
                       properties:
@@ -2416,7 +2416,7 @@ spec:
                     nullable: true
                     type: array
                   volumes:
-                    description: 'List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes'
+                    description: 'List of volumes that can be mounted by containers belonging to the pod. More info: <https://kubernetes.io/docs/concepts/storage/volumes>'
                     items:
                       description: Volume represents a named volume in a pod that may be accessed by any container in the pod.
                       properties:
@@ -3536,17 +3536,17 @@ spec:
                 type: object
               onionBalance:
                 description: |-
-                  OnionBalance the OnionService belongs to.
+                  `OnionBalance` the `OnionService` belongs to.
 
                   Default: nil / none / null / undefined.
                 nullable: true
                 properties:
                   onionKey:
-                    description: OnionKey reference of the OnionBalance.
+                    description: '`OnionKey` reference of the `OnionBalance`.'
                     properties:
                       hostname:
                         description: |-
-                          Hostname value of the OnionKey.
+                          Hostname value of the `OnionKey`.
 
                           Example: "abcdefg.onion"
                         type: string
@@ -3557,10 +3557,10 @@ spec:
                 - onionKey
                 type: object
               onionKey:
-                description: OnionKey settings.
+                description: '`OnionKey` settings.'
                 properties:
                   name:
-                    description: Name of the OnionKey.
+                    description: Name of the `OnionKey`.
                     type: string
                 required:
                 - name
@@ -3612,7 +3612,7 @@ spec:
 
                   `Initialized`
 
-                  ### OnionKey
+                  ### `OnionKey`
 
                   `NotFound`, `HostnameNotFound`, `Ready`
                 items:
@@ -3648,7 +3648,7 @@ spec:
                 type: array
               hostname:
                 description: |-
-                  OnionKey hostname.
+                  `OnionKey` hostname.
 
                   The hostname is only populated once `state` is "running".
                 nullable: true

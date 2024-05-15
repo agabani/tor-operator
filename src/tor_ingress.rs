@@ -78,13 +78,13 @@ use crate::{
 )]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpec {
-    /// HorizontalPodAutoscaler settings.
+    /// `HorizontalPodAutoscaler` settings.
     pub horizontal_pod_autoscaler: Option<TorIngressHorizontalPodAutoscaler>,
 
-    /// OnionBalance settings.
+    /// `OnionBalance` settings.
     pub onion_balance: TorIngressSpecOnionBalance,
 
-    /// OnionService settings.
+    /// `OnionService` settings.
     pub onion_service: TorIngressSpecOnionService,
 }
 
@@ -92,18 +92,18 @@ pub struct TorIngressSpec {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressHorizontalPodAutoscaler {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
-    /// behavior configures the scaling behavior of the target in both Up and Down directions (scaleUp and scaleDown fields respectively). If not set, the default HPAScalingRules for scale up and scale down are used.
+    /// behavior configures the scaling behavior of the target in both Up and Down directions (scaleUp and scaleDown fields respectively). If not set, the default `HPAScalingRules` for scale up and scale down are used.
     pub behavior: Option<HorizontalPodAutoscalerBehavior>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
-    /// Name of the HorizontalPodAutoscaler.
+    /// Name of the `HorizontalPodAutoscaler`.
     ///
-    /// Default: name of the TorIngress
+    /// Default: name of the `TorIngress`
     pub name: Option<String>,
 
     /// maxReplicas is the upper limit for the number of replicas to which the autoscaler can scale up. It cannot be less that minReplicas.
@@ -112,7 +112,7 @@ pub struct TorIngressHorizontalPodAutoscaler {
     /// metrics contains the specifications for which to use to calculate the desired replica count (the maximum replica count across all metrics will be used).  The desired replica count is calculated multiplying the ratio between the target value and the current value by the current number of pods.  Ergo, metrics used must decrease as the pod count is increased, and vice-versa.  See the individual metric source types for more information about how each type of metric must respond. If not set, the default metric will be set to 80% average CPU utilization.
     pub metrics: Option<Vec<MetricSpec>>,
 
-    /// minReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.  It defaults to 1 pod.  minReplicas is allowed to be 0 if the alpha feature gate HPAScaleToZero is enabled and at least one Object or External metric is configured.  Scaling is active as long as at least one metric value is available.
+    /// minReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.  It defaults to 1 pod.  minReplicas is allowed to be 0 if the alpha feature gate `HPAScaleToZero` is enabled and at least one Object or External metric is configured.  Scaling is active as long as at least one metric value is available.
     pub min_replicas: Option<i32>,
 }
 
@@ -120,7 +120,7 @@ pub struct TorIngressHorizontalPodAutoscaler {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalance {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Config Map settings.
@@ -129,15 +129,15 @@ pub struct TorIngressSpecOnionBalance {
     /// Deployment settings.
     pub deployment: Option<TorIngressSpecOnionBalanceDeployment>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
-    /// Name of the OnionBalance.
+    /// Name of the `OnionBalance`.
     ///
-    /// Default: name of the TorIngress
+    /// Default: name of the `TorIngress`
     pub name: Option<String>,
 
-    /// OnionKey settings.
+    /// `OnionKey` settings.
     pub onion_key: TorIngressSpecOnionBalanceOnionKey,
 
     /// Tor torrc settings.
@@ -148,15 +148,15 @@ pub struct TorIngressSpecOnionBalance {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceConfigMap {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
     /// Name of the Config Map.
     ///
-    /// Default: name of the TorIngress
+    /// Default: name of the `TorIngress`
     pub name: Option<String>,
 }
 
@@ -167,39 +167,39 @@ pub struct TorIngressSpecOnionBalanceDeployment {
     /// If specified, the pod's scheduling constraints
     pub affinity: Option<Affinity>,
 
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
     pub containers: Option<Vec<Container>>,
 
-    /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+    /// `ImagePullSecrets` is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this `PodSpec`. If specified, these secrets will be passed to individual puller implementations for them to use. More info: <https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod>
     pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
 
-    /// List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    /// List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: <https://kubernetes.io/docs/concepts/workloads/pods/init-containers/>
     pub init_containers: Option<Vec<Container>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
     /// Name of the Deployment.
     ///
-    /// Default: name of the TorIngress
+    /// Default: name of the `TorIngress`
     pub name: Option<String>,
 
-    /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+    /// `NodeSelector` is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: <https://kubernetes.io/docs/concepts/configuration/assign-pod-node/>
     pub node_selector: Option<std::collections::BTreeMap<String, String>>,
 
-    /// SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
+    /// `SecurityContext` holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
     pub security_context: Option<PodSecurityContext>,
 
     /// If specified, the pod's tolerations.
     pub tolerations: Option<Vec<Toleration>>,
 
-    /// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
+    /// `TopologySpreadConstraints` describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are `ANDed`.
     pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
 
-    /// List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes
+    /// List of volumes that can be mounted by containers belonging to the pod. More info: <https://kubernetes.io/docs/concepts/storage/volumes>
     pub volumes: Option<Vec<Volume>>,
 }
 
@@ -234,13 +234,13 @@ pub struct TorIngressSpecOnionBalanceDeploymentContainersTor {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionBalanceOnionKey {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
-    /// Name of the OnionKey.
+    /// Name of the `OnionKey`.
     pub name: String,
 }
 
@@ -248,7 +248,7 @@ pub struct TorIngressSpecOnionBalanceOnionKey {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionService {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Config Map settings.
@@ -257,15 +257,15 @@ pub struct TorIngressSpecOnionService {
     /// Deployment settings.
     pub deployment: Option<TorIngressSpecOnionServiceDeployment>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
-    /// Name prefix of the OnionService.
+    /// Name prefix of the `OnionService`.
     ///
-    /// Default: name of the TorIngress
+    /// Default: name of the `TorIngress`
     pub name_prefix: Option<String>,
 
-    /// OnionKey settings.
+    /// `OnionKey` settings.
     pub onion_key: Option<TorIngressSpecOnionServiceOnionKey>,
 
     /// Onion Service Hidden Service ports.
@@ -287,15 +287,15 @@ fn default_onion_service_replicas() -> i32 {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceConfigMap {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
     /// Name prefix of the Config Map.
     ///
-    /// Default: name of the TorIngress
+    /// Default: name of the `TorIngress`
     pub name_prefix: Option<String>,
 }
 
@@ -306,39 +306,39 @@ pub struct TorIngressSpecOnionServiceDeployment {
     /// If specified, the pod's scheduling constraints
     pub affinity: Option<Affinity>,
 
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
     pub containers: Option<Vec<Container>>,
 
-    /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+    /// `ImagePullSecrets` is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this `PodSpec`. If specified, these secrets will be passed to individual puller implementations for them to use. More info: <https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod>
     pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
 
-    /// List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    /// List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: <https://kubernetes.io/docs/concepts/workloads/pods/init-containers/>
     pub init_containers: Option<Vec<Container>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
     /// Name prefix of the Deployment.
     ///
-    /// Default: name of the TorIngress
+    /// Default: name of the `TorIngress`
     pub name_prefix: Option<String>,
 
-    /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+    /// `NodeSelector` is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: <https://kubernetes.io/docs/concepts/configuration/assign-pod-node/>
     pub node_selector: Option<std::collections::BTreeMap<String, String>>,
 
-    /// SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
+    /// `SecurityContext` holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
     pub security_context: Option<PodSecurityContext>,
 
     /// If specified, the pod's tolerations.
     pub tolerations: Option<Vec<Toleration>>,
 
-    /// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
+    /// `TopologySpreadConstraints` describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are `ANDed`.
     pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
 
-    /// List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes
+    /// List of volumes that can be mounted by containers belonging to the pod. More info: <https://kubernetes.io/docs/concepts/storage/volumes>
     pub volumes: Option<Vec<Volume>>,
 }
 
@@ -362,15 +362,15 @@ pub struct TorIngressSpecOnionServiceDeploymentContainersTor {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceOnionKey {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
-    /// Name prefix of the OnionKey.
+    /// Name prefix of the `OnionKey`.
     ///
-    /// Default: name of the TorIngress
+    /// Default: name of the `TorIngress`
     pub name_prefix: Option<String>,
 
     /// Secret settings.
@@ -381,15 +381,15 @@ pub struct TorIngressSpecOnionServiceOnionKey {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TorIngressSpecOnionServiceOnionKeySecret {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
     /// Name prefix of the Secret.
     ///
-    /// Default: name of the TorIngress
+    /// Default: name of the `TorIngress`
     pub name_prefix: Option<String>,
 }
 
@@ -414,13 +414,13 @@ pub struct TorIngressStatus {
     ///
     /// `Initialized`
     ///
-    /// ### OnionKey
+    /// ### `OnionKey`
     ///
     /// `NotFound`, `HostnameNotFound`, `Ready`
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditions: Vec<Condition>,
 
-    /// OnionKey hostname.
+    /// `OnionKey` hostname.
     ///
     /// The hostname is only populated once `state` is "running".
     pub hostname: Option<String>,

@@ -71,10 +71,10 @@ pub struct OnionBalanceSpec {
     /// Deployment settings.
     pub deployment: Option<OnionBalanceSpecDeployment>,
 
-    /// OnionKey settings.
+    /// `OnionKey` settings.
     pub onion_key: OnionBalanceSpecOnionKey,
 
-    /// OnionService part of the OnionBalance load balancing.
+    /// `OnionService` part of the `OnionBalance` load balancing.
     pub onion_services: Vec<OnionBalanceSpecOnionService>,
 
     /// Tor torrc settings.
@@ -85,15 +85,15 @@ pub struct OnionBalanceSpec {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecConfigMap {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
     /// Name of the Config Map.
     ///
-    /// Default: name of the OnionBalance
+    /// Default: name of the `OnionBalance`
     pub name: Option<String>,
 }
 
@@ -104,39 +104,39 @@ pub struct OnionBalanceSpecDeployment {
     /// If specified, the pod's scheduling constraints
     pub affinity: Option<Affinity>,
 
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
     /// Containers of the Deployment.
     pub containers: Option<Vec<Container>>,
 
-    /// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
+    /// `ImagePullSecrets` is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this `PodSpec`. If specified, these secrets will be passed to individual puller implementations for them to use. More info: <https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod>
     pub image_pull_secrets: Option<Vec<LocalObjectReference>>,
 
-    /// List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+    /// List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: <https://kubernetes.io/docs/concepts/workloads/pods/init-containers/>
     pub init_containers: Option<Vec<Container>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
     /// Name of the Deployment.
     ///
-    /// Default: name of the OnionBalance
+    /// Default: name of the `OnionBalance`
     pub name: Option<String>,
 
-    /// NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+    /// `NodeSelector` is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: <https://kubernetes.io/docs/concepts/configuration/assign-pod-node/>
     pub node_selector: Option<std::collections::BTreeMap<String, String>>,
 
-    /// SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
+    /// `SecurityContext` holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.
     pub security_context: Option<PodSecurityContext>,
 
     /// If specified, the pod's tolerations.
     pub tolerations: Option<Vec<Toleration>>,
 
-    /// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
+    /// `TopologySpreadConstraints` describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are `ANDed`.
     pub topology_spread_constraints: Option<Vec<TopologySpreadConstraint>>,
 
-    /// List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes
+    /// List of volumes that can be mounted by containers belonging to the pod. More info: <https://kubernetes.io/docs/concepts/storage/volumes>
     pub volumes: Option<Vec<Volume>>,
 }
 
@@ -144,7 +144,7 @@ pub struct OnionBalanceSpecDeployment {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecOnionKey {
-    /// Name of the OnionKey.
+    /// Name of the `OnionKey`.
     pub name: String,
 }
 
@@ -152,7 +152,7 @@ pub struct OnionBalanceSpecOnionKey {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecOnionService {
-    /// OnionKey reference of the OnionService.
+    /// `OnionKey` reference of the `OnionService`.
     pub onion_key: OnionBalanceSpecOnionServiceOnionKey,
 }
 
@@ -160,7 +160,7 @@ pub struct OnionBalanceSpecOnionService {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionBalanceSpecOnionServiceOnionKey {
-    /// Hostname value of the OnionKey.
+    /// Hostname value of the `OnionKey`.
     ///
     /// Example: "abcdefg.onion"
     pub hostname: String,
@@ -176,18 +176,18 @@ pub struct OnionBalanceStatus {
     ///
     /// `Initialized`
     ///
-    /// ### OnionKey
+    /// ### `OnionKey`
     ///
     /// `NotFound`, `HostnameNotFound`, `Ready`
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditions: Vec<Condition>,
 
-    /// OnionKey hostname.
+    /// `OnionKey` hostname.
     ///
     /// The hostname is only populated once `state` is "running".
     pub hostname: Option<String>,
 
-    /// Number of OnionServices.
+    /// Number of `OnionServices`.
     pub onion_services: i32,
 
     /// Represents the latest available observations of a deployment's current state.

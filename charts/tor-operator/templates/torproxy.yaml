@@ -50,20 +50,20 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>'
                     nullable: true
                     type: object
                   labels:
                     additionalProperties:
                       type: string
-                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>'
                     nullable: true
                     type: object
                   name:
                     description: |-
                       Name of the Config Map.
 
-                      Default: name of the OnionService
+                      Default: name of the `OnionService`
                     nullable: true
                     type: string
                 type: object
@@ -576,7 +576,7 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>'
                     nullable: true
                     type: object
                   containers:
@@ -1382,7 +1382,7 @@ spec:
                     nullable: true
                     type: array
                   imagePullSecrets:
-                    description: 'ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod'
+                    description: '`ImagePullSecrets` is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this `PodSpec`. If specified, these secrets will be passed to individual puller implementations for them to use. More info: <https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod>'
                     items:
                       description: LocalObjectReference contains enough information to let you locate the referenced object inside the same namespace.
                       properties:
@@ -1393,7 +1393,7 @@ spec:
                     nullable: true
                     type: array
                   initContainers:
-                    description: 'List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/'
+                    description: 'List of initialization containers belonging to the pod. Init containers are executed in order prior to containers being started. If any init container fails, the pod is considered to have failed and is handled according to its restartPolicy. The name for an init container or normal container must be unique among all containers. Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes. The resourceRequirements of an init container are taken into account during scheduling by finding the highest request/limit for each resource type, and then using the max of of that value or the sum of the normal containers. Limits are applied to init containers in a similar fashion. Init containers cannot currently be added or removed. Cannot be updated. More info: <https://kubernetes.io/docs/concepts/workloads/pods/init-containers/>'
                     items:
                       description: A single application container that you want to run within a pod.
                       properties:
@@ -2197,20 +2197,20 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
-                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>'
                     nullable: true
                     type: object
                   name:
                     description: |-
                       Name of the Deployment.
 
-                      Default: name of the OnionService
+                      Default: name of the `OnionService`
                     nullable: true
                     type: string
                   nodeSelector:
                     additionalProperties:
                       type: string
-                    description: 'NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node''s labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/'
+                    description: '`NodeSelector` is a selector which must be true for the pod to fit on a node. Selector which must match a node''s labels for the pod to be scheduled on that node. More info: <https://kubernetes.io/docs/concepts/configuration/assign-pod-node/>'
                     nullable: true
                     type: object
                   replicas:
@@ -2219,7 +2219,7 @@ spec:
                     format: int32
                     type: integer
                   securityContext:
-                    description: 'SecurityContext holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.'
+                    description: '`SecurityContext` holds pod-level security attributes and common container settings. Optional: Defaults to empty.  See type description for default values of each field.'
                     nullable: true
                     properties:
                       fsGroup:
@@ -2340,7 +2340,7 @@ spec:
                     nullable: true
                     type: array
                   topologySpreadConstraints:
-                    description: TopologySpreadConstraints describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are ANDed.
+                    description: '`TopologySpreadConstraints` describes how a group of pods ought to spread across topology domains. Scheduler will schedule pods in a way which abides by the constraints. All topologySpreadConstraints are `ANDed`.'
                     items:
                       description: TopologySpreadConstraint specifies how to spread matching pods among the given topology.
                       properties:
@@ -2425,7 +2425,7 @@ spec:
                     nullable: true
                     type: array
                   volumes:
-                    description: 'List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes'
+                    description: 'List of volumes that can be mounted by containers belonging to the pod. More info: <https://kubernetes.io/docs/concepts/storage/volumes>'
                     items:
                       description: Volume represents a named volume in a pod that may be accessed by any container in the pod.
                       properties:
@@ -3544,17 +3544,17 @@ spec:
                     type: array
                 type: object
               horizontalPodAutoscaler:
-                description: HorizontalPodAutoscaler settings.
+                description: '`HorizontalPodAutoscaler` settings.'
                 nullable: true
                 properties:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>'
                     nullable: true
                     type: object
                   behavior:
-                    description: behavior configures the scaling behavior of the target in both Up and Down directions (scaleUp and scaleDown fields respectively). If not set, the default HPAScalingRules for scale up and scale down are used.
+                    description: behavior configures the scaling behavior of the target in both Up and Down directions (scaleUp and scaleDown fields respectively). If not set, the default `HPAScalingRules` for scale up and scale down are used.
                     nullable: true
                     properties:
                       scaleDown:
@@ -3631,7 +3631,7 @@ spec:
                   labels:
                     additionalProperties:
                       type: string
-                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>'
                     nullable: true
                     type: object
                   maxReplicas:
@@ -3926,15 +3926,15 @@ spec:
                     nullable: true
                     type: array
                   minReplicas:
-                    description: minReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.  It defaults to 1 pod.  minReplicas is allowed to be 0 if the alpha feature gate HPAScaleToZero is enabled and at least one Object or External metric is configured.  Scaling is active as long as at least one metric value is available.
+                    description: minReplicas is the lower limit for the number of replicas to which the autoscaler can scale down.  It defaults to 1 pod.  minReplicas is allowed to be 0 if the alpha feature gate `HPAScaleToZero` is enabled and at least one Object or External metric is configured.  Scaling is active as long as at least one metric value is available.
                     format: int32
                     nullable: true
                     type: integer
                   name:
                     description: |-
-                      Name of the HorizontalPodAutoscaler.
+                      Name of the `HorizontalPodAutoscaler`.
 
-                      Default: name of the TorIngress
+                      Default: name of the `TorIngress`
                     nullable: true
                     type: string
                 required:
@@ -3946,13 +3946,13 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>'
                     nullable: true
                     type: object
                   labels:
                     additionalProperties:
                       type: string
-                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>'
                     nullable: true
                     type: object
                   name:
@@ -3963,18 +3963,18 @@ spec:
                     nullable: true
                     type: string
                   ports:
-                    description: 'The list of ports that are exposed by this service. More info: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies'
+                    description: 'The list of ports that are exposed by this service. More info: <https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies>'
                     items:
                       properties:
                         name:
-                          description: The name of this port within the service. This must be a DNS_LABEL. All ports within a ServiceSpec must have unique names. When considering the endpoints for a Service, this must match the 'name' field in the EndpointPort.
+                          description: The name of this port within the service. This must be a `DNS_LABEL`. All ports within a `ServiceSpec` must have unique names. When considering the endpoints for a Service, this must match the 'name' field in the `EndpointPort`.
                           type: string
                         port:
                           description: The port that will be exposed by this service.
                           format: int32
                           type: integer
                         protocol:
-                          description: The IP protocol for this port. Supports "HTTP_TUNNEL", "SOCKS".
+                          description: The IP protocol for this port. Supports "`HTTP_TUNNEL`", "SOCKS".
                           type: string
                       required:
                       - name
