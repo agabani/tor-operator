@@ -86,14 +86,14 @@ pub struct OnionKeySpec {
     /// The Tor Operator will generate a random Onion Key and save it in the
     /// secret specified in `.secret.name`.
     ///
-    /// If the OnionKey's secret key is missing or malformed, the Tor Operator
+    /// If the `OnionKey`'s secret key is missing or malformed, the Tor Operator
     /// will recreate the secret key.
     ///
-    /// If the OnionKey's public key is missing, malformed, or does not match
+    /// If the `OnionKey`'s public key is missing, malformed, or does not match
     /// the secret key, the Tor Operator will deterministically recreate the
     /// public key from the secret key.
     ///
-    /// If the OnionKey's hostname is missing, malformed, or does not match
+    /// If the `OnionKey`'s hostname is missing, malformed, or does not match
     /// the public key, the Tor Operator will deterministically recreate the
     /// hostname from the public key.
     #[serde(default)]
@@ -107,10 +107,10 @@ pub struct OnionKeySpec {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionKeySpecSecret {
-    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
+    /// Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>
     pub annotations: Option<BTreeMap<String, String>>,
 
-    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels
+    /// Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>
     pub labels: Option<BTreeMap<String, String>>,
 
     /// Name of the secret.
@@ -124,7 +124,7 @@ pub struct OnionKeySpecSecret {
 #[derive(JsonSchema, Deserialize, Serialize, Debug, Default, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OnionKeyStatus {
-    /// Auto generated OnionKey.
+    /// Auto generated `OnionKey`.
     pub auto_generated: bool,
 
     /// Represents the latest available observations of a deployment's current state.
@@ -139,7 +139,7 @@ pub struct OnionKeyStatus {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditions: Vec<Condition>,
 
-    /// OnionKey hostname.
+    /// `OnionKey` hostname.
     ///
     /// The hostname is only populated once `state` is ready.
     pub hostname: Option<String>,
