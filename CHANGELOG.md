@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Third party Tor v0.4.8.12 container image with OpenSSL 3.3.1. (linux/amd64, linux/arm64)
+
 ## [0.0.31] - 2024-04-20
 
 ### Changed
@@ -22,10 +26,10 @@
 
 ### Changed
 
--  `*.spec.**.deployment.containers` configuration from map to array.
--  `*.spec.**.deployment.containers.*.env` configuration from map to array.
--  `*.spec.**.deployment.containers.*.ports` configuration from map to array.
--  `*.spec.**.deployment.containers.*.volumeMounts` configuration from map to array.
+- `*.spec.**.deployment.containers` configuration from map to array.
+- `*.spec.**.deployment.containers.*.env` configuration from map to array.
+- `*.spec.**.deployment.containers.*.ports` configuration from map to array.
+- `*.spec.**.deployment.containers.*.volumeMounts` configuration from map to array.
 
 ## [0.0.28] - 2024-04-06
 
@@ -41,9 +45,9 @@
 
 ### Changed
 
--  `*.spec.**.deployment.containers.*.env` configuration from array to map.
--  `*.spec.**.deployment.containers.*.ports` configuration from array to map.
--  `*.spec.**.deployment.containers.*.volumeMounts` configuration from array to map.
+- `*.spec.**.deployment.containers.*.env` configuration from array to map.
+- `*.spec.**.deployment.containers.*.ports` configuration from array to map.
+- `*.spec.**.deployment.containers.*.volumeMounts` configuration from array to map.
 
 ### Removed
 
@@ -247,17 +251,11 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.31...HEAD
-
 [0.0.31]: https://github.com/agabani/tor-operator/compare/v0.0.30...v0.0.31
-
 [0.0.30]: https://github.com/agabani/tor-operator/compare/v0.0.29...v0.0.30
-
 [0.0.29]: https://github.com/agabani/tor-operator/compare/v0.0.28...v0.0.29
-
 [0.0.28]: https://github.com/agabani/tor-operator/compare/v0.0.27...v0.0.28
-
 [0.0.27]: https://github.com/agabani/tor-operator/compare/v0.0.26...v0.0.27
-
 [0.0.26]: https://github.com/agabani/tor-operator/compare/v0.0.25...v0.0.26
 [0.0.25]: https://github.com/agabani/tor-operator/compare/v0.0.24...v0.0.25
 [0.0.24]: https://github.com/agabani/tor-operator/compare/v0.0.23...v0.0.24
