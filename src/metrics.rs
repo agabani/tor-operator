@@ -49,7 +49,7 @@ impl Metrics {
         let tor_operator_reconcile_duration_seconds = meter
             .f64_histogram("tor_operator_reconcile_duration_seconds")
             .with_description("The reconcile duration in seconds.")
-            .with_unit(opentelemetry::metrics::Unit::new("s"))
+            .with_unit("s")
             .init();
 
         opentelemetry::global::set_meter_provider(provider.clone());
