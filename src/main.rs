@@ -1,6 +1,7 @@
 use std::{borrow::Cow, fs::File, io::Write};
 
 use kube::Client;
+use opentelemetry::trace::TracerProvider;
 use opentelemetry_otlp::WithExportConfig;
 use tor_operator::{
     cli::{
@@ -50,7 +51,7 @@ fn init_tracing(cli: &CliArgs) {
             OpenTelemetryLayer::new(
                 opentelemetry_otlp::new_pipeline()
                     .tracing()
-                    .with_trace_config(opentelemetry_sdk::trace::config().with_resource(
+                    .with_trace_config(opentelemetry_sdk::trace::Config::default().with_resource(
                         opentelemetry_sdk::Resource::new([opentelemetry::KeyValue::new(
                             "service.name",
                             "tor-operator",
@@ -62,7 +63,8 @@ fn init_tracing(cli: &CliArgs) {
                             .with_endpoint(otlp_endpoint),
                     )
                     .install_batch(opentelemetry_sdk::runtime::Tokio)
-                    .unwrap(),
+                    .unwrap()
+                    .tracer("tor-operator"),
             )
         }))
         .init();
