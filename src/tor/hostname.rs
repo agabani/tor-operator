@@ -36,7 +36,7 @@ impl From<&PublicKey> for Hostname {
 
         let data = [value.as_ref(), &checksum, &[0x03]].concat();
 
-        let address = base32::encode(base32::Alphabet::RFC4648 { padding: false }, &data)
+        let address = base32::encode(base32::Alphabet::Rfc4648 { padding: false }, &data)
             .to_ascii_lowercase();
 
         Self::new(format!("{address}.onion"))
