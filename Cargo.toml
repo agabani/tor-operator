@@ -35,5 +35,5 @@ sha3 = "0.10.8"
 tokio = { version = "1.40.0", features = ["full"] }
 tower = "0.5.1"
 tracing = "0.1.40"
-tracing-opentelemetry = "0.25.0"
+tracing-opentelemetry = "0.27.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
