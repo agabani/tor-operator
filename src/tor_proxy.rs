@@ -1072,7 +1072,7 @@ fn generate_deployment_volumes(object: &TorProxy) -> Vec<Volume> {
                 mode: Some(0o400),
                 path: "torrc".into(),
             }]),
-            name: Some(object.config_map_name().into()),
+            name: object.config_map_name().into(),
             optional: Some(false),
         });
     }

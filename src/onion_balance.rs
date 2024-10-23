@@ -1005,7 +1005,7 @@ pub fn generate_deployment_volumes(object: &OnionBalance, onion_key: &OnionKey) 
                 mode: Some(0o400),
                 path: "config.yaml".into(),
             }]),
-            name: Some(object.config_map_name().into()),
+            name: object.config_map_name().into(),
             optional: Some(false),
         });
     }
@@ -1020,7 +1020,7 @@ pub fn generate_deployment_volumes(object: &OnionBalance, onion_key: &OnionKey) 
                 mode: Some(0o400),
                 path: "torrc".into(),
             }]),
-            name: Some(object.config_map_name().into()),
+            name: object.config_map_name().into(),
             optional: Some(false),
         });
     }
