@@ -1015,7 +1015,7 @@ fn generate_deployment_volumes(object: &OnionService, onion_key: &OnionKey) -> V
                 }
                 items
             }),
-            name: Some(object.config_map_name().into()),
+            name: object.config_map_name().into(),
             optional: Some(false),
         });
     }
