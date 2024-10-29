@@ -1,18 +1,8 @@
-use std::{net::SocketAddr, pin::pin, sync::Arc, time::Duration};
+use std::{net::SocketAddr, sync::Arc};
 
-use axum::{
-    extract::{Request, State},
-    routing::get,
-    Router,
-};
-use hyper::{body::Incoming, service::service_fn};
-use hyper_util::{
-    rt::{TokioExecutor, TokioIo},
-    server::conn::auto::Builder,
-};
+use axum::{extract::State, routing::get, Router};
 use prometheus::Encoder;
-use tokio::{net::TcpListener, signal, sync::watch, time::sleep};
-use tower::Service;
+use tokio::{net::TcpListener, signal};
 
 use crate::metrics::Metrics;
 
@@ -32,60 +22,10 @@ pub async fn run(addr: SocketAddr, metrics: Metrics) {
 
     tracing::info!(addr =% addr, "server started");
 
-    let (close_tx, close_rx) = watch::channel(());
-
-    loop {
-        let (tcp_stream, remote_addr) = tokio::select! {
-            result = listener.accept() => {
-                result.unwrap()
-            }
-            () = shutdown_signal() => {
-                tracing::info!("shutdown signal received, not accepting new connections");
-                break;
-            }
-        };
-
-        let tower_service = app.clone();
-        let close_rx = close_rx.clone();
-
-        tokio::spawn(async move {
-            let tcp_stream = TokioIo::new(tcp_stream);
-
-            let hyper_service =
-                service_fn(move |request: Request<Incoming>| tower_service.clone().call(request));
-
-            let builder = Builder::new(TokioExecutor::new());
-
-            let mut connection =
-                pin!(builder.serve_connection_with_upgrades(tcp_stream, hyper_service));
-
-            tokio::select! {
-                result = connection.as_mut() => {
-                    if let Err(error) = result {
-                        tracing::warn!(error =% error, "failed to serve connection");
-                    }
-                }
-                () = shutdown_signal() => {
-                    tokio::select! {
-                        result = connection.as_mut() => {
-                            if let Err(error) = result {
-                                tracing::warn!(error =% error, "failed to serve connection");
-                            }
-                        }
-                        () = sleep(Duration::from_secs(30)) => {}
-                    }
-                }
-            }
-
-            tracing::debug!(remote_addr =% remote_addr, "connection closed");
-
-            drop(close_rx);
-        });
-    }
-
-    drop(close_rx);
-    drop(listener);
-    close_tx.closed().await;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
 
     tracing::info!("server stopped");
 }
