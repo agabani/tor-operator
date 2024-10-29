@@ -126,8 +126,6 @@
             <div class="section" itemprop="articleBody">
               
                 <h1 id="getting-started">Getting Started</h1>
-<!-- BEGIN INCLUDE ../README.md '&lt;!--getting-started-installation-start--&gt;' '&lt;!--getting-started-installation-end--&gt;' -->
-
 <h2 id="installation">Installation</h2>
 <ol>
 <li>
@@ -154,10 +152,6 @@
 </code></pre>
 </li>
 </ol>
-<!-- END INCLUDE -->
-
-<!-- BEGIN INCLUDE ../README.md '&lt;!--getting-started-custom-resource-definitions-start--&gt;' '&lt;!--getting-started-custom-resource-definitions-end--&gt;' -->
-
 <h2 id="creating-a-tor-ingress">Creating a Tor Ingress</h2>
 <ol>
 <li>
@@ -168,7 +162,7 @@
 <li><code>hs_ed25519_secret_key</code></li>
 </ul>
 <p>or generate a new Onion Key using:</p>
-<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag v0.0.32
+<pre><code>cargo install --git https://github.com/agabani/tor-operator --tag v0.0.33
 tor-operator onion-key generate
 </code></pre>
 </li>
@@ -252,7 +246,6 @@ spec:
 <p><code>kubectl apply -f torproxy.yaml</code></p>
 </li>
 </ol>
-<!-- END INCLUDE -->
               
             </div>
           </div><footer>
