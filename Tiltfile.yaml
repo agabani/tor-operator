@@ -12,6 +12,11 @@ tor:
     repository: agabani/tor
     tag: dev
 
+env:
+  # Configures logging
+  RUST_LOG:
+    value: "info"
+
 opentelemetry:
   enabled: true
-  endpoint: http://otel-collector-opentelemetry-collector.opentelemetry.svc:4317
+  endpoint: http://hyperdx.hyperdx.svc:4317

@@ -1,15 +1,14 @@
 use opentelemetry::{
-    metrics::{Counter, Histogram, MeterProvider as _},
+    metrics::{Counter, Histogram, Meter, MeterProvider},
     KeyValue,
 };
 use opentelemetry_sdk::metrics::SdkMeterProvider;
-use prometheus::Registry;
 
 use crate::{kubernetes::Resource, Error};
 
 #[derive(Clone)]
 pub struct Metrics {
-    registry: prometheus::Registry,
+    registry: Meter,
     tor_operator_kubernetes_api_usage_total: Counter<u64>,
     tor_operator_reconciliation_errors_total: Counter<u64>,
     tor_operator_reconciliations_total: Counter<u64>,
@@ -19,16 +18,7 @@ pub struct Metrics {
 impl Metrics {
     #[allow(clippy::missing_panics_doc)]
     #[must_use]
-    pub fn new() -> Self {
-        let registry = prometheus::Registry::new();
-
-        let exporter = opentelemetry_prometheus::exporter()
-            .with_registry(registry.clone())
-            .build()
-            .unwrap();
-
-        let provider = SdkMeterProvider::builder().with_reader(exporter).build();
-
+    pub fn new(provider: SdkMeterProvider) -> Self {
         let meter = provider.meter("tor-operator");
 
         let tor_operator_kubernetes_api_usage_total = meter
@@ -52,10 +42,8 @@ impl Metrics {
             .with_unit("s")
             .init();
 
-        opentelemetry::global::set_meter_provider(provider.clone());
-
         Self {
-            registry,
+            registry: meter,
             tor_operator_kubernetes_api_usage_total,
             tor_operator_reconciliation_errors_total,
             tor_operator_reconciliations_total,
@@ -64,7 +52,7 @@ impl Metrics {
     }
 
     #[must_use]
-    pub fn registry(&self) -> &Registry {
+    pub fn registry(&self) -> &Meter {
         &self.registry
     }
 
@@ -106,12 +94,6 @@ impl Metrics {
                 KeyValue::new("version", R::version(&())),
             ],
         );
-    }
-}
-
-impl Default for Metrics {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

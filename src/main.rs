@@ -1,8 +1,9 @@
-use std::{borrow::Cow, fs::File, io::Write};
+use std::{borrow::Cow, fs::File, io::Write, time::Duration};
 
 use kube::Client;
-use opentelemetry::trace::TracerProvider;
+use opentelemetry::{trace::TracerProvider, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::{metrics::reader::DefaultTemporalitySelector, Resource};
 use tor_operator::{
     cli::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
@@ -17,7 +18,8 @@ use tor_operator::{
     tor_ingress, tor_proxy,
 };
 use tracing_opentelemetry::OpenTelemetryLayer;
-use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 #[tokio::main]
 async fn main() {
@@ -43,39 +45,52 @@ async fn main() {
     }
 }
 
+fn init_meter_provider(cli: &CliArgs) -> opentelemetry_sdk::metrics::SdkMeterProvider {
+    opentelemetry_otlp::new_pipeline()
+        .metrics(opentelemetry_sdk::runtime::Tokio)
+        .with_exporter(exporter(cli))
+        .with_resource(Resource::new(vec![KeyValue::new(
+            "service.name",
+            "tor-operator",
+        )]))
+        .with_period(Duration::from_secs(3))
+        .with_timeout(Duration::from_secs(10))
+        .with_temporality_selector(DefaultTemporalitySelector::new())
+        .build()
+        .unwrap()
+}
+
+fn exporter(cli: &CliArgs) -> opentelemetry_otlp::TonicExporterBuilder {
+    let mut otlp_exporter = opentelemetry_otlp::new_exporter().tonic();
+    if let Some(otlp_endpoint) = &cli.opentelemetry_endpoint {
+        otlp_exporter = otlp_exporter.with_endpoint(otlp_endpoint);
+    }
+    otlp_exporter
+}
+
 fn init_tracing(cli: &CliArgs) {
+    let otlp_exporter = exporter(cli);
+    let tracer_provider = opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(otlp_exporter)
+        .install_batch(opentelemetry_sdk::runtime::Tokio)
+        .unwrap()
+        .tracer("tor-operator");
+    let tracing = OpenTelemetryLayer::new(tracer_provider);
+
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
-        .with(cli.opentelemetry_endpoint.as_ref().map(|otlp_endpoint| {
-            OpenTelemetryLayer::new(
-                opentelemetry_otlp::new_pipeline()
-                    .tracing()
-                    .with_trace_config(opentelemetry_sdk::trace::Config::default().with_resource(
-                        opentelemetry_sdk::Resource::new([opentelemetry::KeyValue::new(
-                            "service.name",
-                            "tor-operator",
-                        )]),
-                    ))
-                    .with_exporter(
-                        opentelemetry_otlp::new_exporter()
-                            .tonic()
-                            .with_endpoint(otlp_endpoint),
-                    )
-                    .install_batch(opentelemetry_sdk::runtime::Tokio)
-                    .unwrap()
-                    .tracer("tor-operator"),
-            )
-        }))
+        .with(tracing)
         .init();
 }
 
-async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
+async fn controller_run(cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
     let client = Client::try_default().await.unwrap();
 
-    let metrics = Metrics::new();
+    let metrics = Metrics::new(init_meter_provider(cli));
 
     let onion_balance_config = onion_balance::Config {
         onion_balance_image: onion_balance::ImageConfig {
@@ -107,7 +122,7 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
     };
 
     tokio::select! {
-        _ = http_server::run(addr, metrics.clone()) => {},
+        _ = http_server::run(addr) => {},
         _ = onion_balance::run_controller(client.clone(), onion_balance_config, metrics.clone()) => {},
         _ = onion_key::run_controller(client.clone(), onion_key_config, metrics.clone()) => {},
         _ = onion_service::run_controller(client.clone(),onion_service_config, metrics.clone()) => {},
