@@ -23,7 +23,7 @@ kube = { version = "0.96.0", features = ["client", "derive", "runtime", "rustls-
 opentelemetry = { version = "0.24.0", features = ["metrics"] }
 opentelemetry-otlp = { version = "0.17.0", features = ["metrics", "tls"] }
 opentelemetry-prometheus = "0.17.0"
-opentelemetry_sdk = { version = "0.24.1", features = ["rt-tokio"] }
+opentelemetry_sdk = { version = "0.27.1", features = ["rt-tokio"] }
 prometheus = "0.13.4"
 rand_07 = { package = "rand", version = "0.7.3" }
 schemars = "0.8.21"
