@@ -5,6 +5,8 @@ metadata:
   labels:
     {{- include "example.labels" . | nindent 4 }}
 spec:
+  deployment:
+    replicas: 3
   service:
     name: tor-proxy-{{ include "example.fullname" . }}-replica
     ports:
@@ -14,4 +16,3 @@ spec:
       - name: socks
         port: 9050
         protocol: SOCKS
-  replica: 3
