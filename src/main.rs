@@ -1,8 +1,9 @@
 use std::{borrow::Cow, fs::File, io::Write};
 
 use kube::Client;
-use opentelemetry::trace::TracerProvider;
+use opentelemetry::{trace::TracerProvider, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::trace::SdkTracerProvider;
 use tor_operator::{
     cli::{
         parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
@@ -49,21 +50,21 @@ fn init_tracing(cli: &CliArgs) {
         .with(tracing_subscriber::fmt::layer())
         .with(cli.opentelemetry_endpoint.as_ref().map(|otlp_endpoint| {
             OpenTelemetryLayer::new(
-                opentelemetry_otlp::new_pipeline()
-                    .tracing()
-                    .with_trace_config(opentelemetry_sdk::trace::Config::default().with_resource(
-                        opentelemetry_sdk::Resource::new([opentelemetry::KeyValue::new(
-                            "service.name",
-                            "tor-operator",
-                        )]),
-                    ))
-                    .with_exporter(
-                        opentelemetry_otlp::new_exporter()
-                            .tonic()
-                            .with_endpoint(otlp_endpoint),
+                SdkTracerProvider::builder()
+                    .with_resource(
+                        opentelemetry_sdk::Resource::builder()
+                            .with_attribute(KeyValue::new("service.name", "tor-operator"))
+                            .with_service_name("tor-operator")
+                            .build(),
                     )
-                    .install_batch(opentelemetry_sdk::runtime::Tokio)
-                    .unwrap()
+                    .with_batch_exporter(
+                        opentelemetry_otlp::SpanExporter::builder()
+                            .with_tonic()
+                            .with_endpoint(otlp_endpoint)
+                            .build()
+                            .unwrap(),
+                    )
+                    .build()
                     .tracer("tor-operator"),
             )
         }))

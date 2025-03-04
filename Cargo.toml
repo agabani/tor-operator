@@ -20,10 +20,10 @@ hyper = { version = "1.5.0", features = ["full"] }
 hyper-util = { version = "0.1.10", features = ["tokio"] }
 k8s-openapi = { version = "0.23.0", features = ["latest", "schemars"] }
 kube = { version = "0.96.0", features = ["client", "derive", "runtime", "rustls-tls"], default-features = false }
-opentelemetry = { version = "0.24.0", features = ["metrics"] }
-opentelemetry-otlp = { version = "0.17.0", features = ["metrics", "tls"] }
-opentelemetry-prometheus = "0.17.0"
-opentelemetry_sdk = { version = "0.24.1", features = ["rt-tokio"] }
+opentelemetry = { version = "0.28.0", features = ["metrics"] }
+opentelemetry-otlp = { version = "0.28.0", features = ["grpc-tonic", "metrics", "tls"] }
+opentelemetry-prometheus = "0.28.0"
+opentelemetry_sdk = { version = "0.28.0", features = ["rt-tokio"] }
 prometheus = "0.13.4"
 rand_07 = { package = "rand", version = "0.7.3" }
 schemars = "0.8.21"
@@ -35,5 +35,5 @@ sha3 = "0.10.8"
 tokio = { version = "1.41.1", features = ["full"] }
 tower = "0.5.1"
 tracing = "0.1.40"
-tracing-opentelemetry = "0.25.0"
+tracing-opentelemetry = "0.29.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

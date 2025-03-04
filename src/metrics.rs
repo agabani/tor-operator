@@ -34,23 +34,23 @@ impl Metrics {
         let tor_operator_kubernetes_api_usage_total = meter
             .u64_counter("tor_operator_kubernetes_api_usage_total")
             .with_description("The total number of Kubernetes API requests made.")
-            .init();
+            .build();
 
         let tor_operator_reconciliation_errors_total = meter
             .u64_counter("tor_operator_reconciliation_errors_total")
             .with_description("The total number of reconciliation errors.")
-            .init();
+            .build();
 
         let tor_operator_reconciliations_total = meter
             .u64_counter("tor_operator_reconciliations_total")
             .with_description("The total number of reconciliations.")
-            .init();
+            .build();
 
         let tor_operator_reconcile_duration_seconds = meter
             .f64_histogram("tor_operator_reconcile_duration_seconds")
             .with_description("The reconcile duration in seconds.")
             .with_unit("s")
-            .init();
+            .build();
 
         opentelemetry::global::set_meter_provider(provider.clone());
 
