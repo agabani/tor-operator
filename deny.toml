@@ -76,6 +76,7 @@ ignore = [
     #{ crate = "a-crate-that-is-yanked@0.1.1", reason = "you can specify why you are ignoring the yanked crate" },
     { id = "RUSTSEC-2022-0093", reason = "v2 does not support loading expanded secrets required by tor" },
     { id = "RUSTSEC-2024-0344", reason = "v2 does not support loading expanded secrets required by tor" },
+    { id = "RUSTSEC-2024-0384", reason = "waiting for kube to release version >0.98.0" },
 ]
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
 # If this is false, then it uses a built-in git library.
