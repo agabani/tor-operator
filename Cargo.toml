@@ -1,6 +1,6 @@
 [package]
 name = "tor-operator"
-version = "0.0.33"
+version = "0.0.34"
 edition = "2021"
 description = "Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys and Onion Services to provide a highly available, load balanced and fault tolerate Tor Ingress and Tor Proxy."
 documentation="https://agabani.github.io/tor-operator/docs/"
