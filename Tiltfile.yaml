@@ -14,4 +14,4 @@ tor:
 
 opentelemetry:
   enabled: true
-  endpoint: http://otel-collector-opentelemetry-collector.opentelemetry.svc:4317
+  endpoint: http://hyperdx.hyperdx.svc:4317

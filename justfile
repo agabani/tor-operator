@@ -133,14 +133,6 @@ kube-clean:
 kube-load:
   @kind load docker-image agabani/onion-balance:{{GIT_COMMIT}} agabani/tor:{{GIT_COMMIT}} agabani/tor-operator:{{GIT_COMMIT}}
 
-# kube port-forward dashboard
-kube-port-forward-dashboard:
-  @kubectl -n kubernetes-dashboard port-forward services/kubernetes-dashboard 8443:443
-
-# kube port-forward dashboard token
-kube-port-forward-dashboard-token:
-  @kubectl -n kubernetes-dashboard create token admin-user
-
 # kube port-forward jaeger
 kube-port-forward-jaeger:
   @kubectl -n jaeger port-forward service/jaeger-query 16686:16686
