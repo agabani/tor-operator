@@ -1,0 +1,56 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hyperdx
+  namespace: hyperdx
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hyperdx
+      app.kubernetes.io/instance: hyperdx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hyperdx
+        app.kubernetes.io/instance: hyperdx
+    spec:
+      containers:
+        - name: hyperdx
+          env:
+            - name: HOSTNAME
+              value: 0.0.0.0
+          image: hyperdx/hyperdx-local
+          ports:
+            - containerPort: 4317
+              name: grpc
+            - containerPort: 4318
+              name: http
+            - containerPort: 8000
+              name: api
+            - containerPort: 8002
+              name: log
+            - containerPort: 8080
+              name: ui
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hyperdx
+  namespace: hyperdx
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: hyperdx
+    app.kubernetes.io/instance: hyperdx
+  ports:
+    - port: 4317
+      name: grpc
+    - port: 4318
+      name: http
+    - port: 8000
+      name: api
+    - port: 8002
+      name: log
+    - port: 8080
+      name: ui
