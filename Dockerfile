@@ -1,4 +1,4 @@
-FROM rust:bullseye as build
+FROM rust:bookworm AS build
 
 # 1a: Prepare toolchain
 RUN cargo install cargo-auditable
