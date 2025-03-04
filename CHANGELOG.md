@@ -2,6 +2,12 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Third party Tor v0.4.8.14 container image with OpenSSL 3.4.1. (linux/amd64, linux/arm64)
+- Third party Onion Balance v0.2.3 container image. (linux/amd64, linux/arm64)
+- Upgrade dependencies.
+
 ## [0.0.33] - 2024-10-29
 
 ### Changed
@@ -260,7 +266,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.33...HEAD
-
 [0.0.33]: https://github.com/agabani/tor-operator/compare/v0.0.32...v0.0.33
 [0.0.32]: https://github.com/agabani/tor-operator/compare/v0.0.31...v0.0.32
 [0.0.31]: https://github.com/agabani/tor-operator/compare/v0.0.30...v0.0.31

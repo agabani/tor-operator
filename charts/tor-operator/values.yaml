@@ -14,13 +14,13 @@ onionBalance:
   image:
     repository: ghcr.io/agabani/tor-operator
     pullPolicy: IfNotPresent
-    tag: "onion-balance-0.2.2.1"
+    tag: "onion-balance-0.2.3.0"
 
 tor:
   image:
     repository: ghcr.io/agabani/tor-operator
     pullPolicy: IfNotPresent
-    tag: "tor-0.4.8.13.0"
+    tag: "tor-0.4.8.14.0"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -69,7 +69,7 @@ podSecurityContext:
 securityContext:
   capabilities:
     drop:
-    - ALL
+      - ALL
   readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
