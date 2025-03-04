@@ -500,8 +500,8 @@ impl Object for TorProxy {
 
     type Status = TorProxyStatus;
 
-    fn status(&self) -> &Option<Self::Status> {
-        &self.status
+    fn status(&self) -> Option<&Self::Status> {
+        self.status.as_ref()
     }
 }
 

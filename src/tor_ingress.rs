@@ -963,8 +963,8 @@ impl Object for TorIngress {
 
     type Status = TorIngressStatus;
 
-    fn status(&self) -> &Option<Self::Status> {
-        &self.status
+    fn status(&self) -> Option<&Self::Status> {
+        self.status.as_ref()
     }
 }
 

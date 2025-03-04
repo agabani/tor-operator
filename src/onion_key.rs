@@ -198,8 +198,8 @@ impl Object for OnionKey {
 
     type Status = OnionKeyStatus;
 
-    fn status(&self) -> &Option<Self::Status> {
-        &self.status
+    fn status(&self) -> Option<&Self::Status> {
+        self.status.as_ref()
     }
 }
 
@@ -381,7 +381,7 @@ async fn reconcile_secret(
 ) -> Result<State> {
     let secret = api.get_opt(&object.secret_name()).await?;
 
-    let (state, secret) = generate_secret(object, &secret, annotations, labels);
+    let (state, secret) = generate_secret(object, secret.as_ref(), annotations, labels);
 
     if let Some(secret) = secret {
         if let State::Ready(_) = state {
@@ -424,7 +424,7 @@ async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionKey, state: &Sta
 #[allow(clippy::too_many_lines)]
 fn generate_secret(
     object: &OnionKey,
-    secret: &Option<Secret>,
+    secret: Option<&Secret>,
     annotations: &Annotations,
     labels: &Labels,
 ) -> (State, Option<Secret>) {

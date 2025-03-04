@@ -414,8 +414,8 @@ impl Object for OnionService {
 
     type Status = OnionServiceStatus;
 
-    fn status(&self) -> &Option<Self::Status> {
-        &self.status
+    fn status(&self) -> Option<&Self::Status> {
+        self.status.as_ref()
     }
 }
 
@@ -580,8 +580,8 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
 
     if let State::Initialized(onion_key) = &state {
         let annotations = Annotations::new()
-            .add_opt(&onion_key.hostname())
-            .add_opt(&ob_config)
+            .add_opt(onion_key.hostname().as_ref())
+            .add_opt(ob_config.as_ref())
             .add(&torrc);
 
         // ConfigMap
@@ -594,7 +594,7 @@ async fn reconciler(object: Arc<OnionService>, ctx: Arc<Context>) -> Result<Acti
             &annotations,
             &labels,
             &torrc,
-            &ob_config,
+            ob_config.as_ref(),
         )
         .await?;
 
@@ -651,7 +651,7 @@ async fn reconcile_config_map(
     annotations: &Annotations,
     labels: &Labels,
     torrc: &Torrc,
-    ob_config: &Option<OBConfig>,
+    ob_config: Option<&OBConfig>,
 ) -> Result<()> {
     api.sync(
         object,
@@ -752,7 +752,7 @@ fn generate_config_map(
     object: &OnionService,
     annotations: &Annotations,
     labels: &Labels,
-    ob_config: &Option<OBConfig>,
+    ob_config: Option<&OBConfig>,
     torrc: &Torrc,
 ) -> ConfigMap {
     ConfigMap {

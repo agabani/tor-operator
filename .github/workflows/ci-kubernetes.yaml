@@ -34,9 +34,9 @@ jobs:
       - name: "Docker: Save"
         run: just docker-save-${{ matrix.software }}
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: images
+          name: images-${{ matrix.software }}
           path: agabani-${{ matrix.software }}.tar
           retention-days: 1
 
@@ -62,9 +62,10 @@ jobs:
         with:
           cluster_name: kind
       - name: Download
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: images
+          merge-multiple: true
+          pattern: images-*
           path: .
       - name: "Docker: Load"
         run: just docker-load
