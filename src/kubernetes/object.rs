@@ -37,7 +37,7 @@ pub trait Object: kube::ResourceExt<DynamicType = ()> {
         PatchParams::apply(APP_KUBERNETES_IO_MANAGED_BY_VALUE)
     }
 
-    fn status(&self) -> &Option<Self::Status>;
+    fn status(&self) -> Option<&Self::Status>;
 
     fn try_owner_reference(&self) -> Result<(String, String, OwnerReference)>
     where

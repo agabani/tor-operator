@@ -20,12 +20,12 @@ impl Annotations {
         self
     }
 
-    pub fn add_opt<'a, A>(mut self, annotation: &'a Option<A>) -> Self
+    pub fn add_opt<'a, A>(mut self, annotation: Option<&'a A>) -> Self
     where
         A: Annotation<'a>,
         &'a A: 'a + Into<Cow<'a, str>>,
     {
-        if let Some((key, value)) = annotation.as_ref().map(Annotation::to_tuple) {
+        if let Some((key, value)) = annotation.map(Annotation::to_tuple) {
             self.0.insert(key, value);
         }
         self

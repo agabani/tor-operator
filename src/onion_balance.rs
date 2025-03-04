@@ -379,8 +379,8 @@ impl Object for OnionBalance {
 
     type Status = OnionBalanceStatus;
 
-    fn status(&self) -> &Option<Self::Status> {
-        &self.status
+    fn status(&self) -> Option<&Self::Status> {
+        self.status.as_ref()
     }
 }
 
@@ -547,7 +547,7 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
     if let State::Initialized(onion_key) = &state {
         let annotations = Annotations::new()
             .add(&config_yaml)
-            .add_opt(&onion_key.hostname())
+            .add_opt(onion_key.hostname().as_ref())
             .add(&torrc);
 
         // ConfigMap
