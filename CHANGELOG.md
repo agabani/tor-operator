@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Upgrade dependencies.
+
 ## [0.0.34] - 2025-03-04
 
 ### Changed
@@ -268,7 +272,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.34...HEAD
-
 [0.0.34]: https://github.com/agabani/tor-operator/compare/v0.0.33...v0.0.34
 [0.0.33]: https://github.com/agabani/tor-operator/compare/v0.0.32...v0.0.33
 [0.0.32]: https://github.com/agabani/tor-operator/compare/v0.0.31...v0.0.32
