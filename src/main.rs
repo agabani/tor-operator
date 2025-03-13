@@ -71,12 +71,12 @@ fn init_tracing(cli: &CliArgs) {
         .init();
 }
 
-async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
+async fn controller_run(cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
     let client = Client::try_default().await.unwrap();
 
-    let metrics = Metrics::new();
+    let metrics = Metrics::new(cli);
 
     let onion_balance_config = onion_balance::Config {
         onion_balance_image: onion_balance::ImageConfig {

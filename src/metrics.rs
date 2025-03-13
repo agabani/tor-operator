@@ -2,10 +2,11 @@ use opentelemetry::{
     metrics::{Counter, Histogram, MeterProvider as _},
     KeyValue,
 };
+use opentelemetry_otlp::{MetricExporter, WithExportConfig};
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 use prometheus::Registry;
 
-use crate::{kubernetes::Resource, Error};
+use crate::{cli::CliArgs, kubernetes::Resource, Error};
 
 #[derive(Clone)]
 pub struct Metrics {
@@ -19,15 +20,34 @@ pub struct Metrics {
 impl Metrics {
     #[allow(clippy::missing_panics_doc)]
     #[must_use]
-    pub fn new() -> Self {
+    pub fn new(cli: &CliArgs) -> Self {
         let registry = prometheus::Registry::new();
 
-        let exporter = opentelemetry_prometheus::exporter()
-            .with_registry(registry.clone())
-            .build()
-            .unwrap();
-
-        let provider = SdkMeterProvider::builder().with_reader(exporter).build();
+        let mut builder = SdkMeterProvider::builder()
+            .with_resource(
+                opentelemetry_sdk::Resource::builder()
+                    .with_attribute(KeyValue::new("service.name", "tor-operator"))
+                    .with_service_name("tor-operator")
+                    .build(),
+            )
+            .with_reader(
+                opentelemetry_prometheus::exporter()
+                    .with_registry(registry.clone())
+                    .build()
+                    .unwrap(),
+            );
+        if let Some(opentelemetry_endpoint) = cli.opentelemetry_endpoint.as_ref() {
+            builder = builder.with_periodic_exporter(
+                MetricExporter::builder()
+                    .with_tonic()
+                    .with_endpoint(opentelemetry_endpoint)
+                    .build()
+                    .unwrap(),
+            );
+        } else {
+            panic!("opentelemetry_endpoint is required")
+        }
+        let provider = builder.build();
 
         let meter = provider.meter("tor-operator");
 
@@ -106,12 +126,6 @@ impl Metrics {
                 KeyValue::new("version", R::version(&())),
             ],
         );
-    }
-}
-
-impl Default for Metrics {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
