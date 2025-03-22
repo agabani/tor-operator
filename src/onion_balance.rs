@@ -15,24 +15,24 @@ use k8s_openapi::{
     chrono::Utc,
 };
 use kube::{
-    core::ObjectMeta,
-    runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
     Client, CustomResource, CustomResourceExt, Resource,
+    core::ObjectMeta,
+    runtime::{Controller, controller::Action, watcher::Config as WatcherConfig},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Result,
     collections::vec_get_or_insert,
     kubernetes::{
-        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
-        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset,
-        Torrc as KubernetesTorrc,
+        self, Annotations, Api, ConditionsExt, Labels, Object, Resource as KubernetesResource,
+        ResourceName, SelectorLabels, Subset, Torrc as KubernetesTorrc, error_policy,
+        pod_security_context,
     },
     metrics::Metrics,
     onion_key::OnionKey,
     tor::{ConfigYaml, ConfigYamlService, ConfigYamlServiceInstance, Torrc},
-    Result,
 };
 
 /*

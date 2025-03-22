@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, sync::Arc};
 
-use axum::{extract::State, routing::get, Router};
+use axum::{Router, extract::State, routing::get};
 use prometheus::Encoder;
 use tokio::{net::TcpListener, signal};
 

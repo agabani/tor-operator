@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use super::{
-    hidden_service_public_key::Data, Error, ExpandedSecretKey, HiddenServicePublicKey, Result,
+    Error, ExpandedSecretKey, HiddenServicePublicKey, Result, hidden_service_public_key::Data,
 };
 
 #[derive(PartialEq)]

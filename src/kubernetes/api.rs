@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use kube::core::ObjectList;
 
-use crate::{metrics::Metrics, Error, Result};
+use crate::{Error, Result, metrics::Metrics};
 
-use super::{subset::Subset, Object, Resource, ResourceName};
+use super::{Object, Resource, ResourceName, subset::Subset};
 
 pub struct Api<K> {
     api: kube::Api<K>,

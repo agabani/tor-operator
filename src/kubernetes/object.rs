@@ -4,6 +4,7 @@ use k8s_openapi::apimachinery::pkg::apis::meta::v1::OwnerReference;
 use kube::api::{DeleteParams, ListParams, Patch, PatchParams};
 
 use super::{
+    Labels, SelectorLabels,
     constants::{
         APP_KUBERNETES_IO_COMPONENT_KEY, APP_KUBERNETES_IO_INSTANCE_KEY,
         APP_KUBERNETES_IO_MANAGED_BY_KEY, APP_KUBERNETES_IO_MANAGED_BY_VALUE,
@@ -11,7 +12,6 @@ use super::{
         TOR_AGABANI_CO_UK_PART_OF_KEY,
     },
     resource::Resource,
-    Labels, SelectorLabels,
 };
 
 use crate::Result;
