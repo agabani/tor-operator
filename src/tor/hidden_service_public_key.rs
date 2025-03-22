@@ -1,8 +1,8 @@
 use std::ops::Deref;
 
 use super::{
-    constants::{ED25519_V1_PUBLIC_TYPE_0_KEY, ED25519_V1_PUBLIC_TYPE_0_LENGTH, VERSION_LENGTH},
     Error, PublicKey, Result,
+    constants::{ED25519_V1_PUBLIC_TYPE_0_KEY, ED25519_V1_PUBLIC_TYPE_0_LENGTH, VERSION_LENGTH},
 };
 
 pub struct HiddenServicePublicKey(Data);

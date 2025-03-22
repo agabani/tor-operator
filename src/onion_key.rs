@@ -2,31 +2,31 @@ use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
 use futures::StreamExt;
 use k8s_openapi::{
+    ByteString,
     api::core::v1::Secret,
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
     apimachinery::pkg::apis::meta::v1::{Condition, Time},
     chrono::Utc,
-    ByteString,
 };
 use kube::{
-    core::ObjectMeta,
-    runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
     Client, CustomResource, CustomResourceExt, Resource, ResourceExt,
+    core::ObjectMeta,
+    runtime::{Controller, controller::Action, watcher::Config as WatcherConfig},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Result,
     kubernetes::{
-        self, error_policy, Annotations, Api, ConditionsExt, Labels, Object,
-        Resource as KubernetesResource, ResourceName, Subset,
+        self, Annotations, Api, ConditionsExt, Labels, Object, Resource as KubernetesResource,
+        ResourceName, Subset, error_policy,
     },
     metrics::Metrics,
     tor::{
         self, ExpandedSecretKey, HiddenServicePublicKey, HiddenServiceSecretKey, Hostname,
         PublicKey,
     },
-    Result,
 };
 
 /*

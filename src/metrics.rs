@@ -1,11 +1,11 @@
 use opentelemetry::{
-    metrics::{Counter, Histogram, MeterProvider as _},
     KeyValue,
+    metrics::{Counter, Histogram, MeterProvider as _},
 };
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 use prometheus::Registry;
 
-use crate::{kubernetes::Resource, Error};
+use crate::{Error, kubernetes::Resource};
 
 #[derive(Clone)]
 pub struct Metrics {

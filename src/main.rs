@@ -1,15 +1,14 @@
 use std::{borrow::Cow, fs::File, io::Write};
 
 use kube::Client;
-use opentelemetry::{trace::TracerProvider, KeyValue};
+use opentelemetry::{KeyValue, trace::TracerProvider};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::trace::SdkTracerProvider;
 use tor_operator::{
     cli::{
-        parse, CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs,
-        CrdArgs, CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat, MarkdownArgs,
-        MarkdownCommands, MarkdownGenerateArgs, OnionKeyArgs, OnionKeyCommands,
-        OnionKeyGenerateArgs,
+        CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs, CrdArgs,
+        CrdCommands, CrdGenerateArgs, CrdGenerateArgsFormat, MarkdownArgs, MarkdownCommands,
+        MarkdownGenerateArgs, OnionKeyArgs, OnionKeyCommands, OnionKeyGenerateArgs, parse,
     },
     http_server,
     metrics::Metrics,

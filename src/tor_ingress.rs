@@ -21,17 +21,18 @@ use k8s_openapi::{
     chrono::Utc,
 };
 use kube::{
-    core::ObjectMeta,
-    runtime::{controller::Action, watcher::Config as WatcherConfig, Controller},
     Client, CustomResource, CustomResourceExt, Resource,
+    core::ObjectMeta,
+    runtime::{Controller, controller::Action, watcher::Config as WatcherConfig},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    Result,
     kubernetes::{
-        self, error_policy, pod_security_context, Annotations, Api, ConditionsExt, Labels, Object,
-        Resource as KubernetesResource, ResourceName, Torrc as KubernetesTorrc,
+        self, Annotations, Api, ConditionsExt, Labels, Object, Resource as KubernetesResource,
+        ResourceName, Torrc as KubernetesTorrc, error_policy, pod_security_context,
     },
     metrics::Metrics,
     onion_balance::{
@@ -45,7 +46,6 @@ use crate::{
         OnionServiceSpecHiddenServicePort, OnionServiceSpecOnionBalance,
         OnionServiceSpecOnionBalanceOnionKey, OnionServiceSpecOnionKey,
     },
-    Result,
 };
 
 /*

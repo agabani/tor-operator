@@ -2,7 +2,7 @@ use sha3::{Digest, Sha3_256};
 
 use crate::kubernetes::Annotation;
 
-use super::{constants::ONION_DOMAIN_LENGTH, Error, PublicKey};
+use super::{Error, PublicKey, constants::ONION_DOMAIN_LENGTH};
 
 #[derive(Debug, PartialEq)]
 pub struct Hostname(String);

@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use super::{hidden_service_secret_key::Data, Error, HiddenServiceSecretKey, Result};
+use super::{Error, HiddenServiceSecretKey, Result, hidden_service_secret_key::Data};
 
 pub struct ExpandedSecretKey(ed25519_dalek::hazmat::ExpandedSecretKey);
 
