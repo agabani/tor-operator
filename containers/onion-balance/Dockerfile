@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS build
+FROM ubuntu:24.10 AS build
 
 ARG ONIONBALANCE_VERSION=0.2.3
 
@@ -18,7 +18,7 @@ RUN git fetch && git checkout ${ONIONBALANCE_VERSION}
 
 RUN python3 -m pip install . --break-system-packages
 
-FROM ubuntu:24.04
+FROM ubuntu:24.10
 
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive \
