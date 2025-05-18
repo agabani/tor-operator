@@ -1051,7 +1051,7 @@ enum State {
     OnionBalanceOnionKeyNotFound,
     OnionBalanceOnionKeyHostnameNotFound,
     OnionServiceOnionKeyHostnameNotFound,
-    Initialized((OnionKey, HashMap<i32, OnionKey>)),
+    Initialized(Box<(OnionKey, HashMap<i32, OnionKey>)>),
 }
 
 impl From<&State> for Vec<Condition> {
@@ -1132,7 +1132,9 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
     )
     .await?;
 
-    if let State::Initialized((onion_balance_onion_key, onion_service_onion_keys)) = &state {
+    if let State::Initialized(tuple) = &state {
+        let (onion_balance_onion_key, onion_service_onion_keys) = &**tuple;
+
         // OnionServices
         reconcile_onion_services(
             &Api::new(
@@ -1234,10 +1236,10 @@ async fn reconcile_onion_key(
     // OnionService: deletion
     api.delete_many(object, deprecated).await?;
 
-    Ok(State::Initialized((
+    Ok(State::Initialized(Box::new((
         onion_balance_onion_key,
         onion_service_onion_keys,
-    )))
+    ))))
 }
 
 async fn reconcile_onion_services(
@@ -1327,7 +1329,8 @@ async fn reconcile_tor_ingress(
         object,
         TorIngressStatus {
             conditions,
-            hostname: if let State::Initialized((onion_key, _)) = state {
+            hostname: if let State::Initialized(tuple) = state {
+                let (onion_key, _) = &**tuple;
                 onion_key.hostname().as_ref().map(ToString::to_string)
             } else {
                 None
