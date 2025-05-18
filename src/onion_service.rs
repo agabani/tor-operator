@@ -504,7 +504,7 @@ impl kubernetes::Context for Context {
 enum State {
     OnionKeyNotFound,
     OnionKeyHostnameNotFound,
-    Initialized(OnionKey),
+    Initialized(Box<OnionKey>),
 }
 
 impl From<&State> for Vec<Condition> {
@@ -642,7 +642,7 @@ async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionService) -> Resu
         return Ok(State::OnionKeyHostnameNotFound);
     }
 
-    Ok(State::Initialized(onion_key))
+    Ok(State::Initialized(Box::new(onion_key)))
 }
 
 async fn reconcile_config_map(
