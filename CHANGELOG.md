@@ -2,6 +2,17 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- OpenTelemetry logs.
+- OpenTelemetry metrics.
+- OpenTelemetry console exporter.
+- OpenTelemetry OTLP SSL support.
+
+### Removed
+
+- `/metrics` endpoint.
+
 ## [0.0.37] - 2025-04-14
 
 ### Changed
@@ -288,7 +299,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.37...HEAD
-
 [0.0.37]: https://github.com/agabani/tor-operator/compare/v0.0.36...v0.0.37
 [0.0.36]: https://github.com/agabani/tor-operator/compare/v0.0.35...v0.0.36
 [0.0.35]: https://github.com/agabani/tor-operator/compare/v0.0.34...v0.0.35

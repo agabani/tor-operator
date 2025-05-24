@@ -1,0 +1,59 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus
+  namespace: prometheus
+data:
+  prometheus.yml: |
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+      app.kubernetes.io/instance: prometheus
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prometheus
+        app.kubernetes.io/instance: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --web.enable-otlp-receiver
+          image: prom/prometheus
+          ports:
+            - containerPort: 9090
+              name: http
+          volumeMounts:
+            - mountPath: /etc/prometheus/
+              name: prometheus
+              readOnly: true
+      volumes:
+        - name: prometheus
+          configMap:
+            name: prometheus
+            items:
+              - key: prometheus.yml
+                path: prometheus.yml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: prometheus
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: prometheus
+  ports:
+    - port: 9090
+      name: http

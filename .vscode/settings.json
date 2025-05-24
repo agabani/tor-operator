@@ -8,6 +8,7 @@
     "apiextensions",
     "apimachinery",
     "apiserver",
+    "appender",
     "autoscaler",
     "cephfs",
     "chrono",
@@ -43,6 +44,7 @@
     "quobyte",
     "rados",
     "readyz",
+    "reqwest",
     "rngs",
     "rustls",
     "schemars",
@@ -53,6 +55,7 @@
     "toringress",
     "torproxy",
     "torrc",
-    "virtport"
+    "virtport",
+    "webpki"
   ]
 }
