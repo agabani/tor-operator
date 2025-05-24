@@ -48,6 +48,10 @@ fn init_tracing(cli: &CliArgs) {
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
         .with(cli.opentelemetry_endpoint.as_ref().map(|otlp_endpoint| {
+            let Some(opentelemetry_transport) = cli.opentelemetry_transport.as_ref() else {
+                panic!("TODO: opentelemetry_transport is required")
+            };
+
             OpenTelemetryLayer::new(
                 SdkTracerProvider::builder()
                     .with_resource(
@@ -56,13 +60,19 @@ fn init_tracing(cli: &CliArgs) {
                             .with_service_name("tor-operator")
                             .build(),
                     )
-                    .with_batch_exporter(
-                        opentelemetry_otlp::SpanExporter::builder()
+                    .with_batch_exporter(match opentelemetry_transport.as_str() {
+                        "grpc" => opentelemetry_otlp::SpanExporter::builder()
                             .with_tonic()
                             .with_endpoint(otlp_endpoint)
                             .build()
                             .unwrap(),
-                    )
+                        "http" => opentelemetry_otlp::SpanExporter::builder()
+                            .with_http()
+                            .with_endpoint(format!("{}/v1/traces", otlp_endpoint))
+                            .build()
+                            .unwrap(),
+                        transport => panic!("Unsupported opentelemetry_transport: {}", transport),
+                    })
                     .build()
                     .tracer("tor-operator"),
             )
@@ -70,12 +80,12 @@ fn init_tracing(cli: &CliArgs) {
         .init();
 }
 
-async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
+async fn controller_run(cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
     let client = Client::try_default().await.unwrap();
 
-    let metrics = Metrics::new();
+    let metrics = Metrics::new(cli);
 
     let onion_balance_config = onion_balance::Config {
         onion_balance_image: onion_balance::ImageConfig {

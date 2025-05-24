@@ -1587,19 +1587,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "opentelemetry-prometheus"
-version = "0.29.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "098a71a4430bb712be6130ed777335d2e5b19bc8566de5f2edddfce906def6ab"
-dependencies = [
- "once_cell",
- "opentelemetry",
- "opentelemetry_sdk",
- "prometheus",
- "tracing",
-]
-
-[[package]]
 name = "opentelemetry-proto"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1609,6 +1596,18 @@ dependencies = [
  "opentelemetry_sdk",
  "prost",
  "tonic",
+]
+
+[[package]]
+name = "opentelemetry-stdout"
+version = "0.29.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7e27d446dabd68610ef0b77d07b102ecde827a4596ea9c01a4d3811e945b286"
+dependencies = [
+ "chrono",
+ "futures-util",
+ "opentelemetry",
+ "opentelemetry_sdk",
 ]
 
 [[package]]
@@ -2622,7 +2621,7 @@ dependencies = [
  "kube",
  "opentelemetry",
  "opentelemetry-otlp",
- "opentelemetry-prometheus",
+ "opentelemetry-stdout",
  "opentelemetry_sdk",
  "prometheus",
  "rand 0.8.5",

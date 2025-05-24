@@ -17,6 +17,9 @@ pub struct CliArgs {
     /// OpenTelemetry endpoint
     #[arg(long)]
     pub opentelemetry_endpoint: Option<String>,
+
+    #[arg(long)]
+    pub opentelemetry_transport: Option<String>,
 }
 
 #[must_use]

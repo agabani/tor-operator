@@ -105,3 +105,4 @@ affinity: {}
 opentelemetry:
   enabled: false
   endpoint: ""
+  transport: ""

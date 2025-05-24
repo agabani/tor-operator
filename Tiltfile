@@ -2,6 +2,18 @@ load('ext://helm_resource', 'helm_repo', 'helm_resource')
 load('ext://namespace', 'namespace_create')
 
 # =============================================================================
+# OneUptime
+# =============================================================================
+namespace_create('oneuptime')
+helm_repo('oneuptime', 'https://helm-chart.oneuptime.com/')
+helm_resource(
+    'my-oneuptime',
+    'oneuptime/oneuptime',
+    namespace="oneuptime",
+    resource_deps=['oneuptime']
+)
+
+# =============================================================================
 # HyperDX
 # =============================================================================
 namespace_create('hyperdx')
@@ -11,7 +23,10 @@ k8s_yaml('.kubernetes/hyperdx/hyperdx.yaml')
 k8s_resource(
   'hyperdx',
   port_forwards=[
+    '4317:4317',
+    '4318:4318',
     '8000:8000',
+    '8002:8002',
     '8080:8080',
   ],
   labels=['hyperdx']

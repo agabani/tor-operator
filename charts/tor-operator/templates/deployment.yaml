@@ -42,6 +42,8 @@ spec:
             {{- if .Values.opentelemetry.enabled }}
             - "--opentelemetry-endpoint"
             - "{{ .Values.opentelemetry.endpoint }}"
+            - "--opentelemetry-transport"
+            - "{{ .Values.opentelemetry.transport }}"
             {{- end }}
 
             - "controller"

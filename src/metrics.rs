@@ -2,10 +2,11 @@ use opentelemetry::{
     KeyValue,
     metrics::{Counter, Histogram, MeterProvider as _},
 };
+use opentelemetry_otlp::{MetricExporter, WithExportConfig};
 use opentelemetry_sdk::metrics::SdkMeterProvider;
 use prometheus::Registry;
 
-use crate::{Error, kubernetes::Resource};
+use crate::{Error, cli::CliArgs, kubernetes::Resource};
 
 #[derive(Clone)]
 pub struct Metrics {
@@ -19,15 +20,40 @@ pub struct Metrics {
 impl Metrics {
     #[allow(clippy::missing_panics_doc)]
     #[must_use]
-    pub fn new() -> Self {
+    pub fn new(cli: &CliArgs) -> Self {
         let registry = prometheus::Registry::new();
 
-        let exporter = opentelemetry_prometheus::exporter()
-            .with_registry(registry.clone())
-            .build()
-            .unwrap();
+        let mut builder = SdkMeterProvider::builder().with_resource(
+            opentelemetry_sdk::Resource::builder()
+                .with_service_name("tor-operator")
+                .build(),
+        );
+        if let Some(opentelemetry_endpoint) = cli.opentelemetry_endpoint.as_ref() {
+            let Some(opentelemetry_transport) = cli.opentelemetry_transport.as_ref() else {
+                panic!("TODO: opentelemetry_transport is required")
+            };
 
-        let provider = SdkMeterProvider::builder().with_reader(exporter).build();
+            builder = builder.with_periodic_exporter(match opentelemetry_transport.as_str() {
+                "grpc" => MetricExporter::builder()
+                    .with_tonic()
+                    .with_endpoint(opentelemetry_endpoint)
+                    .build()
+                    .unwrap(),
+                "http" => MetricExporter::builder()
+                    .with_http()
+                    .with_endpoint(format!("{}/v1/metrics", opentelemetry_endpoint))
+                    .build()
+                    .unwrap(),
+                transport => panic!("Unsupported opentelemetry_transport: {}", transport),
+            })
+        } else {
+            panic!("TODO: opentelemetry_endpoint is required")
+        }
+
+        builder = builder
+            .with_periodic_exporter(opentelemetry_stdout::MetricExporterBuilder::default().build());
+
+        let provider = builder.build();
 
         let meter = provider.meter("tor-operator");
 
@@ -106,12 +132,6 @@ impl Metrics {
                 KeyValue::new("version", R::version(&())),
             ],
         );
-    }
-}
-
-impl Default for Metrics {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
