@@ -39,11 +39,6 @@ spec:
             {{- end }}
             {{- end }}
           args:
-            {{- if .Values.opentelemetry.enabled }}
-            - "--opentelemetry-endpoint"
-            - "{{ .Values.opentelemetry.endpoint }}"
-            {{- end }}
-
             - "controller"
             - "run"
 

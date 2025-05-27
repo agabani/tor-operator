@@ -2,6 +2,12 @@ load('ext://helm_resource', 'helm_repo', 'helm_resource')
 load('ext://namespace', 'namespace_create')
 
 # =============================================================================
+# Metrics Server
+# =============================================================================
+k8s_yaml('.kubernetes/metrics-server/metrics-server.yaml')
+
+
+# =============================================================================
 # HyperDX
 # =============================================================================
 namespace_create('hyperdx')
@@ -11,16 +17,29 @@ k8s_yaml('.kubernetes/hyperdx/hyperdx.yaml')
 k8s_resource(
   'hyperdx',
   port_forwards=[
+    '4317:4317',
+    '4318:4318',
     '8000:8000',
+    '8002:8002',
     '8080:8080',
   ],
   labels=['hyperdx']
 )
 
 # =============================================================================
-# Metrics Server
+# Prometheus
 # =============================================================================
-k8s_yaml('.kubernetes/metrics-server/metrics-server.yaml')
+namespace_create('prometheus')
+
+k8s_yaml('.kubernetes/prometheus/prometheus.yaml')
+
+k8s_resource(
+  'prometheus',
+  port_forwards=[
+    '9090:9090',
+  ],
+  labels=['prometheus']
+)
 
 # =============================================================================
 # Onion Balance

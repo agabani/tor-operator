@@ -1,9 +1,5 @@
 use std::{borrow::Cow, fs::File, io::Write};
 
-use kube::Client;
-use opentelemetry::{KeyValue, trace::TracerProvider};
-use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::trace::SdkTracerProvider;
 use tor_operator::{
     cli::{
         CliArgs, CliCommands, ControllerArgs, ControllerCommands, ControllerRunArgs, CrdArgs,
@@ -12,22 +8,23 @@ use tor_operator::{
     },
     http_server,
     metrics::Metrics,
-    onion_balance, onion_key, onion_service,
+    onion_balance, onion_key, onion_service, otel,
     tor::{ExpandedSecretKey, HiddenServicePublicKey, HiddenServiceSecretKey, Hostname, PublicKey},
     tor_ingress, tor_proxy,
 };
-use tracing_opentelemetry::OpenTelemetryLayer;
-use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     let cli = &parse();
 
-    init_tracing(cli);
+    let provider = otel::Provider::new(cli);
+    provider.init_tracing_subscriber();
 
     match &cli.command {
         CliCommands::Controller(controller) => match &controller.command {
-            ControllerCommands::Run(run) => controller_run(cli, controller, run).await,
+            ControllerCommands::Run(run) => {
+                controller_run(cli, controller, run, provider.meter()).await
+            }
         },
         CliCommands::Crd(crd) => match &crd.command {
             CrdCommands::Generate(generate) => crd_generate(cli, crd, generate),
@@ -41,41 +38,19 @@ async fn main() {
             }
         },
     }
+
+    provider.shutdown()
 }
 
-fn init_tracing(cli: &CliArgs) {
-    tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::from_default_env())
-        .with(tracing_subscriber::fmt::layer())
-        .with(cli.opentelemetry_endpoint.as_ref().map(|otlp_endpoint| {
-            OpenTelemetryLayer::new(
-                SdkTracerProvider::builder()
-                    .with_resource(
-                        opentelemetry_sdk::Resource::builder()
-                            .with_attribute(KeyValue::new("service.name", "tor-operator"))
-                            .with_service_name("tor-operator")
-                            .build(),
-                    )
-                    .with_batch_exporter(
-                        opentelemetry_otlp::SpanExporter::builder()
-                            .with_tonic()
-                            .with_endpoint(otlp_endpoint)
-                            .build()
-                            .unwrap(),
-                    )
-                    .build()
-                    .tracer("tor-operator"),
-            )
-        }))
-        .init();
-}
-
-async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &ControllerRunArgs) {
+async fn controller_run(
+    _cli: &CliArgs,
+    _controller: &ControllerArgs,
+    run: &ControllerRunArgs,
+    meter_provider: &opentelemetry_sdk::metrics::SdkMeterProvider,
+) {
     let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
 
-    let client = Client::try_default().await.unwrap();
-
-    let metrics = Metrics::new();
+    let client = kube::Client::try_default().await.unwrap();
 
     let onion_balance_config = onion_balance::Config {
         onion_balance_image: onion_balance::ImageConfig {
@@ -106,8 +81,10 @@ async fn controller_run(_cli: &CliArgs, _controller: &ControllerArgs, run: &Cont
         },
     };
 
+    let metrics = Metrics::new(meter_provider);
+
     tokio::select! {
-        _ = http_server::run(addr, metrics.clone()) => {},
+        _ = http_server::run(addr) => {},
         _ = onion_balance::run_controller(client.clone(), onion_balance_config, metrics.clone()) => {},
         _ = onion_key::run_controller(client.clone(), onion_key_config, metrics.clone()) => {},
         _ = onion_service::run_controller(client.clone(),onion_service_config, metrics.clone()) => {},

@@ -1,3 +1,57 @@
+env:
+  # RUST_LOG:
+  #   value: "info,opentelemetry=debug"
+
+  OTEL_EXPORTER_OTLP_ENDPOINT:
+    value: http://hyperdx.hyperdx.svc:4317
+    # value: http://hyperdx.hyperdx.svc:4318
+
+  OTEL_EXPORTER_OTLP_PROTOCOL:
+    value: grpc
+    # value: http/json
+    # value: http/protobuf
+
+  # OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:
+  #   value: http://hyperdx.hyperdx.svc:4317
+  #   # value: http://hyperdx.hyperdx.svc:4318/v1/logs
+  # OTEL_EXPORTER_OTLP_LOGS_PROTOCOL:
+  #   value: grpc
+  #   # value: http/json
+  #   # value: http/protobuf
+
+  OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:
+    value: http://prometheus.prometheus.svc:9090/api/v1/otlp/v1/metrics
+    # value: http://hyperdx.hyperdx.svc:4317
+    # value: http://hyperdx.hyperdx.svc:4318/v1/metrics
+  OTEL_EXPORTER_OTLP_METRICS_PROTOCOL:
+    # value: grpc
+    # value: http/json
+    value: http/protobuf
+
+  # OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:
+  #   value: http://hyperdx.hyperdx.svc:4317
+  #   # value: http://hyperdx.hyperdx.svc:4318/v1/traces
+  # OTEL_EXPORTER_OTLP_TRACES_PROTOCOL:
+  #   value: grpc
+  #   # value: http/json
+  #   # value: http/protobuf
+
+  OTEL_LOGS_EXPORTER:
+    # value: console
+    value: otlp
+    # value: console,otlp
+  OTEL_METRICS_EXPORTER:
+    # value: console
+    value: otlp
+    # value: console,otlp
+  OTEL_TRACES_EXPORTER:
+    # value: console
+    value: otlp
+    # value: console,otlp
+
+  OTEL_SERVICE_NAME:
+    value: tor-operator
+
 image:
   repository: agabani/tor-operator
   tag: dev
@@ -11,7 +65,3 @@ tor:
   image:
     repository: agabani/tor
     tag: dev
-
-opentelemetry:
-  enabled: true
-  endpoint: http://hyperdx.hyperdx.svc:4317

@@ -13,8 +13,7 @@ nav:
       - TorProxy: "custom_resource_definitions/torproxy.md"
   - Observability:
       - Logs: "observability/logs.md"
-      - Metrics: "observability/metrics.md"
-      - Tracing: "observability/tracing.md"
+      - OpenTelemetry: "observability/opentelemetry.md"
   - Security:
       - Cluster Role: "security/cluster_role.md"
   - Licenses:

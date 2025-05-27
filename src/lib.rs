@@ -8,6 +8,7 @@ pub mod metrics;
 pub mod onion_balance;
 pub mod onion_key;
 pub mod onion_service;
+pub mod otel;
 pub mod tor;
 pub mod tor_ingress;
 pub mod tor_proxy;

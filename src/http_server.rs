@@ -1,22 +1,13 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::net::SocketAddr;
 
-use axum::{Router, extract::State, routing::get};
-use prometheus::Encoder;
+use axum::{Router, routing::get};
 use tokio::{net::TcpListener, signal};
 
-use crate::metrics::Metrics;
-
-struct AppState {
-    metrics: Metrics,
-}
-
 #[allow(clippy::missing_panics_doc)]
-pub async fn run(addr: SocketAddr, metrics: Metrics) {
+pub async fn run(addr: SocketAddr) {
     let app = Router::new()
         .route("/livez", get(handler))
-        .route("/metrics", get(metrics_handler))
-        .route("/readyz", get(handler))
-        .with_state(Arc::new(AppState { metrics }));
+        .route("/readyz", get(handler));
 
     let listener = TcpListener::bind(&addr).await.unwrap();
 
@@ -32,15 +23,6 @@ pub async fn run(addr: SocketAddr, metrics: Metrics) {
 
 #[allow(clippy::unused_async)]
 async fn handler() {}
-
-#[allow(clippy::unused_async)]
-async fn metrics_handler(State(state): State<Arc<AppState>>) -> String {
-    let mut buffer = vec![];
-    let encoder = prometheus::TextEncoder::new();
-    let metric_families = state.metrics.registry().gather();
-    encoder.encode(&metric_families, &mut buffer).unwrap();
-    String::from_utf8_lossy(&buffer).into()
-}
 
 async fn shutdown_signal() {
     let ctrl_c = async {

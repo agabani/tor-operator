@@ -2,33 +2,21 @@ use opentelemetry::{
     KeyValue,
     metrics::{Counter, Histogram, MeterProvider as _},
 };
-use opentelemetry_sdk::metrics::SdkMeterProvider;
-use prometheus::Registry;
 
 use crate::{Error, kubernetes::Resource};
 
 #[derive(Clone)]
 pub struct Metrics {
-    registry: prometheus::Registry,
-    tor_operator_kubernetes_api_usage_total: Counter<u64>,
-    tor_operator_reconciliation_errors_total: Counter<u64>,
-    tor_operator_reconciliations_total: Counter<u64>,
-    tor_operator_reconcile_duration_seconds: Histogram<f64>,
+    kubernetes_api_usage_total: Counter<u64>,
+    reconciliation_errors_total: Counter<u64>,
+    reconciliations_total: Counter<u64>,
+    reconcile_duration_seconds: Histogram<f64>,
 }
 
 impl Metrics {
     #[allow(clippy::missing_panics_doc)]
     #[must_use]
-    pub fn new() -> Self {
-        let registry = prometheus::Registry::new();
-
-        let exporter = opentelemetry_prometheus::exporter()
-            .with_registry(registry.clone())
-            .build()
-            .unwrap();
-
-        let provider = SdkMeterProvider::builder().with_reader(exporter).build();
-
+    pub fn new(provider: &opentelemetry_sdk::metrics::SdkMeterProvider) -> Self {
         let meter = provider.meter("tor-operator");
 
         let tor_operator_kubernetes_api_usage_total = meter
@@ -52,29 +40,21 @@ impl Metrics {
             .with_unit("s")
             .build();
 
-        opentelemetry::global::set_meter_provider(provider.clone());
-
         Self {
-            registry,
-            tor_operator_kubernetes_api_usage_total,
-            tor_operator_reconciliation_errors_total,
-            tor_operator_reconciliations_total,
-            tor_operator_reconcile_duration_seconds,
+            kubernetes_api_usage_total: tor_operator_kubernetes_api_usage_total,
+            reconciliation_errors_total: tor_operator_reconciliation_errors_total,
+            reconciliations_total: tor_operator_reconciliations_total,
+            reconcile_duration_seconds: tor_operator_reconcile_duration_seconds,
         }
     }
 
     #[must_use]
-    pub fn registry(&self) -> &Registry {
-        &self.registry
-    }
-
-    #[must_use]
     pub fn count_and_measure(&self, controller: &'static str) -> ControllerTimer {
-        self.tor_operator_reconciliations_total
+        self.reconciliations_total
             .add(1, &[KeyValue::new("controller", controller)]);
         ControllerTimer {
             start: std::time::Instant::now(),
-            metric: self.tor_operator_reconcile_duration_seconds.clone(),
+            metric: self.reconcile_duration_seconds.clone(),
             controller,
         }
     }
@@ -84,7 +64,7 @@ impl Metrics {
             Error::Kube(_) => "kube",
             Error::MissingObjectKey(_) => "missing object key",
         };
-        self.tor_operator_reconciliation_errors_total.add(
+        self.reconciliation_errors_total.add(
             1,
             &[
                 KeyValue::new("controller", controller),
@@ -97,7 +77,7 @@ impl Metrics {
     where
         R: Resource,
     {
-        self.tor_operator_kubernetes_api_usage_total.add(
+        self.kubernetes_api_usage_total.add(
             1,
             &[
                 KeyValue::new("kind", R::kind(&())),
@@ -106,12 +86,6 @@ impl Metrics {
                 KeyValue::new("version", R::version(&())),
             ],
         );
-    }
-}
-
-impl Default for Metrics {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
