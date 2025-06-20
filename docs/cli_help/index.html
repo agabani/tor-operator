@@ -76,9 +76,7 @@
               <ul>
                   <li class="toctree-l1"><a class="reference internal" href="../observability/logs/">Logs</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../observability/metrics/">Metrics</a>
-                  </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../observability/tracing/">Tracing</a>
+                  <li class="toctree-l1"><a class="reference internal" href="../observability/opentelemetry/">OpenTelemetry</a>
                   </li>
               </ul>
               <p class="caption"><span class="caption-text">Security</span></p>
@@ -140,7 +138,66 @@
 </ul>
 <h6 id="options"><strong>Options:</strong></h6>
 <ul>
-<li><code>--opentelemetry-endpoint &lt;OPENTELEMETRY_ENDPOINT&gt;</code> — OpenTelemetry endpoint</li>
+<li><code>--otel-service-name &lt;OTEL_SERVICE_NAME&gt;</code> — Sets the value of the service.name resource attribute</li>
+</ul>
+<p>Default value: <code>tor-operator</code>
+* <code>--otel-resource-attributes &lt;OTEL_RESOURCE_ATTRIBUTES&gt;</code> — Key-value pairs to be used as resource attributes
+* <code>--otel-logs-exporter &lt;OTEL_LOGS_EXPORTER&gt;</code> — Specifies which exporters are used for logs</p>
+<p>Possible values: <code>console</code>, <code>otlp</code></p>
+<ul>
+<li><code>--otel-metrics-exporter &lt;OTEL_METRICS_EXPORTER&gt;</code> — Specifies which exporters are used for metrics</li>
+</ul>
+<p>Possible values: <code>console</code>, <code>otlp</code></p>
+<ul>
+<li><code>--otel-traces-exporter &lt;OTEL_TRACES_EXPORTER&gt;</code> — Specifies which exporters are used for traces</li>
+</ul>
+<p>Possible values: <code>console</code>, <code>otlp</code></p>
+<ul>
+<li><code>--otel-exporter-otlp-compression &lt;OTEL_EXPORTER_OTLP_COMPRESSION&gt;</code> — Specifies the OTLP transport compression to be used for all telemetry data</li>
+</ul>
+<p>Possible values: <code>gzip</code>, <code>zstd</code></p>
+<ul>
+<li><code>--otel-exporter-otlp-endpoint &lt;OTEL_EXPORTER_OTLP_ENDPOINT&gt;</code> — A base endpoint URL for any signal type, with an optionally-specified port number. Helpful for when you’re sending more than one signal to the same endpoint and want one environment variable to control the endpoint</li>
+<li><code>--otel-exporter-otlp-headers &lt;OTEL_EXPORTER_OTLP_HEADERS&gt;</code> — A list of headers to apply to all outgoing data (traces, metrics, and logs)</li>
+<li><code>--otel-exporter-otlp-protocol &lt;OTEL_EXPORTER_OTLP_PROTOCOL&gt;</code> — Specifies the OTLP transport protocol to be used for all telemetry data</li>
+</ul>
+<p>Possible values: <code>grpc</code>, <code>http/json</code>, <code>http/protobuf</code></p>
+<ul>
+<li><code>--otel-exporter-otlp-timeout &lt;OTEL_EXPORTER_OTLP_TIMEOUT&gt;</code> — The timeout value for all outgoing data (traces, metrics, and logs) in milliseconds</li>
+</ul>
+<p>Default value: <code>10000</code>
+* <code>--otel-exporter-otlp-logs-compression &lt;OTEL_EXPORTER_OTLP_LOGS_COMPRESSION&gt;</code> — Specifies the OTLP transport compression to be used for log data</p>
+<p>Possible values: <code>gzip</code>, <code>zstd</code></p>
+<ul>
+<li><code>--otel-exporter-otlp-logs-endpoint &lt;OTEL_EXPORTER_OTLP_LOGS_ENDPOINT&gt;</code> — Endpoint URL for log data only, with an optionally-specified port number. Typically ends with <code>v1/logs</code> when using OTLP/HTTP</li>
+<li><code>--otel-exporter-otlp-logs-headers &lt;OTEL_EXPORTER_OTLP_LOGS_HEADERS&gt;</code> — A list of headers to apply to all outgoing logs</li>
+<li><code>--otel-exporter-otlp-logs-protocol &lt;OTEL_EXPORTER_OTLP_LOGS_PROTOCOL&gt;</code> — Specifies the OTLP transport protocol to be used for log data</li>
+</ul>
+<p>Possible values: <code>grpc</code>, <code>http/json</code>, <code>http/protobuf</code></p>
+<ul>
+<li><code>--otel-exporter-otlp-logs-timeout &lt;OTEL_EXPORTER_OTLP_LOGS_TIMEOUT&gt;</code> — The timeout value for all outgoing logs in milliseconds</li>
+<li><code>--otel-exporter-otlp-metrics-compression &lt;OTEL_EXPORTER_OTLP_METRICS_COMPRESSION&gt;</code> — Specifies the OTLP transport compression to be used for metrics data</li>
+</ul>
+<p>Possible values: <code>gzip</code>, <code>zstd</code></p>
+<ul>
+<li><code>--otel-exporter-otlp-metrics-endpoint &lt;OTEL_EXPORTER_OTLP_METRICS_ENDPOINT&gt;</code> — Endpoint URL for metric data only, with an optionally-specified port number. Typically ends with <code>v1/metrics</code> when using OTLP/HTTP</li>
+<li><code>--otel-exporter-otlp-metrics-headers &lt;OTEL_EXPORTER_OTLP_METRICS_HEADERS&gt;</code> — A list of headers to apply to all outgoing metrics</li>
+<li><code>--otel-exporter-otlp-metrics-protocol &lt;OTEL_EXPORTER_OTLP_METRICS_PROTOCOL&gt;</code> — Specifies the OTLP transport protocol to be used for metrics data</li>
+</ul>
+<p>Possible values: <code>grpc</code>, <code>http/json</code>, <code>http/protobuf</code></p>
+<ul>
+<li><code>--otel-exporter-otlp-metrics-timeout &lt;OTEL_EXPORTER_OTLP_METRICS_TIMEOUT&gt;</code> — The timeout value for all outgoing metrics in milliseconds</li>
+<li><code>--otel-exporter-otlp-traces-compression &lt;OTEL_EXPORTER_OTLP_TRACES_COMPRESSION&gt;</code> — Specifies the OTLP transport compression to be used for trace data</li>
+</ul>
+<p>Possible values: <code>gzip</code>, <code>zstd</code></p>
+<ul>
+<li><code>--otel-exporter-otlp-traces-endpoint &lt;OTEL_EXPORTER_OTLP_TRACES_ENDPOINT&gt;</code> — Endpoint URL for metric data only, with an optionally-specified port number. Typically ends with <code>v1/traces</code> when using OTLP/HTTP</li>
+<li><code>--otel-exporter-otlp-traces-headers &lt;OTEL_EXPORTER_OTLP_TRACES_HEADERS&gt;</code> — A list of headers to apply to all outgoing traces</li>
+<li><code>--otel-exporter-otlp-traces-protocol &lt;OTEL_EXPORTER_OTLP_TRACES_PROTOCOL&gt;</code> — Specifies the OTLP transport protocol to be used for trace data</li>
+</ul>
+<p>Possible values: <code>grpc</code>, <code>http/json</code>, <code>http/protobuf</code></p>
+<ul>
+<li><code>--otel-exporter-otlp-traces-timeout &lt;OTEL_EXPORTER_OTLP_TRACES_TIMEOUT&gt;</code> — The timeout value for all outgoing traces in milliseconds</li>
 </ul>
 <h2 id="tor-operator-controller"><code>tor-operator controller</code></h2>
 <p>Controller</p>
