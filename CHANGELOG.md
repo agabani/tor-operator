@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.38] - 2025-06-20
+
 ### Added
 
 - OpenTelemetry logs.
@@ -300,7 +302,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.37...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.38...HEAD
+
+[0.0.38]: https://github.com/agabani/tor-operator/compare/v0.0.37...v0.0.38
 [0.0.37]: https://github.com/agabani/tor-operator/compare/v0.0.36...v0.0.37
 [0.0.36]: https://github.com/agabani/tor-operator/compare/v0.0.35...v0.0.36
 [0.0.35]: https://github.com/agabani/tor-operator/compare/v0.0.34...v0.0.35
