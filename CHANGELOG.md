@@ -7,6 +7,8 @@
 - OpenTelemetry logs.
 - OpenTelemetry metrics.
 - OpenTelemetry console exporter.
+- OpenTelemetry OTLP compression support.
+- OpenTelemetry OTLP header support.
 - OpenTelemetry OTLP SSL support.
 
 ### Removed

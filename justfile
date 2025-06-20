@@ -122,6 +122,10 @@ docker-save-tor:
 docker-save-tor-operator:
   @docker save --output agabani-tor-operator.tar agabani/tor-operator:{{GIT_COMMIT}}
 
+# format
+format:
+  @cargo fmt
+
 # generate
 generate: cli-crd-generate cli-markdown-generate license
 
