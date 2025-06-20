@@ -2,6 +2,9 @@ env:
   # RUST_LOG:
   #   value: "info,opentelemetry=debug"
 
+  OTEL_EXPORTER_OTLP_COMPRESSION:
+    value: grpc
+
   OTEL_EXPORTER_OTLP_ENDPOINT:
     value: http://hyperdx.hyperdx.svc:4317
     # value: http://hyperdx.hyperdx.svc:4318

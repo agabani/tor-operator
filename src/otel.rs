@@ -1,8 +1,11 @@
-use std::time::Duration;
+use std::{collections::HashMap, time::Duration};
 
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::{Protocol, WithExportConfig};
+use opentelemetry_otlp::{
+    Compression, Protocol, WithExportConfig, WithHttpConfig, WithTonicConfig,
+    tonic_types::metadata::MetadataMap,
+};
 use opentelemetry_sdk::{
     logs::SdkLoggerProvider, metrics::SdkMeterProvider, trace::SdkTracerProvider,
 };
@@ -113,6 +116,30 @@ fn service_name(cli: &CliArgs) -> String {
 
 /*
  * ============================================================================
+ * Compressions
+ * ============================================================================
+ */
+
+fn logs_compression(cli: &CliArgs) -> Option<Compression> {
+    cli.otel_exporter_otlp_logs_compression
+        .or(cli.otel_exporter_otlp_compression)
+        .map(Into::into)
+}
+
+fn metrics_compression(cli: &CliArgs) -> Option<Compression> {
+    cli.otel_exporter_otlp_metrics_compression
+        .or(cli.otel_exporter_otlp_compression)
+        .map(Into::into)
+}
+
+fn traces_compression(cli: &CliArgs) -> Option<Compression> {
+    cli.otel_exporter_otlp_traces_compression
+        .or(cli.otel_exporter_otlp_compression)
+        .map(Into::into)
+}
+
+/*
+ * ============================================================================
  * Endpoints
  * ============================================================================
  */
@@ -166,6 +193,33 @@ fn traces_endpoint(cli: &CliArgs, protocol: Protocol) -> String {
     }
 
     panic!("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT or OTEL_EXPORTER_OTLP_ENDPOINT must be set");
+}
+
+/*
+ * ============================================================================
+ * Headers
+ * ============================================================================
+ */
+
+fn log_headers(cli: &CliArgs) -> Option<&str> {
+    cli.otel_exporter_otlp_logs_headers
+        .as_ref()
+        .or(cli.otel_exporter_otlp_headers.as_ref())
+        .map(String::as_str)
+}
+
+fn metrics_headers(cli: &CliArgs) -> Option<&str> {
+    cli.otel_exporter_otlp_metrics_headers
+        .as_ref()
+        .or(cli.otel_exporter_otlp_headers.as_ref())
+        .map(String::as_str)
+}
+
+fn traces_headers(cli: &CliArgs) -> Option<&str> {
+    cli.otel_exporter_otlp_traces_headers
+        .as_ref()
+        .or(cli.otel_exporter_otlp_headers.as_ref())
+        .map(String::as_str)
 }
 
 /*
@@ -232,17 +286,24 @@ fn logger_provider(cli: &CliArgs) -> SdkLoggerProvider {
         }
 
         if exporter.contains(&CliArgsOtelExporter::Otlp) {
+            let compression = logs_compression(cli);
             let protocol = logs_protocol(cli);
             let endpoint = logs_endpoint(cli, protocol);
+            let headers = log_headers(cli);
             let timeout = logs_timeout(cli);
 
             match protocol {
                 Protocol::Grpc => {
-                    let exporter_builder = opentelemetry_otlp::LogExporter::builder()
+                    let mut exporter_builder = opentelemetry_otlp::LogExporter::builder()
                         .with_tonic()
                         .with_endpoint(endpoint)
+                        .with_metadata(parse_headers_metadata_map(headers))
                         .with_protocol(Protocol::Grpc)
                         .with_timeout(Duration::from_millis(timeout));
+
+                    if let Some(compression) = compression {
+                        exporter_builder = exporter_builder.with_compression(compression);
+                    }
 
                     provider_builder =
                         provider_builder.with_batch_exporter(exporter_builder.build().unwrap());
@@ -251,6 +312,7 @@ fn logger_provider(cli: &CliArgs) -> SdkLoggerProvider {
                     let exporter_builder = opentelemetry_otlp::LogExporter::builder()
                         .with_http()
                         .with_endpoint(endpoint)
+                        .with_headers(parse_headers_hashmap(headers))
                         .with_protocol(protocol)
                         .with_timeout(Duration::from_millis(timeout));
 
@@ -274,17 +336,24 @@ fn meter_provider(cli: &CliArgs) -> SdkMeterProvider {
         }
 
         if exporter.contains(&CliArgsOtelExporter::Otlp) {
+            let compression = metrics_compression(cli);
             let protocol = metrics_protocol(cli);
             let endpoint = metrics_endpoint(cli, protocol);
+            let headers = metrics_headers(cli);
             let timeout = metrics_timeout(cli);
 
             match protocol {
                 Protocol::Grpc => {
-                    let exporter_builder = opentelemetry_otlp::MetricExporter::builder()
+                    let mut exporter_builder = opentelemetry_otlp::MetricExporter::builder()
                         .with_tonic()
                         .with_endpoint(endpoint)
+                        .with_metadata(parse_headers_metadata_map(headers))
                         .with_protocol(Protocol::Grpc)
                         .with_timeout(Duration::from_millis(timeout));
+
+                    if let Some(compression) = compression {
+                        exporter_builder = exporter_builder.with_compression(compression);
+                    }
 
                     provider_builder =
                         provider_builder.with_periodic_exporter(exporter_builder.build().unwrap());
@@ -293,6 +362,7 @@ fn meter_provider(cli: &CliArgs) -> SdkMeterProvider {
                     let exporter_builder = opentelemetry_otlp::MetricExporter::builder()
                         .with_http()
                         .with_endpoint(endpoint)
+                        .with_headers(parse_headers_hashmap(headers))
                         .with_protocol(protocol)
                         .with_timeout(Duration::from_millis(timeout));
 
@@ -316,17 +386,24 @@ fn tracer_provider(cli: &CliArgs) -> SdkTracerProvider {
         }
 
         if exporter.contains(&CliArgsOtelExporter::Otlp) {
+            let compression = traces_compression(cli);
             let protocol = traces_protocol(cli);
             let endpoint = traces_endpoint(cli, protocol);
+            let headers = traces_headers(cli);
             let timeout = traces_timeout(cli);
 
             match protocol {
                 Protocol::Grpc => {
-                    let exporter_builder = opentelemetry_otlp::SpanExporter::builder()
+                    let mut exporter_builder = opentelemetry_otlp::SpanExporter::builder()
                         .with_tonic()
                         .with_endpoint(endpoint)
+                        .with_metadata(parse_headers_metadata_map(headers))
                         .with_protocol(Protocol::Grpc)
                         .with_timeout(Duration::from_millis(timeout));
+
+                    if let Some(compression) = compression {
+                        exporter_builder = exporter_builder.with_compression(compression);
+                    }
 
                     provider_builder =
                         provider_builder.with_batch_exporter(exporter_builder.build().unwrap());
@@ -335,6 +412,7 @@ fn tracer_provider(cli: &CliArgs) -> SdkTracerProvider {
                     let exporter_builder = opentelemetry_otlp::SpanExporter::builder()
                         .with_http()
                         .with_endpoint(endpoint)
+                        .with_headers(parse_headers_hashmap(headers))
                         .with_protocol(protocol)
                         .with_timeout(Duration::from_millis(timeout));
 
@@ -346,4 +424,90 @@ fn tracer_provider(cli: &CliArgs) -> SdkTracerProvider {
     }
 
     provider_builder.build()
+}
+
+/*
+ * ============================================================================
+ * Parsers
+ * ============================================================================
+ */
+
+fn parse_headers_hashmap(headers: Option<&str>) -> HashMap<String, String> {
+    headers
+        .map(|headers| {
+            parse_headers(headers)
+                .map(|(key, value)| (key.into(), value.into()))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn parse_headers_metadata_map(headers: Option<&str>) -> MetadataMap {
+    headers
+        .map(|headers| {
+            MetadataMap::from_headers(
+                parse_headers(headers)
+                    .map(|(key, value)| (key.parse().unwrap(), value.parse().unwrap()))
+                    .collect(),
+            )
+        })
+        .unwrap_or_default()
+}
+
+fn parse_headers<'a>(
+    headers: &'a str,
+) -> std::iter::Map<std::str::Split<'a, char>, impl FnMut(&'a str) -> (&'a str, &'a str)> {
+    headers.split(',').map(|header| {
+        let mut parts = header.splitn(2, '=');
+        let key = parts.next().unwrap();
+        let value = parts.next().unwrap_or("");
+        (key, value)
+    })
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn parse_headers_hashmap_none() {
+        let headers = None;
+
+        let actual = parse_headers_hashmap(headers);
+
+        assert_eq!(actual.len(), 0);
+    }
+
+    #[test]
+    fn parse_headers_hashmap_some() {
+        let headers = Some("key1=value1,key2=value2,key3=");
+
+        let actual = parse_headers_hashmap(headers);
+
+        assert_eq!(actual.len(), 3);
+        assert_eq!(actual.get("key1").unwrap(), "value1");
+        assert_eq!(actual.get("key2").unwrap(), "value2");
+        assert_eq!(actual.get("key3").unwrap(), "");
+    }
+
+    #[test]
+    fn parse_headers_metadata_map_none() {
+        let headers = None;
+
+        let actual = parse_headers_metadata_map(headers);
+
+        assert_eq!(actual.len(), 0);
+    }
+
+    #[test]
+    fn parse_headers_metadata_map_some() {
+        let headers = Some("key1=value1,key2=value2,key3=");
+
+        let actual = parse_headers_metadata_map(headers);
+
+        assert_eq!(actual.len(), 3);
+        assert_eq!(actual.get("key1").unwrap(), "value1");
+        assert_eq!(actual.get("key2").unwrap(), "value2");
+        assert_eq!(actual.get("key3").unwrap(), "");
+    }
 }

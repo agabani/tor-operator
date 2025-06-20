@@ -34,6 +34,10 @@ pub struct CliArgs {
     #[arg(long, env, value_delimiter = ',')]
     pub otel_traces_exporter: Option<Vec<CliArgsOtelExporter>>,
 
+    /// Specifies the OTLP transport compression to be used for all telemetry data.
+    #[arg(long, value_enum, env)]
+    pub otel_exporter_otlp_compression: Option<CliArgsOtelExporterOtlpCompression>,
+
     /// A base endpoint URL for any signal type, with an optionally-specified port number. Helpful for when you’re sending more than one signal to the same endpoint and want one environment variable to control the endpoint.
     #[arg(long, env)]
     pub otel_exporter_otlp_endpoint: Option<String>,
@@ -49,6 +53,10 @@ pub struct CliArgs {
     /// The timeout value for all outgoing data (traces, metrics, and logs) in milliseconds.
     #[arg(long, env, default_value_t = 10000)]
     pub otel_exporter_otlp_timeout: u64,
+
+    /// Specifies the OTLP transport compression to be used for log data.
+    #[arg(long, value_enum, env)]
+    pub otel_exporter_otlp_logs_compression: Option<CliArgsOtelExporterOtlpCompression>,
 
     /// Endpoint URL for log data only, with an optionally-specified port number. Typically ends with `v1/logs` when using OTLP/HTTP.
     #[arg(long, env)]
@@ -66,6 +74,10 @@ pub struct CliArgs {
     #[arg(long, env)]
     pub otel_exporter_otlp_logs_timeout: Option<u64>,
 
+    /// Specifies the OTLP transport compression to be used for metrics data.
+    #[arg(long, value_enum, env)]
+    pub otel_exporter_otlp_metrics_compression: Option<CliArgsOtelExporterOtlpCompression>,
+
     /// Endpoint URL for metric data only, with an optionally-specified port number. Typically ends with `v1/metrics` when using OTLP/HTTP.
     #[arg(long, env)]
     pub otel_exporter_otlp_metrics_endpoint: Option<String>,
@@ -82,6 +94,10 @@ pub struct CliArgs {
     #[arg(long, env)]
     pub otel_exporter_otlp_metrics_timeout: Option<u64>,
 
+    /// Specifies the OTLP transport compression to be used for trace data.
+    #[arg(long, value_enum, env)]
+    pub otel_exporter_otlp_traces_compression: Option<CliArgsOtelExporterOtlpCompression>,
+
     /// Endpoint URL for metric data only, with an optionally-specified port number. Typically ends with `v1/traces` when using OTLP/HTTP.
     #[arg(long, env)]
     pub otel_exporter_otlp_traces_endpoint: Option<String>,
@@ -97,6 +113,23 @@ pub struct CliArgs {
     /// The timeout value for all outgoing traces in milliseconds.
     #[arg(long, env)]
     pub otel_exporter_otlp_traces_timeout: Option<u64>,
+}
+
+#[derive(ValueEnum, Debug, Clone, Copy)]
+pub enum CliArgsOtelExporterOtlpCompression {
+    #[value(name = "gzip")]
+    Gzip,
+    #[value(name = "zstd")]
+    Zstd,
+}
+
+impl From<CliArgsOtelExporterOtlpCompression> for opentelemetry_otlp::Compression {
+    fn from(value: CliArgsOtelExporterOtlpCompression) -> Self {
+        match value {
+            CliArgsOtelExporterOtlpCompression::Gzip => opentelemetry_otlp::Compression::Gzip,
+            CliArgsOtelExporterOtlpCompression::Zstd => opentelemetry_otlp::Compression::Zstd,
+        }
+    }
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy)]

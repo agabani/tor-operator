@@ -42,6 +42,10 @@ Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys an
 
   Possible values: `console`, `otlp`
 
+* `--otel-exporter-otlp-compression <OTEL_EXPORTER_OTLP_COMPRESSION>` — Specifies the OTLP transport compression to be used for all telemetry data
+
+  Possible values: `gzip`, `zstd`
+
 * `--otel-exporter-otlp-endpoint <OTEL_EXPORTER_OTLP_ENDPOINT>` — A base endpoint URL for any signal type, with an optionally-specified port number. Helpful for when you’re sending more than one signal to the same endpoint and want one environment variable to control the endpoint
 * `--otel-exporter-otlp-headers <OTEL_EXPORTER_OTLP_HEADERS>` — A list of headers to apply to all outgoing data (traces, metrics, and logs)
 * `--otel-exporter-otlp-protocol <OTEL_EXPORTER_OTLP_PROTOCOL>` — Specifies the OTLP transport protocol to be used for all telemetry data
@@ -51,6 +55,10 @@ Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys an
 * `--otel-exporter-otlp-timeout <OTEL_EXPORTER_OTLP_TIMEOUT>` — The timeout value for all outgoing data (traces, metrics, and logs) in milliseconds
 
   Default value: `10000`
+* `--otel-exporter-otlp-logs-compression <OTEL_EXPORTER_OTLP_LOGS_COMPRESSION>` — Specifies the OTLP transport compression to be used for log data
+
+  Possible values: `gzip`, `zstd`
+
 * `--otel-exporter-otlp-logs-endpoint <OTEL_EXPORTER_OTLP_LOGS_ENDPOINT>` — Endpoint URL for log data only, with an optionally-specified port number. Typically ends with `v1/logs` when using OTLP/HTTP
 * `--otel-exporter-otlp-logs-headers <OTEL_EXPORTER_OTLP_LOGS_HEADERS>` — A list of headers to apply to all outgoing logs
 * `--otel-exporter-otlp-logs-protocol <OTEL_EXPORTER_OTLP_LOGS_PROTOCOL>` — Specifies the OTLP transport protocol to be used for log data
@@ -58,6 +66,10 @@ Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys an
   Possible values: `grpc`, `http/json`, `http/protobuf`
 
 * `--otel-exporter-otlp-logs-timeout <OTEL_EXPORTER_OTLP_LOGS_TIMEOUT>` — The timeout value for all outgoing logs in milliseconds
+* `--otel-exporter-otlp-metrics-compression <OTEL_EXPORTER_OTLP_METRICS_COMPRESSION>` — Specifies the OTLP transport compression to be used for metrics data
+
+  Possible values: `gzip`, `zstd`
+
 * `--otel-exporter-otlp-metrics-endpoint <OTEL_EXPORTER_OTLP_METRICS_ENDPOINT>` — Endpoint URL for metric data only, with an optionally-specified port number. Typically ends with `v1/metrics` when using OTLP/HTTP
 * `--otel-exporter-otlp-metrics-headers <OTEL_EXPORTER_OTLP_METRICS_HEADERS>` — A list of headers to apply to all outgoing metrics
 * `--otel-exporter-otlp-metrics-protocol <OTEL_EXPORTER_OTLP_METRICS_PROTOCOL>` — Specifies the OTLP transport protocol to be used for metrics data
@@ -65,6 +77,10 @@ Tor Operator is a Kubernetes Operator that manages Onion Balances, Onion Keys an
   Possible values: `grpc`, `http/json`, `http/protobuf`
 
 * `--otel-exporter-otlp-metrics-timeout <OTEL_EXPORTER_OTLP_METRICS_TIMEOUT>` — The timeout value for all outgoing metrics in milliseconds
+* `--otel-exporter-otlp-traces-compression <OTEL_EXPORTER_OTLP_TRACES_COMPRESSION>` — Specifies the OTLP transport compression to be used for trace data
+
+  Possible values: `gzip`, `zstd`
+
 * `--otel-exporter-otlp-traces-endpoint <OTEL_EXPORTER_OTLP_TRACES_ENDPOINT>` — Endpoint URL for metric data only, with an optionally-specified port number. Typically ends with `v1/traces` when using OTLP/HTTP
 * `--otel-exporter-otlp-traces-headers <OTEL_EXPORTER_OTLP_TRACES_HEADERS>` — A list of headers to apply to all outgoing traces
 * `--otel-exporter-otlp-traces-protocol <OTEL_EXPORTER_OTLP_TRACES_PROTOCOL>` — Specifies the OTLP transport protocol to be used for trace data
