@@ -15,7 +15,7 @@ base32 = "0.5.1"
 clap = { version = "4.5.40", features = ["derive", "env"] }
 clap-markdown = "0.1.5"
 curve25519-dalek = { version = "4.2.0", features = ["legacy_compatibility"] }
-ed25519-dalek = { version = "2.1.1", features = ["hazmat", "rand_core"] }
+ed25519-dalek = { version = "2.2.0", features = ["hazmat", "rand_core"] }
 futures = "0.3.31"
 hyper = { version = "1.6.0", features = ["full"] }
 hyper-util = { version = "0.1.15", features = ["tokio"] }
