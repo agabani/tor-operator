@@ -1,6 +1,6 @@
-FROM ubuntu:24.10 AS build
+FROM ubuntu:24.04 AS build
 
-ARG ONIONBALANCE_VERSION=0.2.3
+ARG ONIONBALANCE_VERSION=0.2.4
 
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive \
