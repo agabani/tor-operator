@@ -209,7 +209,7 @@ pub struct ControllerRunArgs {
     /// Onion Balance image uri
     #[arg(
         long,
-        default_value = "ghcr.io/agabani/tor-operator:onion-balance-0.2.3.0"
+        default_value = "ghcr.io/agabani/tor-operator:onion-balance-0.2.4.0"
     )]
     pub onion_balance_image_uri: String,
 
@@ -226,7 +226,7 @@ pub struct ControllerRunArgs {
     pub tor_image_pull_policy: String,
 
     /// Tor image uri
-    #[arg(long, default_value = "ghcr.io/agabani/tor-operator:tor-0.4.8.16.0")]
+    #[arg(long, default_value = "ghcr.io/agabani/tor-operator:tor-0.4.8.17.0")]
     pub tor_image_uri: String,
 }
 
