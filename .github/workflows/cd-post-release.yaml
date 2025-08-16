@@ -121,7 +121,7 @@ jobs:
           - platform: linux/amd64
             os: ubuntu-latest
           - platform: linux/arm64
-            os: buildjet-4vcpu-ubuntu-2204-arm
+            os: ubuntu-24.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v5
