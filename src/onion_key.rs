@@ -383,10 +383,10 @@ async fn reconcile_secret(
 
     let (state, secret) = generate_secret(object, secret.as_ref(), annotations, labels);
 
-    if let Some(secret) = secret {
-        if let State::Ready(_) = state {
-            api.sync(object, [((), secret)].into()).await?;
-        }
+    if let Some(secret) = secret
+        && let State::Ready(_) = state
+    {
+        api.sync(object, [((), secret)].into()).await?;
     }
 
     Ok(state)
