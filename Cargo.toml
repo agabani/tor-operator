@@ -20,7 +20,7 @@ futures = "0.3.31"
 hyper = { version = "1.7.0", features = ["full"] }
 hyper-util = { version = "0.1.16", features = ["tokio"] }
 k8s-openapi = { version = "0.25.0", features = ["latest", "schemars"] }
-kube = { version = "1.1.0", features = ["client", "derive", "runtime", "rustls-tls"], default-features = false }
+kube = { version = "2.0.0", features = ["client", "derive", "runtime", "rustls-tls"], default-features = false }
 opentelemetry = { version = "0.30.0", features = ["metrics"] }
 opentelemetry-appender-tracing = "0.30.1"
 opentelemetry-otlp = { version = "0.30.0", features = ["grpc-tonic", "gzip-tonic", "logs", "metrics", "reqwest-rustls-webpki-roots", "tls", "tls-webpki-roots", "trace", "zstd-tonic"] }
