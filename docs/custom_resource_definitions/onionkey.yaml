@@ -39,13 +39,21 @@ spec:
 
               A Tor Onion Key consists of the following files:
 
-              - `hostname` - `hs_ed25519_public_key` - `hs_ed25519_public_key`
+              - `hostname`
+              - `hs_ed25519_public_key`
+              - `hs_ed25519_public_key`
 
               A user can import their existing Tor Onion Key by creating a secret.
 
-              ```ignore kubectl create secret generic tor-ingress-example \ --from-file=hostname=./hostname \ --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \ --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key ```
+              ```ignore
+              kubectl create secret generic tor-ingress-example \
+                --from-file=hostname=./hostname \
+                --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \
+                --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key
+              ```
 
-              A user can have the Tor Operator create a new random Tor Onion Key by using the auto generate feature controlled by `.autoGenerate`.
+              A user can have the Tor Operator create a new random Tor Onion Key by using the
+              auto generate feature controlled by `.autoGenerate`.
             properties:
               autoGenerate:
                 default: false
@@ -54,17 +62,24 @@ spec:
 
                   ## Auto Generate: False
 
-                  Tor Operator will use an existing Onion Key from the Secret specified in `.secret.name`.
+                  Tor Operator will use an existing Onion Key from the Secret specified
+                  in `.secret.name`.
 
                   ## Auto Generate: True
 
-                  The Tor Operator will generate a random Onion Key and save it in the secret specified in `.secret.name`.
+                  The Tor Operator will generate a random Onion Key and save it in the
+                  secret specified in `.secret.name`.
 
-                  If the `OnionKey`'s secret key is missing or malformed, the Tor Operator will recreate the secret key.
+                  If the `OnionKey`'s secret key is missing or malformed, the Tor Operator
+                  will recreate the secret key.
 
-                  If the `OnionKey`'s public key is missing, malformed, or does not match the secret key, the Tor Operator will deterministically recreate the public key from the secret key.
+                  If the `OnionKey`'s public key is missing, malformed, or does not match
+                  the secret key, the Tor Operator will deterministically recreate the
+                  public key from the secret key.
 
-                  If the `OnionKey`'s hostname is missing, malformed, or does not match the public key, the Tor Operator will deterministically recreate the hostname from the public key.
+                  If the `OnionKey`'s hostname is missing, malformed, or does not match
+                  the public key, the Tor Operator will deterministically recreate the
+                  hostname from the public key.
                 title: Auto Generate
                 type: boolean
               secret:
@@ -86,7 +101,8 @@ spec:
                     description: |-
                       Name of the secret.
 
-                      Secret data must have keys `hostname`, `hs_ed25519_public_key` and `hs_ed25519_secret_key`.
+                      Secret data must have keys `hostname`, `hs_ed25519_public_key` and
+                      `hs_ed25519_secret_key`.
                     type: string
                 required:
                 - name
@@ -107,7 +123,11 @@ spec:
 
                   ### Ready
 
-                  `SecretNotFound`, `SecretKeyNotFound`, `SecretKeyMalformed`, `PublicKeyNotFound`, `PublicKeyMalformed`, `PublicKeyMismatch`, `HostnameNotFound`, `HostnameMalformed`, `HostnameMismatch`, `Ready`
+                  `SecretNotFound`,
+                  `SecretKeyNotFound`, `SecretKeyMalformed`,
+                  `PublicKeyNotFound`, `PublicKeyMalformed`, `PublicKeyMismatch`,
+                  `HostnameNotFound`, `HostnameMalformed`, `HostnameMismatch`,
+                  `Ready`
                 items:
                   description: Condition contains details for one aspect of the current state of this API Resource.
                   properties:
