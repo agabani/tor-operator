@@ -2,6 +2,11 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Target earliest supported Kubernetes API server version (1.30.0).
+- Upgrade dependencies.
+
 ## [0.0.39] - 2025-08-16
 
 ### Changed
@@ -311,7 +316,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.39...HEAD
-
 [0.0.39]: https://github.com/agabani/tor-operator/compare/v0.0.38...v0.0.39
 [0.0.38]: https://github.com/agabani/tor-operator/compare/v0.0.37...v0.0.38
 [0.0.37]: https://github.com/agabani/tor-operator/compare/v0.0.36...v0.0.37
