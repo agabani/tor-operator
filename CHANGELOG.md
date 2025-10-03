@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Third party Tor v0.4.8.18 container image with OpenSSL 3.6.0 and Ubuntu 24.04. (linux/amd64, linux/arm64)
 - Target earliest supported Kubernetes API server version (1.30.0).
 - Upgrade dependencies.
 
