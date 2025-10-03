@@ -69,7 +69,7 @@ RUN cd tor-${TOR_VERSION} && \
     make install && \
     cd ..
 
-FROM ubuntu:24.10
+FROM ubuntu:24.04
 
 ARG TOR_VERSION=0.4.8.17
 

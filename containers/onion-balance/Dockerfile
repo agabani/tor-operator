@@ -18,7 +18,7 @@ RUN git fetch && git checkout ${ONIONBALANCE_VERSION}
 
 RUN python3 -m pip install . --break-system-packages
 
-FROM ubuntu:24.10
+FROM ubuntu:24.04
 
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive \
