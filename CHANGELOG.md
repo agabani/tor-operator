@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [1.0.0] - 2025-10-03
+
 ### Changed
 
 - Third party Tor v0.4.8.18 container image with OpenSSL 3.6.0 and Ubuntu 24.04. (linux/amd64, linux/arm64)
@@ -316,7 +318,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v0.0.39...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.0...HEAD
+
+[1.0.0]: https://github.com/agabani/tor-operator/compare/v0.0.39...v1.0.0
 [0.0.39]: https://github.com/agabani/tor-operator/compare/v0.0.38...v0.0.39
 [0.0.38]: https://github.com/agabani/tor-operator/compare/v0.0.37...v0.0.38
 [0.0.37]: https://github.com/agabani/tor-operator/compare/v0.0.36...v0.0.37
