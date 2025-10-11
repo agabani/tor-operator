@@ -128,7 +128,7 @@ Run the Tor Operator
   Default value: `IfNotPresent`
 * `--tor-image-uri <TOR_IMAGE_URI>` — Tor image uri
 
-  Default value: `ghcr.io/agabani/tor-operator:tor-0.4.8.18.0`
+  Default value: `ghcr.io/agabani/tor-operator:tor-0.4.8.19.0`
 
 
 
