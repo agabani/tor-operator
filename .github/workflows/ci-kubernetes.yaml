@@ -62,7 +62,7 @@ jobs:
         with:
           cluster_name: kind
       - name: Download
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           merge-multiple: true
           pattern: images-*
