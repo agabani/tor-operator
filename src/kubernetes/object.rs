@@ -90,7 +90,7 @@ pub trait Object: kube::ResourceExt<DynamicType = ()> {
             (
                 TOR_AGABANI_CO_UK_PART_OF_KEY.into(),
                 if let Some(part_of) = self.labels().get(TOR_AGABANI_CO_UK_PART_OF_KEY) {
-                    part_of.to_string()
+                    part_of.into()
                 } else {
                     self.try_uid()?.into()
                 },
