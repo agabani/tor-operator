@@ -29,7 +29,7 @@ opentelemetry_sdk = { version = "0.31.0", features = ["rt-tokio"] }
 rand_08 = { package = "rand", version = "0.8.5" }
 schemars = "1.2.0"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.147"
+serde_json = "1.0.148"
 serde_yaml = "0.9.34"
 sha2 = "0.10.9"
 sha3 = "0.10.8"
