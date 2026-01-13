@@ -34,7 +34,7 @@ serde_yaml = "0.9.34"
 sha2 = "0.10.9"
 sha3 = "0.10.8"
 tokio = { version = "1.49.0", features = ["full"] }
-tower = "0.5.2"
+tower = "0.5.3"
 tracing = "0.1.44"
 tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
