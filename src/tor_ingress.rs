@@ -18,7 +18,7 @@ use k8s_openapi::{
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
     apimachinery::pkg::apis::meta::v1::{Condition, Time},
-    chrono::Utc,
+    jiff::Timestamp,
 };
 use kube::{
     Client, CustomResource, CustomResourceExt, Resource,
@@ -1058,7 +1058,7 @@ impl From<&State> for Vec<Condition> {
     fn from(value: &State) -> Self {
         match value {
             State::OnionBalanceOnionKeyNotFound => vec![Condition {
-                last_transition_time: Time(Utc::now()),
+                last_transition_time: Time(Timestamp::now()),
                 message: "The OnionBalance OnionKey was not found.".into(),
                 observed_generation: None,
                 reason: "NotFound".into(),
@@ -1066,7 +1066,7 @@ impl From<&State> for Vec<Condition> {
                 type_: "OnionKey".into(),
             }],
             State::OnionBalanceOnionKeyHostnameNotFound => vec![Condition {
-                last_transition_time: Time(Utc::now()),
+                last_transition_time: Time(Timestamp::now()),
                 message: "The OnionBalance OnionKey does not have a hostname.".into(),
                 observed_generation: None,
                 reason: "HostnameNotFound".into(),
@@ -1074,7 +1074,7 @@ impl From<&State> for Vec<Condition> {
                 type_: "OnionKey".into(),
             }],
             State::OnionServiceOnionKeyHostnameNotFound => vec![Condition {
-                last_transition_time: Time(Utc::now()),
+                last_transition_time: Time(Timestamp::now()),
                 message: "The OnionService OnionKey does not have a hostname.".into(),
                 observed_generation: None,
                 reason: "HostnameNotFound".into(),
@@ -1083,7 +1083,7 @@ impl From<&State> for Vec<Condition> {
             }],
             State::Initialized(_) => vec![
                 Condition {
-                    last_transition_time: Time(Utc::now()),
+                    last_transition_time: Time(Timestamp::now()),
                     message: "The OnionKey is ready.".into(),
                     observed_generation: None,
                     reason: "Ready".into(),
@@ -1091,7 +1091,7 @@ impl From<&State> for Vec<Condition> {
                     type_: "OnionKey".into(),
                 },
                 Condition {
-                    last_transition_time: Time(Utc::now()),
+                    last_transition_time: Time(Timestamp::now()),
                     message: "The TorIngress is initialized.".into(),
                     observed_generation: None,
                     reason: "Initialized".into(),

@@ -19,8 +19,8 @@ ed25519-dalek = { version = "2.2.0", features = ["hazmat", "rand_core"] }
 futures = "0.3.31"
 hyper = { version = "1.8.1", features = ["full"] }
 hyper-util = { version = "0.1.19", features = ["tokio"] }
-k8s-openapi = { version = "0.26.1", features = ["earliest", "schemars"] }
-kube = { version = "2.0.1", features = ["client", "derive", "runtime", "rustls-tls"], default-features = false }
+k8s-openapi = { version = "0.27.0", features = ["earliest", "schemars"] }
+kube = { version = "3.0.0", features = ["client", "derive", "runtime", "rustls-tls"], default-features = false }
 opentelemetry = { version = "0.31.0", features = ["metrics"] }
 opentelemetry-appender-tracing = "0.31.1"
 opentelemetry-otlp = { version = "0.31.0", features = ["grpc-tonic", "gzip-tonic", "logs", "metrics", "reqwest-rustls-webpki-roots", "tls", "tls-webpki-roots", "trace", "zstd-tonic"] }

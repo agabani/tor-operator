@@ -3,6 +3,12 @@ updates:
   # Maintain dependencies for Cargo
   - package-ecosystem: "cargo"
     directory: "/"
+    groups:
+      kube:
+        patterns:
+          - kube
+          - k8s-openapi
+          - schemars
     schedule:
       interval: "daily"
 
