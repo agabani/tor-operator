@@ -24,7 +24,7 @@ use k8s_openapi::{
         apis::meta::v1::{Condition, LabelSelector, Time},
         util::intstr::IntOrString,
     },
-    chrono::Utc,
+    jiff::Timestamp,
 };
 use kube::{
     Client, CustomResource, CustomResourceExt, Resource,
@@ -599,7 +599,7 @@ impl From<&State> for Vec<Condition> {
     fn from(value: &State) -> Self {
         match value {
             State::PortsNotFound => vec![Condition {
-                last_transition_time: Time(Utc::now()),
+                last_transition_time: Time(Timestamp::now()),
                 message: "The TorProxy service port was not found.".into(),
                 observed_generation: None,
                 reason: "PortsNotFound".into(),
@@ -608,7 +608,7 @@ impl From<&State> for Vec<Condition> {
             }],
             State::Initialized(_) => vec![
                 Condition {
-                    last_transition_time: Time(Utc::now()),
+                    last_transition_time: Time(Timestamp::now()),
                     message: "The TorProxy service is ready.".into(),
                     observed_generation: None,
                     reason: "Ready".into(),
@@ -616,7 +616,7 @@ impl From<&State> for Vec<Condition> {
                     type_: "Service".into(),
                 },
                 Condition {
-                    last_transition_time: Time(Utc::now()),
+                    last_transition_time: Time(Timestamp::now()),
                     message: "The TorProxy is initialized.".into(),
                     observed_generation: None,
                     reason: "Initialized".into(),

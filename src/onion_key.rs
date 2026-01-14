@@ -6,7 +6,7 @@ use k8s_openapi::{
     api::core::v1::Secret,
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
     apimachinery::pkg::apis::meta::v1::{Condition, Time},
-    chrono::Utc,
+    jiff::Timestamp,
 };
 use kube::{
     Client, CustomResource, CustomResourceExt, Resource, ResourceExt,
@@ -289,7 +289,7 @@ enum State {
 impl From<&State> for Vec<Condition> {
     fn from(value: &State) -> Self {
         vec![Condition {
-            last_transition_time: Time(Utc::now()),
+            last_transition_time: Time(Timestamp::now()),
             message: match value {
                 State::SecretNotFound => "The secret was not found.".into(),
                 State::SecretKeyNotFound => "The secret key was not found.".into(),

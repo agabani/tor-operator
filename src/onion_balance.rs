@@ -12,7 +12,7 @@ use k8s_openapi::{
     },
     apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition,
     apimachinery::pkg::apis::meta::v1::{Condition, LabelSelector, Time},
-    chrono::Utc,
+    jiff::Timestamp,
 };
 use kube::{
     Client, CustomResource, CustomResourceExt, Resource,
@@ -477,7 +477,7 @@ impl From<&State> for Vec<Condition> {
     fn from(value: &State) -> Self {
         match value {
             State::OnionKeyNotFound => vec![Condition {
-                last_transition_time: Time(Utc::now()),
+                last_transition_time: Time(Timestamp::now()),
                 message: "The OnionKey was not found.".into(),
                 observed_generation: None,
                 reason: "NotFound".into(),
@@ -485,7 +485,7 @@ impl From<&State> for Vec<Condition> {
                 type_: "OnionKey".into(),
             }],
             State::OnionKeyHostnameNotFound => vec![Condition {
-                last_transition_time: Time(Utc::now()),
+                last_transition_time: Time(Timestamp::now()),
                 message: "The OnionKey does not have a hostname.".into(),
                 observed_generation: None,
                 reason: "HostnameNotFound".into(),
@@ -494,7 +494,7 @@ impl From<&State> for Vec<Condition> {
             }],
             State::Initialized(_) => vec![
                 Condition {
-                    last_transition_time: Time(Utc::now()),
+                    last_transition_time: Time(Timestamp::now()),
                     message: "The OnionKey is ready.".into(),
                     observed_generation: None,
                     reason: "Ready".into(),
@@ -502,7 +502,7 @@ impl From<&State> for Vec<Condition> {
                     type_: "OnionKey".into(),
                 },
                 Condition {
-                    last_transition_time: Time(Utc::now()),
+                    last_transition_time: Time(Timestamp::now()),
                     message: "The OnionBalance is initialized.".into(),
                     observed_generation: None,
                     reason: "Initialized".into(),
