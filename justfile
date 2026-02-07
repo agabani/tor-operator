@@ -35,6 +35,10 @@ cli-markdown-generate:
 cli-onion-key-generate:
   @cargo run -- onion-key generate
 
+# deny
+deny:
+  @cargo deny check
+
 # docker build
 docker-build: docker-build-onion-balance docker-build-tor docker-build-tor-operator
 
