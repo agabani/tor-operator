@@ -6,7 +6,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  VERSION: 0.4.8.22.0
+  VERSION: 0.4.9.5.0
 
 jobs:
   release-container-image:
