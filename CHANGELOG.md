@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Third party Tor v0.4.9.5 container image. (linux/amd64, linux/arm64)
+
 ## [1.0.4] - 2026-01-28
 
 ### Changed
