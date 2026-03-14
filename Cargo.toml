@@ -37,4 +37,4 @@ tokio = { version = "1.50.0", features = ["full"] }
 tower = "0.5.3"
 tracing = "0.1.44"
 tracing-opentelemetry = "0.32.1"
-tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
