@@ -23,7 +23,7 @@ k8s-openapi = { version = "0.27.1", features = ["earliest", "schemars"] }
 kube = { version = "3.1.0", features = ["client", "derive", "runtime", "rustls-tls"], default-features = false }
 opentelemetry = { version = "0.31.0", features = ["metrics"] }
 opentelemetry-appender-tracing = "0.31.1"
-opentelemetry-otlp = { version = "0.31.0", features = ["grpc-tonic", "gzip-tonic", "logs", "metrics", "reqwest-rustls-webpki-roots", "tls", "tls-webpki-roots", "trace", "zstd-tonic"] }
+opentelemetry-otlp = { version = "0.31.1", features = ["grpc-tonic", "gzip-tonic", "logs", "metrics", "reqwest-rustls-webpki-roots", "tls", "tls-webpki-roots", "trace", "zstd-tonic"] }
 opentelemetry-stdout = "0.31.0"
 opentelemetry_sdk = { version = "0.31.0", features = ["rt-tokio"] }
 rand_08 = { package = "rand", version = "0.8.5" }
