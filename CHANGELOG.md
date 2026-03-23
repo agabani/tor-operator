@@ -6,11 +6,8 @@
 
 ### Changed
 
-- Upgrade dependencies.
-
-### Changed
-
 - Third party Tor v0.4.9.5 container image with zlib 1.3.2. (linux/amd64, linux/arm64)
+- Upgrade dependencies.
 
 ## [1.0.5] - 2026-02-14
 
