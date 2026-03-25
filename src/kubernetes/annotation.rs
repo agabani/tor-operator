@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, fmt::Write as _};
 
 use sha2::{Digest, Sha256};
 
@@ -12,9 +12,13 @@ where
 
     #[must_use]
     fn sha_256(&'a self) -> String {
-        let mut sha = Sha256::new();
-        sha.update(&*self.into());
-        format!("sha256:{:x}", sha.finalize())
+        let digest = Sha256::digest(&*self.into());
+        let mut sha256 = String::with_capacity(7 + 64);
+        sha256.push_str("sha256:");
+        for byte in &digest {
+            write!(sha256, "{byte:02x}").expect("writing to a String is infallible");
+        }
+        sha256
     }
 
     #[must_use]
