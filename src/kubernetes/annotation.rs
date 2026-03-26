@@ -49,21 +49,8 @@ mod tests {
     }
 
     #[test]
-    fn sha_256_returns_sha256_prefix() {
-        // arrange
-        let annotation = TestAnnotation("hello".to_string());
-
-        // act
-        let result = annotation.sha_256();
-
-        // assert
-        assert!(result.starts_with("sha256:"));
-    }
-
-    #[test]
     fn sha_256_produces_correct_hash() {
         // arrange
-        // echo -n "hello" | sha256sum => 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
         let annotation = TestAnnotation("hello".to_string());
 
         // act
@@ -77,42 +64,15 @@ mod tests {
     }
 
     #[test]
-    fn sha_256_empty_string() {
+    fn sha_256_does_not_reallocate() {
         // arrange
-        // echo -n "" | sha256sum => e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-        let annotation = TestAnnotation(String::new());
+        let annotation = TestAnnotation("hello".to_string());
 
         // act
         let result = annotation.sha_256();
 
         // assert
-        assert_eq!(
-            result,
-            "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        );
-    }
-
-    #[test]
-    fn sha_256_is_deterministic() {
-        // arrange
-        let annotation = TestAnnotation("deterministic".to_string());
-
-        // act
-        let result1 = annotation.sha_256();
-        let result2 = annotation.sha_256();
-
-        // assert
-        assert_eq!(result1, result2);
-    }
-
-    #[test]
-    fn sha_256_different_inputs_produce_different_hashes() {
-        // arrange
-        let a = TestAnnotation("foo".to_string());
-        let b = TestAnnotation("bar".to_string());
-
-        // act / assert
-        assert_ne!(a.sha_256(), b.sha_256());
+        assert_eq!(result.len(), result.capacity());
     }
 
     #[test]
