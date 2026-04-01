@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+- Third party Tor v0.4.9.6 container image with zlib 1.3.2. (linux/amd64, linux/arm64)
+
 ## [1.0.6] - 2026-03-22
 
 ### Changed
