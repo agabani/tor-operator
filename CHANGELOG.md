@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [1.0.7] - 2026-04-01
+
 - Third party Tor v0.4.9.6 container image with zlib 1.3.2. (linux/amd64, linux/arm64)
 
 ## [1.0.6] - 2026-03-22
@@ -357,7 +359,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.7...HEAD
+
+[1.0.7]: https://github.com/agabani/tor-operator/compare/v1.0.6...v1.0.7
 
 [1.0.6]: https://github.com/agabani/tor-operator/compare/v1.0.5...v1.0.6
 
