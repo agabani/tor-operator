@@ -1,14 +1,25 @@
 use std::ops::Deref;
 
+use rand::{Rng as _, SeedableRng as _};
+
 use super::{Error, HiddenServiceSecretKey, Result, hidden_service_secret_key::Data};
 
 pub struct ExpandedSecretKey(ed25519_dalek::hazmat::ExpandedSecretKey);
 
 impl ExpandedSecretKey {
+    /// # Panics
+    ///
+    /// Panics if the system entropy source cannot be used to seed the RNG.
     #[must_use]
     pub fn generate() -> Self {
-        let mut csprng = rand_08::rngs::OsRng;
-        let secret_key = ed25519_dalek::SigningKey::generate(&mut csprng);
+        let mut csprng = rand::rngs::StdRng::try_from_rng(&mut rand::rngs::SysRng)
+            .expect("failed to seed StdRng from system entropy source");
+
+        // upstream reference: https://github.com/dalek-cryptography/curve25519-dalek/blob/ed25519-2.2.0/ed25519-dalek/src/signing.rs#L183-L206
+        let mut secret = ed25519_dalek::SecretKey::default();
+        csprng.fill_bytes(&mut secret);
+        let secret_key = ed25519_dalek::SigningKey::from_bytes(&secret);
+
         Self(secret_key.as_bytes().into())
     }
 
@@ -39,7 +50,7 @@ impl TryFrom<&HiddenServiceSecretKey> for ExpandedSecretKey {
                     hash_prefix: data[32..64].try_into().expect("incorrect hash prefix slice length"),
                     #[allow(deprecated)] // bytes from hs_ed25519_secret_key must be loaded into expanded secret key without modification
                     scalar: curve25519_dalek::Scalar::from_bits(
-                        data[0..32].try_into().expect("incorrect scaler slice length"),
+                        data[0..32].try_into().expect("incorrect scalar slice length"),
                     ),
                 },
             )),
