@@ -594,7 +594,7 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
     tracing::info!("reconciled");
 
     match state {
-        State::Initialized(_) => Ok(Action::requeue(Duration::from_secs(3600))),
+        State::Initialized(_) => Ok(Action::requeue(Duration::from_hours(1))),
         _ => Ok(Action::requeue(Duration::from_secs(5))),
     }
 }
