@@ -1188,7 +1188,7 @@ async fn reconciler(object: Arc<TorIngress>, ctx: Arc<Context>) -> Result<Action
     tracing::info!("reconciled");
 
     match state {
-        State::Initialized(_) => Ok(Action::requeue(Duration::from_secs(3600))),
+        State::Initialized(_) => Ok(Action::requeue(Duration::from_hours(1))),
         _ => Ok(Action::requeue(Duration::from_secs(5))),
     }
 }

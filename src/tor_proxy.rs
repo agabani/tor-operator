@@ -725,7 +725,7 @@ async fn reconciler(object: Arc<TorProxy>, ctx: Arc<Context>) -> Result<Action> 
 
     match state {
         State::Initialized(_) | State::PortsNotFound => {
-            Ok(Action::requeue(Duration::from_secs(3600)))
+            Ok(Action::requeue(Duration::from_hours(1)))
         }
     }
 }

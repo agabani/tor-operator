@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use std::{borrow::Cow, fs::File, io::Write};
 
 use tor_operator::{
@@ -23,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     match &cli.command {
         CliCommands::Controller(controller) => match &controller.command {
             ControllerCommands::Run(run) => {
-                controller_run(cli, controller, run, provider.meter()).await
+                controller_run(cli, controller, run, provider.meter()).await;
             }
         },
         CliCommands::Crd(crd) => match &crd.command {
@@ -34,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
         },
         CliCommands::OnionKey(onion_address) => match &onion_address.command {
             OnionKeyCommands::Generate(generate) => {
-                onion_key_generate(cli, onion_address, generate)
+                onion_key_generate(cli, onion_address, generate);
             }
         },
     }
@@ -84,17 +86,17 @@ async fn controller_run(
     let metrics = Metrics::new(meter_provider);
 
     tokio::select! {
-        _ = http_server::run(addr) => {},
-        _ = onion_balance::run_controller(client.clone(), onion_balance_config, metrics.clone()) => {},
-        _ = onion_key::run_controller(client.clone(), onion_key_config, metrics.clone()) => {},
-        _ = onion_service::run_controller(client.clone(),onion_service_config, metrics.clone()) => {},
-        _ = tor_ingress::run_controller(client.clone(), tor_ingress_config, metrics.clone()) => {},
-        _ = tor_proxy::run_controller(client.clone(), tor_proxy_config, metrics.clone()) => {},
+        () = http_server::run(addr) => {},
+        () = onion_balance::run_controller(client.clone(), onion_balance_config, metrics.clone()) => {},
+        () = onion_key::run_controller(client.clone(), onion_key_config, metrics.clone()) => {},
+        () = onion_service::run_controller(client.clone(),onion_service_config, metrics.clone()) => {},
+        () = tor_ingress::run_controller(client.clone(), tor_ingress_config, metrics.clone()) => {},
+        () = tor_proxy::run_controller(client.clone(), tor_proxy_config, metrics.clone()) => {},
     }
 }
 
 fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
-    fn helmify(content: String) -> String {
+    fn helmify(content: &str) -> String {
         format!(
             "{}\n{}{}\n",
             "{{- if .Values.customResourceDefinition.create -}}",
@@ -143,16 +145,17 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
 
     for (name, crd) in crds {
         let content = match generate.format {
-            CrdGenerateArgsFormat::Helm => helmify(serde_yaml::to_string(&crd).unwrap()),
+            CrdGenerateArgsFormat::Helm => helmify(&serde_yaml::to_string(&crd).unwrap()),
             CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd).unwrap(),
             CrdGenerateArgsFormat::Yaml => serde_yaml::to_string(&crd).unwrap(),
         };
 
         if let Some(output) = &generate.output {
             let path = match generate.format {
-                CrdGenerateArgsFormat::Helm => output.join(format!("{name}.yaml")),
                 CrdGenerateArgsFormat::Json => output.join(format!("{name}.json")),
-                CrdGenerateArgsFormat::Yaml => output.join(format!("{name}.yaml")),
+                CrdGenerateArgsFormat::Helm | CrdGenerateArgsFormat::Yaml => {
+                    output.join(format!("{name}.yaml"))
+                }
             };
 
             File::create(path)

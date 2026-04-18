@@ -368,7 +368,7 @@ async fn reconciler(object: Arc<OnionKey>, ctx: Arc<Context>) -> Result<Action> 
     tracing::info!("reconciled");
 
     match state {
-        State::Ready(_) => Ok(Action::requeue(Duration::from_secs(3600))),
+        State::Ready(_) => Ok(Action::requeue(Duration::from_hours(1))),
         _ => Ok(Action::requeue(Duration::from_secs(5))),
     }
 }
