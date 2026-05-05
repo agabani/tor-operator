@@ -3,22 +3,25 @@ use std::net::SocketAddr;
 use axum::{Router, routing::get};
 use tokio::{net::TcpListener, signal};
 
-#[allow(clippy::missing_panics_doc)]
-pub async fn run(addr: SocketAddr) {
+/// # Errors
+///
+/// Returns an error if the TCP listener fails to bind or the server encounters an I/O error.
+pub async fn run(addr: SocketAddr) -> std::io::Result<()> {
     let app = Router::new()
         .route("/livez", get(handler))
         .route("/readyz", get(handler));
 
-    let listener = TcpListener::bind(&addr).await.unwrap();
+    let listener = TcpListener::bind(&addr).await?;
 
     tracing::info!(addr =% addr, "server started");
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
-        .await
-        .unwrap();
+        .await?;
 
     tracing::info!("server stopped");
+
+    Ok(())
 }
 
 #[allow(clippy::unused_async)]
