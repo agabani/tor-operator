@@ -62,7 +62,9 @@ impl Metrics {
     pub fn reconcile_failure(&self, controller: &'static str, error: &Error) {
         let error = match error {
             Error::Kube(_) => "kube",
+            Error::MissingConfiguration(_) => "missing configuration",
             Error::MissingObjectKey(_) => "missing object key",
+            Error::SyncInvariantViolated(_) => "sync invariant violated",
         };
         self.reconciliation_errors_total.add(
             1,

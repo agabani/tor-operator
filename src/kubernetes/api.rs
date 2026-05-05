@@ -211,11 +211,9 @@ where
             }
         }
 
-        assert!(
-            resources.is_empty(),
-            "{} resources were not patched",
-            resources.len()
-        );
+        if !resources.is_empty() {
+            return Err(Error::SyncInvariantViolated(resources.len()));
+        }
 
         Ok((patched, deprecated))
     }

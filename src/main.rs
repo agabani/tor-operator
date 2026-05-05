@@ -19,13 +19,13 @@ use tor_operator::{
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     let cli = &parse();
 
-    let provider = otel::Provider::new(cli);
+    let provider = otel::Provider::new(cli)?;
     provider.init_tracing_subscriber();
 
     match &cli.command {
         CliCommands::Controller(controller) => match &controller.command {
             ControllerCommands::Run(run) => {
-                controller_run(cli, controller, run, provider.meter()).await;
+                controller_run(cli, controller, run, provider.meter()).await?;
             }
         },
         CliCommands::Crd(crd) => match &crd.command {
@@ -49,10 +49,10 @@ async fn controller_run(
     _controller: &ControllerArgs,
     run: &ControllerRunArgs,
     meter_provider: &opentelemetry_sdk::metrics::SdkMeterProvider,
-) {
-    let addr = format!("{}:{}", run.host, run.port).parse().unwrap();
+) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
+    let addr = format!("{}:{}", run.host, run.port).parse()?;
 
-    let client = kube::Client::try_default().await.unwrap();
+    let client = kube::Client::try_default().await?;
 
     let onion_balance_config = onion_balance::Config {
         onion_balance_image: onion_balance::ImageConfig {
@@ -93,6 +93,8 @@ async fn controller_run(
         () = tor_ingress::run_controller(client.clone(), tor_ingress_config, metrics.clone()) => {},
         () = tor_proxy::run_controller(client.clone(), tor_proxy_config, metrics.clone()) => {},
     }
+
+    Ok(())
 }
 
 fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
