@@ -595,13 +595,13 @@ enum State {
     Initialized(String),
 }
 
-impl From<&State> for Vec<Condition> {
-    fn from(value: &State) -> Self {
-        match value {
+impl State {
+    fn conditions(&self, generation: Option<i64>) -> Vec<Condition> {
+        match self {
             State::PortsNotFound => vec![Condition {
                 last_transition_time: Time(Timestamp::now()),
                 message: "The TorProxy service port was not found.".into(),
-                observed_generation: None,
+                observed_generation: generation,
                 reason: "PortsNotFound".into(),
                 status: "False".into(),
                 type_: "Service".into(),
@@ -610,7 +610,7 @@ impl From<&State> for Vec<Condition> {
                 Condition {
                     last_transition_time: Time(Timestamp::now()),
                     message: "The TorProxy service is ready.".into(),
-                    observed_generation: None,
+                    observed_generation: generation,
                     reason: "Ready".into(),
                     status: "True".into(),
                     type_: "Service".into(),
@@ -618,7 +618,7 @@ impl From<&State> for Vec<Condition> {
                 Condition {
                     last_transition_time: Time(Timestamp::now()),
                     message: "The TorProxy is initialized.".into(),
-                    observed_generation: None,
+                    observed_generation: generation,
                     reason: "Initialized".into(),
                     status: "True".into(),
                     type_: "Initialized".into(),
@@ -807,7 +807,7 @@ async fn reconcile_tor_proxy(api: &Api<TorProxy>, object: &TorProxy, state: &Sta
     let conditions = object
         .status_conditions()
         .unwrap_or(&Vec::new())
-        .merge_from(&state.into());
+        .merge_from(&state.conditions(object.meta().generation));
 
     let summary = conditions
         .iter()

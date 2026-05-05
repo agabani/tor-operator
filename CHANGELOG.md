@@ -2,6 +2,11 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Fixed
+
+- Conditions Observed Generation support.
+- OpenTelemetry OTLP HTTP compression support.
+
 ### Changed
 
 - Replace panics with error propagation.

@@ -1623,6 +1623,7 @@ version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f69cd6acbb9af919df949cd1ec9e5e7fdc2ef15d234b6b795aaa525cc02f71f"
 dependencies = [
+ "flate2",
  "http",
  "opentelemetry",
  "opentelemetry-http",
@@ -1634,6 +1635,7 @@ dependencies = [
  "tokio",
  "tonic",
  "tracing",
+ "zstd",
 ]
 
 [[package]]

@@ -3,17 +3,19 @@ env:
   #   value: "info,opentelemetry=debug"
 
   OTEL_EXPORTER_OTLP_COMPRESSION:
-    value: grpc
-
+    value: gzip
+    # value: zstd
   OTEL_EXPORTER_OTLP_ENDPOINT:
     value: http://hyperdx.hyperdx.svc:4317
     # value: http://hyperdx.hyperdx.svc:4318
-
   OTEL_EXPORTER_OTLP_PROTOCOL:
     value: grpc
     # value: http/json
     # value: http/protobuf
 
+  # OTEL_EXPORTER_OTLP_LOGS_COMPRESSION:
+  #   value: gzip
+  #   value: zstd
   # OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:
   #   value: http://hyperdx.hyperdx.svc:4317
   #   # value: http://hyperdx.hyperdx.svc:4318/v1/logs
@@ -22,15 +24,20 @@ env:
   #   # value: http/json
   #   # value: http/protobuf
 
+  OTEL_EXPORTER_OTLP_METRICS_COMPRESSION:
+    value: gzip
+    # value: zstd
   OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:
-    value: http://prometheus.prometheus.svc:9090/api/v1/otlp/v1/metrics
     # value: http://hyperdx.hyperdx.svc:4317
-    # value: http://hyperdx.hyperdx.svc:4318/v1/metrics
+    value: http://hyperdx.hyperdx.svc:4318/v1/metrics
   OTEL_EXPORTER_OTLP_METRICS_PROTOCOL:
     # value: grpc
     # value: http/json
     value: http/protobuf
 
+  # OTEL_EXPORTER_OTLP_TRACES_COMPRESSION:
+  #   value: gzip
+  #   value: zstd
   # OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:
   #   value: http://hyperdx.hyperdx.svc:4317
   #   # value: http://hyperdx.hyperdx.svc:4318/v1/traces

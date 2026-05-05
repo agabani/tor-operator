@@ -286,11 +286,11 @@ enum State {
     Ready(Hostname),
 }
 
-impl From<&State> for Vec<Condition> {
-    fn from(value: &State) -> Self {
+impl State {
+    fn conditions(&self, generation: Option<i64>) -> Vec<Condition> {
         vec![Condition {
             last_transition_time: Time(Timestamp::now()),
-            message: match value {
+            message: match self {
                 State::SecretNotFound => "The secret was not found.".into(),
                 State::SecretKeyNotFound => "The secret key was not found.".into(),
                 State::SecretKeyMalformed(e) => format!("The secret key is malformed: {e}."),
@@ -302,8 +302,8 @@ impl From<&State> for Vec<Condition> {
                 State::HostnameMismatch => "The hostname does not much the public key.".into(),
                 State::Ready(_) => "The OnionKey is ready.".into(),
             },
-            observed_generation: None,
-            reason: match value {
+            observed_generation: generation,
+            reason: match self {
                 State::SecretNotFound => "SecretNotFound".into(),
                 State::SecretKeyNotFound => "SecretKeyNotFound".into(),
                 State::SecretKeyMalformed(_) => "SecretKeyMalformed".into(),
@@ -315,7 +315,7 @@ impl From<&State> for Vec<Condition> {
                 State::HostnameMismatch => "HostnameMismatch".into(),
                 State::Ready(_) => "Ready".into(),
             },
-            status: if let State::Ready(_) = value {
+            status: if let State::Ready(_) = self {
                 "True".into()
             } else {
                 "False".into()
@@ -396,7 +396,7 @@ async fn reconcile_onion_key(api: &Api<OnionKey>, object: &OnionKey, state: &Sta
     let conditions = object
         .status_conditions()
         .unwrap_or(&Vec::new())
-        .merge_from(&state.into());
+        .merge_from(&state.conditions(object.meta().generation));
 
     let summary = conditions
         .iter()

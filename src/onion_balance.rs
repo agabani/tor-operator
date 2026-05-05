@@ -473,13 +473,13 @@ enum State {
     Initialized(Box<OnionKey>),
 }
 
-impl From<&State> for Vec<Condition> {
-    fn from(value: &State) -> Self {
-        match value {
+impl State {
+    fn conditions(&self, generation: Option<i64>) -> Vec<Condition> {
+        match self {
             State::OnionKeyNotFound => vec![Condition {
                 last_transition_time: Time(Timestamp::now()),
                 message: "The OnionKey was not found.".into(),
-                observed_generation: None,
+                observed_generation: generation,
                 reason: "NotFound".into(),
                 status: "False".into(),
                 type_: "OnionKey".into(),
@@ -487,7 +487,7 @@ impl From<&State> for Vec<Condition> {
             State::OnionKeyHostnameNotFound => vec![Condition {
                 last_transition_time: Time(Timestamp::now()),
                 message: "The OnionKey does not have a hostname.".into(),
-                observed_generation: None,
+                observed_generation: generation,
                 reason: "HostnameNotFound".into(),
                 status: "False".into(),
                 type_: "OnionKey".into(),
@@ -496,7 +496,7 @@ impl From<&State> for Vec<Condition> {
                 Condition {
                     last_transition_time: Time(Timestamp::now()),
                     message: "The OnionKey is ready.".into(),
-                    observed_generation: None,
+                    observed_generation: generation,
                     reason: "Ready".into(),
                     status: "True".into(),
                     type_: "OnionKey".into(),
@@ -504,7 +504,7 @@ impl From<&State> for Vec<Condition> {
                 Condition {
                     last_transition_time: Time(Timestamp::now()),
                     message: "The OnionBalance is initialized.".into(),
-                    observed_generation: None,
+                    observed_generation: generation,
                     reason: "Initialized".into(),
                     status: "True".into(),
                     type_: "Initialized".into(),
@@ -667,7 +667,7 @@ async fn reconcile_onion_balance(
     let conditions = object
         .status_conditions()
         .unwrap_or(&Vec::new())
-        .merge_from(&state.into());
+        .merge_from(&state.conditions(object.meta().generation));
 
     let summary = conditions
         .iter()
