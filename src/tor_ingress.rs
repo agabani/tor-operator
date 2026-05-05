@@ -1054,13 +1054,13 @@ enum State {
     Initialized(Box<(OnionKey, HashMap<i32, OnionKey>)>),
 }
 
-impl From<&State> for Vec<Condition> {
-    fn from(value: &State) -> Self {
-        match value {
+impl State {
+    fn conditions(&self, generation: Option<i64>) -> Vec<Condition> {
+        match self {
             State::OnionBalanceOnionKeyNotFound => vec![Condition {
                 last_transition_time: Time(Timestamp::now()),
                 message: "The OnionBalance OnionKey was not found.".into(),
-                observed_generation: None,
+                observed_generation: generation,
                 reason: "NotFound".into(),
                 status: "False".into(),
                 type_: "OnionKey".into(),
@@ -1068,7 +1068,7 @@ impl From<&State> for Vec<Condition> {
             State::OnionBalanceOnionKeyHostnameNotFound => vec![Condition {
                 last_transition_time: Time(Timestamp::now()),
                 message: "The OnionBalance OnionKey does not have a hostname.".into(),
-                observed_generation: None,
+                observed_generation: generation,
                 reason: "HostnameNotFound".into(),
                 status: "False".into(),
                 type_: "OnionKey".into(),
@@ -1076,7 +1076,7 @@ impl From<&State> for Vec<Condition> {
             State::OnionServiceOnionKeyHostnameNotFound => vec![Condition {
                 last_transition_time: Time(Timestamp::now()),
                 message: "The OnionService OnionKey does not have a hostname.".into(),
-                observed_generation: None,
+                observed_generation: generation,
                 reason: "HostnameNotFound".into(),
                 status: "False".into(),
                 type_: "OnionKey".into(),
@@ -1085,7 +1085,7 @@ impl From<&State> for Vec<Condition> {
                 Condition {
                     last_transition_time: Time(Timestamp::now()),
                     message: "The OnionKey is ready.".into(),
-                    observed_generation: None,
+                    observed_generation: generation,
                     reason: "Ready".into(),
                     status: "True".into(),
                     type_: "OnionKey".into(),
@@ -1093,7 +1093,7 @@ impl From<&State> for Vec<Condition> {
                 Condition {
                     last_transition_time: Time(Timestamp::now()),
                     message: "The TorIngress is initialized.".into(),
-                    observed_generation: None,
+                    observed_generation: generation,
                     reason: "Initialized".into(),
                     status: "True".into(),
                     type_: "Initialized".into(),
@@ -1312,7 +1312,7 @@ async fn reconcile_tor_ingress(
     let conditions = object
         .status_conditions()
         .unwrap_or(&Vec::new())
-        .merge_from(&state.into());
+        .merge_from(&state.conditions(object.meta().generation));
 
     let summary = conditions
         .iter()

@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- Conditions Observed Generation support.
 - OpenTelemetry OTLP HTTP compression support.
 
 ### Changed
