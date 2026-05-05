@@ -35,7 +35,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Result,
+    Error, Result,
     collections::vec_get_or_insert,
     kubernetes::{
         self, Annotations, Api, ConditionsExt, Labels, Object, Resource as KubernetesResource,
@@ -739,7 +739,7 @@ async fn reconcile_config_map(
 ) -> Result<()> {
     api.sync(
         object,
-        [((), generate_config_map(object, annotations, labels, torrc))].into(),
+        [((), generate_config_map(object, annotations, labels, torrc)?)].into(),
     )
     .await
     .map(|_| ())
@@ -757,7 +757,7 @@ async fn reconcile_deployment(
         object,
         [(
             (),
-            generate_deployment(object, config, annotations, labels, selector_labels),
+            generate_deployment(object, config, annotations, labels, selector_labels)?,
         )]
         .into(),
     )
@@ -772,7 +772,7 @@ async fn reconcile_horizontal_pod_autoscaler(
     labels: &Labels,
 ) -> Result<()> {
     let resources: HashMap<(), _> = if let Some(horizontal_pod_autoscaler) =
-        generate_horizontal_pod_autoscaler(object, annotations, labels)
+        generate_horizontal_pod_autoscaler(object, annotations, labels)?
     {
         let mut map = HashMap::with_capacity(1);
         map.insert((), horizontal_pod_autoscaler);
@@ -795,7 +795,7 @@ async fn reconcile_service(
         object,
         [(
             (),
-            generate_service(object, annotations, labels, selector_labels),
+            generate_service(object, annotations, labels, selector_labels)?,
         )]
         .into(),
     )
@@ -853,8 +853,8 @@ fn generate_config_map(
     annotations: &Annotations,
     labels: &Labels,
     torrc: &Torrc,
-) -> ConfigMap {
-    ConfigMap {
+) -> Result<ConfigMap> {
+    Ok(ConfigMap {
         metadata: ObjectMeta {
             name: Some(object.config_map_name().into()),
             annotations: Some(
@@ -869,12 +869,16 @@ fn generate_config_map(
                     .append_reverse(object.config_map_labels())
                     .into(),
             ),
-            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
         },
         data: Some(BTreeMap::from([("torrc".into(), torrc.to_string())])),
         ..Default::default()
-    }
+    })
 }
 
 #[allow(clippy::too_many_lines)]
@@ -884,8 +888,8 @@ fn generate_deployment(
     annotations: &Annotations,
     labels: &Labels,
     selector_labels: &SelectorLabels,
-) -> Deployment {
-    Deployment {
+) -> Result<Deployment> {
+    Ok(Deployment {
         metadata: ObjectMeta {
             name: Some(object.deployment_name().into()),
             annotations: Some(
@@ -900,7 +904,11 @@ fn generate_deployment(
                     .append_reverse(object.deployment_labels())
                     .into(),
             ),
-            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
         },
         spec: Some(DeploymentSpec {
@@ -941,7 +949,7 @@ fn generate_deployment(
             ..Default::default()
         }),
         ..Default::default()
-    }
+    })
 }
 
 fn generate_deployment_containers(object: &TorProxy, config: &Config) -> Vec<Container> {
@@ -1084,42 +1092,45 @@ fn generate_horizontal_pod_autoscaler(
     object: &TorProxy,
     annotations: &Annotations,
     labels: &Labels,
-) -> Option<HorizontalPodAutoscaler> {
-    object
-        .spec
-        .horizontal_pod_autoscaler
-        .as_ref()
-        .map(|horizontal_pod_autoscaler| HorizontalPodAutoscaler {
-            metadata: ObjectMeta {
-                name: Some(object.horizontal_pod_autoscaler_name().into()),
-                annotations: Some(
-                    annotations
-                        .clone()
-                        .append_reverse(object.horizontal_pod_autoscaler_annotations())
-                        .into(),
-                ),
-                labels: Some(
-                    labels
-                        .clone()
-                        .append_reverse(object.horizontal_pod_autoscaler_labels())
-                        .into(),
-                ),
-                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
-                ..Default::default()
-            },
-            spec: Some(HorizontalPodAutoscalerSpec {
-                behavior: horizontal_pod_autoscaler.behavior.clone(),
-                max_replicas: horizontal_pod_autoscaler.max_replicas,
-                metrics: horizontal_pod_autoscaler.metrics.clone(),
-                min_replicas: horizontal_pod_autoscaler.min_replicas,
-                scale_target_ref: CrossVersionObjectReference {
-                    api_version: Some(TorProxy::api_version(&()).into()),
-                    kind: TorProxy::kind(&()).into(),
-                    name: object.try_name().unwrap().into(),
-                },
-            }),
+) -> Result<Option<HorizontalPodAutoscaler>> {
+    let Some(horizontal_pod_autoscaler) = object.spec.horizontal_pod_autoscaler.as_ref() else {
+        return Ok(None);
+    };
+    Ok(Some(HorizontalPodAutoscaler {
+        metadata: ObjectMeta {
+            name: Some(object.horizontal_pod_autoscaler_name().into()),
+            annotations: Some(
+                annotations
+                    .clone()
+                    .append_reverse(object.horizontal_pod_autoscaler_annotations())
+                    .into(),
+            ),
+            labels: Some(
+                labels
+                    .clone()
+                    .append_reverse(object.horizontal_pod_autoscaler_labels())
+                    .into(),
+            ),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
-        })
+        },
+        spec: Some(HorizontalPodAutoscalerSpec {
+            behavior: horizontal_pod_autoscaler.behavior.clone(),
+            max_replicas: horizontal_pod_autoscaler.max_replicas,
+            metrics: horizontal_pod_autoscaler.metrics.clone(),
+            min_replicas: horizontal_pod_autoscaler.min_replicas,
+            scale_target_ref: CrossVersionObjectReference {
+                api_version: Some(TorProxy::api_version(&()).into()),
+                kind: TorProxy::kind(&()).into(),
+                name: object.try_name().unwrap().into(),
+            },
+        }),
+        ..Default::default()
+    }))
 }
 
 fn generate_service(
@@ -1127,8 +1138,8 @@ fn generate_service(
     annotations: &Annotations,
     labels: &Labels,
     selector_labels: &SelectorLabels,
-) -> Service {
-    Service {
+) -> Result<Service> {
+    Ok(Service {
         metadata: ObjectMeta {
             name: Some(object.service_name().into()),
             annotations: Some(
@@ -1143,7 +1154,11 @@ fn generate_service(
                     .append_reverse(object.service_labels())
                     .into(),
             ),
-            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
         },
         spec: Some(ServiceSpec {
@@ -1182,7 +1197,7 @@ fn generate_service(
             ..Default::default()
         }),
         ..Default::default()
-    }
+    })
 }
 
 #[cfg(test)]

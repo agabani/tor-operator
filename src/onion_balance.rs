@@ -23,7 +23,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Result,
+    Error, Result,
     collections::vec_get_or_insert,
     kubernetes::{
         self, Annotations, Api, ConditionsExt, Labels, Object, Resource as KubernetesResource,
@@ -623,7 +623,7 @@ async fn reconcile_config_map(
         object,
         [(
             (),
-            generate_config_map(object, annotations, labels, torrc, config_yaml),
+            generate_config_map(object, annotations, labels, torrc, config_yaml)?,
         )]
         .into(),
     )
@@ -651,7 +651,7 @@ async fn reconcile_deployment(
                 labels,
                 selector_labels,
                 onion_key,
-            ),
+            )?,
         )]
         .into(),
     )
@@ -727,8 +727,8 @@ fn generate_config_map(
     labels: &Labels,
     torrc: &Torrc,
     config_yaml: &ConfigYaml,
-) -> ConfigMap {
-    ConfigMap {
+) -> Result<ConfigMap> {
+    Ok(ConfigMap {
         metadata: ObjectMeta {
             name: Some(object.config_map_name().into()),
             annotations: Some(
@@ -743,7 +743,11 @@ fn generate_config_map(
                     .append_reverse(object.config_map_labels())
                     .into(),
             ),
-            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
         },
         data: Some(BTreeMap::from([
@@ -751,7 +755,7 @@ fn generate_config_map(
             ("config.yaml".into(), config_yaml.to_string()),
         ])),
         ..Default::default()
-    }
+    })
 }
 
 fn generate_deployment(
@@ -761,8 +765,8 @@ fn generate_deployment(
     labels: &Labels,
     selector_labels: &SelectorLabels,
     onion_key: &OnionKey,
-) -> Deployment {
-    Deployment {
+) -> Result<Deployment> {
+    Ok(Deployment {
         metadata: ObjectMeta {
             name: Some(object.deployment_name().into()),
             annotations: Some(
@@ -777,7 +781,11 @@ fn generate_deployment(
                     .append_reverse(object.deployment_labels())
                     .into(),
             ),
-            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
         },
         spec: Some(DeploymentSpec {
@@ -818,7 +826,7 @@ fn generate_deployment(
             ..Default::default()
         }),
         ..Default::default()
-    }
+    })
 }
 
 fn generate_deployment_containers(object: &OnionBalance, config: &Config) -> Vec<Container> {

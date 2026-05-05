@@ -29,7 +29,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Result,
+    Error, Result,
     kubernetes::{
         self, Annotations, Api, ConditionsExt, Labels, Object, Resource as KubernetesResource,
         ResourceName, Torrc as KubernetesTorrc, error_policy, pod_security_context,
@@ -1215,12 +1215,10 @@ async fn reconcile_onion_key(
             object,
             (0..object.onion_service_replicas())
                 .map(|instance| {
-                    (
-                        instance,
-                        generate_onion_service_onion_key(object, annotations, labels, instance),
-                    )
+                    generate_onion_service_onion_key(object, annotations, labels, instance)
+                        .map(|key| (instance, key))
                 })
-                .collect(),
+                .collect::<Result<HashMap<_, _>>>()?,
         )
         .await?;
 
@@ -1253,18 +1251,16 @@ async fn reconcile_onion_services(
         object,
         (0..object.onion_service_replicas())
             .map(|instance| {
-                (
+                generate_onion_service(
+                    object,
+                    annotations,
+                    labels,
+                    onion_balance_onion_key,
                     instance,
-                    generate_onion_service(
-                        object,
-                        annotations,
-                        labels,
-                        onion_balance_onion_key,
-                        instance,
-                    ),
                 )
+                .map(|svc| (instance, svc))
             })
-            .collect(),
+            .collect::<Result<HashMap<_, _>>>()?,
     )
     .await
     .map(|_| ())
@@ -1281,7 +1277,7 @@ async fn reconcile_onion_balance(
         object,
         [(
             (),
-            generate_onion_balance(object, annotations, labels, onion_service_onion_keys),
+            generate_onion_balance(object, annotations, labels, onion_service_onion_keys)?,
         )]
         .into(),
     )
@@ -1296,7 +1292,7 @@ async fn reconcile_horizontal_pod_autoscaler(
     labels: &Labels,
 ) -> Result<()> {
     let resources: HashMap<(), _> = if let Some(horizontal_pod_autoscaler) =
-        generate_horizontal_pod_autoscaler(object, annotations, labels)
+        generate_horizontal_pod_autoscaler(object, annotations, labels)?
     {
         let mut map = HashMap::with_capacity(1);
         map.insert((), horizontal_pod_autoscaler);
@@ -1348,8 +1344,8 @@ fn generate_onion_balance(
     annotations: &Annotations,
     labels: &Labels,
     onion_service_onion_keys: &HashMap<i32, OnionKey>,
-) -> OnionBalance {
-    OnionBalance {
+) -> Result<OnionBalance> {
+    Ok(OnionBalance {
         metadata: ObjectMeta {
             name: Some(object.onion_balance_name().into()),
             annotations: Some(
@@ -1364,7 +1360,11 @@ fn generate_onion_balance(
                     .append_reverse(object.onion_balance_labels())
                     .into(),
             ),
-            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
         },
         spec: OnionBalanceSpec {
@@ -1425,7 +1425,7 @@ fn generate_onion_balance(
             torrc: object.onion_balance_torrc(),
         },
         status: None,
-    }
+    })
 }
 
 fn generate_onion_service_onion_key(
@@ -1433,8 +1433,8 @@ fn generate_onion_service_onion_key(
     annotations: &Annotations,
     labels: &Labels,
     instance: i32,
-) -> OnionKey {
-    OnionKey {
+) -> Result<OnionKey> {
+    Ok(OnionKey {
         metadata: ObjectMeta {
             name: Some(object.onion_service_onion_key_name(instance).into()),
             annotations: Some(
@@ -1449,7 +1449,11 @@ fn generate_onion_service_onion_key(
                     .append_reverse(object.onion_service_onion_key_labels())
                     .into(),
             ),
-            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
         },
         spec: OnionKeySpec {
@@ -1471,7 +1475,7 @@ fn generate_onion_service_onion_key(
             },
         },
         status: None,
-    }
+    })
 }
 
 fn generate_onion_service(
@@ -1480,8 +1484,8 @@ fn generate_onion_service(
     labels: &Labels,
     onion_balance_onion_key: &OnionKey,
     instance: i32,
-) -> OnionService {
-    OnionService {
+) -> Result<OnionService> {
+    Ok(OnionService {
         metadata: ObjectMeta {
             name: Some(object.onion_service_name(instance).into()),
             annotations: Some(
@@ -1496,7 +1500,11 @@ fn generate_onion_service(
                     .append_reverse(object.onion_service_labels())
                     .into(),
             ),
-            owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
         },
         spec: OnionServiceSpec {
@@ -1561,47 +1569,50 @@ fn generate_onion_service(
             torrc: object.onion_service_torrc(),
         },
         status: None,
-    }
+    })
 }
 
 fn generate_horizontal_pod_autoscaler(
     object: &TorIngress,
     annotations: &Annotations,
     labels: &Labels,
-) -> Option<HorizontalPodAutoscaler> {
-    object
-        .spec
-        .horizontal_pod_autoscaler
-        .as_ref()
-        .map(|horizontal_pod_autoscaler| HorizontalPodAutoscaler {
-            metadata: ObjectMeta {
-                name: Some(object.horizontal_pod_autoscaler_name().into()),
-                annotations: Some(
-                    annotations
-                        .clone()
-                        .append_reverse(object.horizontal_pod_autoscaler_annotations())
-                        .into(),
-                ),
-                labels: Some(
-                    labels
-                        .clone()
-                        .append_reverse(object.horizontal_pod_autoscaler_labels())
-                        .into(),
-                ),
-                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
-                ..Default::default()
-            },
-            spec: Some(HorizontalPodAutoscalerSpec {
-                behavior: horizontal_pod_autoscaler.behavior.clone(),
-                max_replicas: horizontal_pod_autoscaler.max_replicas,
-                metrics: horizontal_pod_autoscaler.metrics.clone(),
-                min_replicas: horizontal_pod_autoscaler.min_replicas,
-                scale_target_ref: CrossVersionObjectReference {
-                    api_version: Some(TorIngress::api_version(&()).into()),
-                    kind: TorIngress::kind(&()).into(),
-                    name: object.try_name().unwrap().into(),
-                },
-            }),
+) -> Result<Option<HorizontalPodAutoscaler>> {
+    let Some(horizontal_pod_autoscaler) = object.spec.horizontal_pod_autoscaler.as_ref() else {
+        return Ok(None);
+    };
+    Ok(Some(HorizontalPodAutoscaler {
+        metadata: ObjectMeta {
+            name: Some(object.horizontal_pod_autoscaler_name().into()),
+            annotations: Some(
+                annotations
+                    .clone()
+                    .append_reverse(object.horizontal_pod_autoscaler_annotations())
+                    .into(),
+            ),
+            labels: Some(
+                labels
+                    .clone()
+                    .append_reverse(object.horizontal_pod_autoscaler_labels())
+                    .into(),
+            ),
+            owner_references: Some(vec![
+                object
+                    .controller_owner_ref(&())
+                    .ok_or(Error::MissingObjectKey("uid"))?,
+            ]),
             ..Default::default()
-        })
+        },
+        spec: Some(HorizontalPodAutoscalerSpec {
+            behavior: horizontal_pod_autoscaler.behavior.clone(),
+            max_replicas: horizontal_pod_autoscaler.max_replicas,
+            metrics: horizontal_pod_autoscaler.metrics.clone(),
+            min_replicas: horizontal_pod_autoscaler.min_replicas,
+            scale_target_ref: CrossVersionObjectReference {
+                api_version: Some(TorIngress::api_version(&()).into()),
+                kind: TorIngress::kind(&()).into(),
+                name: object.try_name().unwrap().into(),
+            },
+        }),
+        ..Default::default()
+    }))
 }
