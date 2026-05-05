@@ -5,6 +5,7 @@
 ### Fixed
 
 - Conditions Observed Generation support.
+- Error Policy exponential backoff support.
 - OpenTelemetry OTLP HTTP compression support.
 
 ### Changed
