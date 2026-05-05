@@ -14,7 +14,10 @@ use tracing_subscriber::{
     EnvFilter, Layer as _, layer::SubscriberExt as _, util::SubscriberInitExt as _,
 };
 
-use crate::cli::{CliArgs, CliArgsOtelExporter};
+use crate::{
+    Error, Result,
+    cli::{CliArgs, CliArgsOtelExporter},
+};
 
 pub struct Provider {
     logger: opentelemetry_sdk::logs::SdkLoggerProvider,
@@ -24,14 +27,16 @@ pub struct Provider {
 }
 
 impl Provider {
-    #[must_use]
-    pub fn new(cli: &CliArgs) -> Self {
-        Self {
-            logger: logger_provider(cli),
-            meter: meter_provider(cli),
+    /// # Errors
+    ///
+    /// Will return `Err` if OTEL endpoint or protocol configuration is missing.
+    pub fn new(cli: &CliArgs) -> Result<Self> {
+        Ok(Self {
+            logger: logger_provider(cli)?,
+            meter: meter_provider(cli)?,
             service_name: service_name(cli),
-            tracer: tracer_provider(cli),
-        }
+            tracer: tracer_provider(cli)?,
+        })
     }
 
     #[must_use]
@@ -144,55 +149,55 @@ fn traces_compression(cli: &CliArgs) -> Option<Compression> {
  * ============================================================================
  */
 
-fn logs_endpoint(cli: &CliArgs, protocol: Protocol) -> String {
+fn logs_endpoint(cli: &CliArgs, protocol: Protocol) -> Result<String> {
     if let Some(endpoint) = &cli.otel_exporter_otlp_logs_endpoint {
-        return endpoint.clone();
+        return Ok(endpoint.clone());
     }
 
     if let Some(endpoint) = &cli.otel_exporter_otlp_endpoint {
-        return match protocol {
+        return Ok(match protocol {
             Protocol::Grpc => endpoint.clone(),
-            Protocol::HttpBinary | Protocol::HttpJson => {
-                format!("{endpoint}/v1/logs")
-            }
-        };
+            Protocol::HttpBinary | Protocol::HttpJson => format!("{endpoint}/v1/logs"),
+        });
     }
 
-    panic!("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT or OTEL_EXPORTER_OTLP_ENDPOINT must be set");
+    Err(Error::MissingConfiguration(
+        "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT or OTEL_EXPORTER_OTLP_ENDPOINT must be set",
+    ))
 }
 
-fn metrics_endpoint(cli: &CliArgs, protocol: Protocol) -> String {
+fn metrics_endpoint(cli: &CliArgs, protocol: Protocol) -> Result<String> {
     if let Some(endpoint) = &cli.otel_exporter_otlp_metrics_endpoint {
-        return endpoint.clone();
+        return Ok(endpoint.clone());
     }
 
     if let Some(endpoint) = &cli.otel_exporter_otlp_endpoint {
-        return match protocol {
+        return Ok(match protocol {
             Protocol::Grpc => endpoint.clone(),
-            Protocol::HttpBinary | Protocol::HttpJson => {
-                format!("{endpoint}/v1/metrics")
-            }
-        };
+            Protocol::HttpBinary | Protocol::HttpJson => format!("{endpoint}/v1/metrics"),
+        });
     }
 
-    panic!("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT or OTEL_EXPORTER_OTLP_ENDPOINT must be set");
+    Err(Error::MissingConfiguration(
+        "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT or OTEL_EXPORTER_OTLP_ENDPOINT must be set",
+    ))
 }
 
-fn traces_endpoint(cli: &CliArgs, protocol: Protocol) -> String {
+fn traces_endpoint(cli: &CliArgs, protocol: Protocol) -> Result<String> {
     if let Some(endpoint) = &cli.otel_exporter_otlp_traces_endpoint {
-        return endpoint.clone();
+        return Ok(endpoint.clone());
     }
 
     if let Some(endpoint) = &cli.otel_exporter_otlp_endpoint {
-        return match protocol {
+        return Ok(match protocol {
             Protocol::Grpc => endpoint.clone(),
-            Protocol::HttpBinary | Protocol::HttpJson => {
-                format!("{endpoint}/v1/traces")
-            }
-        };
+            Protocol::HttpBinary | Protocol::HttpJson => format!("{endpoint}/v1/traces"),
+        });
     }
 
-    panic!("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT or OTEL_EXPORTER_OTLP_ENDPOINT must be set");
+    Err(Error::MissingConfiguration(
+        "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT or OTEL_EXPORTER_OTLP_ENDPOINT must be set",
+    ))
 }
 
 /*
@@ -228,25 +233,31 @@ fn traces_headers(cli: &CliArgs) -> Option<&str> {
  * ============================================================================
  */
 
-fn logs_protocol(cli: &CliArgs) -> Protocol {
+fn logs_protocol(cli: &CliArgs) -> Result<Protocol> {
     cli.otel_exporter_otlp_logs_protocol
         .or(cli.otel_exporter_otlp_protocol)
-        .expect("OTEL_EXPORTER_OTLP_LOGS_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL must be set")
-        .into()
+        .ok_or(Error::MissingConfiguration(
+            "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL must be set",
+        ))
+        .map(Into::into)
 }
 
-fn metrics_protocol(cli: &CliArgs) -> Protocol {
+fn metrics_protocol(cli: &CliArgs) -> Result<Protocol> {
     cli.otel_exporter_otlp_metrics_protocol
         .or(cli.otel_exporter_otlp_protocol)
-        .expect("OTEL_EXPORTER_OTLP_METRICS_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL must be set")
-        .into()
+        .ok_or(Error::MissingConfiguration(
+            "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL must be set",
+        ))
+        .map(Into::into)
 }
 
-fn traces_protocol(cli: &CliArgs) -> Protocol {
+fn traces_protocol(cli: &CliArgs) -> Result<Protocol> {
     cli.otel_exporter_otlp_traces_protocol
         .or(cli.otel_exporter_otlp_protocol)
-        .expect("OTEL_EXPORTER_OTLP_TRACES_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL must be set")
-        .into()
+        .ok_or(Error::MissingConfiguration(
+            "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL or OTEL_EXPORTER_OTLP_PROTOCOL must be set",
+        ))
+        .map(Into::into)
 }
 
 /*
@@ -276,7 +287,7 @@ fn traces_timeout(cli: &CliArgs) -> u64 {
  * ============================================================================
  */
 
-fn logger_provider(cli: &CliArgs) -> SdkLoggerProvider {
+fn logger_provider(cli: &CliArgs) -> Result<SdkLoggerProvider> {
     let mut provider_builder = SdkLoggerProvider::builder().with_resource(resource(cli));
 
     if let Some(exporter) = &cli.otel_logs_exporter {
@@ -287,8 +298,8 @@ fn logger_provider(cli: &CliArgs) -> SdkLoggerProvider {
 
         if exporter.contains(&CliArgsOtelExporter::Otlp) {
             let compression = logs_compression(cli);
-            let protocol = logs_protocol(cli);
-            let endpoint = logs_endpoint(cli, protocol);
+            let protocol = logs_protocol(cli)?;
+            let endpoint = logs_endpoint(cli, protocol)?;
             let headers = log_headers(cli);
             let timeout = logs_timeout(cli);
 
@@ -323,10 +334,10 @@ fn logger_provider(cli: &CliArgs) -> SdkLoggerProvider {
         }
     }
 
-    provider_builder.build()
+    Ok(provider_builder.build())
 }
 
-fn meter_provider(cli: &CliArgs) -> SdkMeterProvider {
+fn meter_provider(cli: &CliArgs) -> Result<SdkMeterProvider> {
     let mut provider_builder = SdkMeterProvider::builder().with_resource(resource(cli));
 
     if let Some(exporter) = &cli.otel_metrics_exporter {
@@ -337,8 +348,8 @@ fn meter_provider(cli: &CliArgs) -> SdkMeterProvider {
 
         if exporter.contains(&CliArgsOtelExporter::Otlp) {
             let compression = metrics_compression(cli);
-            let protocol = metrics_protocol(cli);
-            let endpoint = metrics_endpoint(cli, protocol);
+            let protocol = metrics_protocol(cli)?;
+            let endpoint = metrics_endpoint(cli, protocol)?;
             let headers = metrics_headers(cli);
             let timeout = metrics_timeout(cli);
 
@@ -373,10 +384,10 @@ fn meter_provider(cli: &CliArgs) -> SdkMeterProvider {
         }
     }
 
-    provider_builder.build()
+    Ok(provider_builder.build())
 }
 
-fn tracer_provider(cli: &CliArgs) -> SdkTracerProvider {
+fn tracer_provider(cli: &CliArgs) -> Result<SdkTracerProvider> {
     let mut provider_builder = SdkTracerProvider::builder().with_resource(resource(cli));
 
     if let Some(exporter) = &cli.otel_traces_exporter {
@@ -387,8 +398,8 @@ fn tracer_provider(cli: &CliArgs) -> SdkTracerProvider {
 
         if exporter.contains(&CliArgsOtelExporter::Otlp) {
             let compression = traces_compression(cli);
-            let protocol = traces_protocol(cli);
-            let endpoint = traces_endpoint(cli, protocol);
+            let protocol = traces_protocol(cli)?;
+            let endpoint = traces_endpoint(cli, protocol)?;
             let headers = traces_headers(cli);
             let timeout = traces_timeout(cli);
 
@@ -423,7 +434,7 @@ fn tracer_provider(cli: &CliArgs) -> SdkTracerProvider {
         }
     }
 
-    provider_builder.build()
+    Ok(provider_builder.build())
 }
 
 /*

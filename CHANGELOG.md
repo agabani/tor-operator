@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Replace panics with error propagation.
+
 ## [1.0.8] - 2026-04-12
 
 - Third party Tor v0.4.9.6 container image with OpenSSL 3.6.2. (linux/amd64, linux/arm64)
@@ -365,17 +369,11 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.8...HEAD
-
 [1.0.8]: https://github.com/agabani/tor-operator/compare/v1.0.7...v1.0.8
-
 [1.0.7]: https://github.com/agabani/tor-operator/compare/v1.0.6...v1.0.7
-
 [1.0.6]: https://github.com/agabani/tor-operator/compare/v1.0.5...v1.0.6
-
 [1.0.5]: https://github.com/agabani/tor-operator/compare/v1.0.4...v1.0.5
-
 [1.0.4]: https://github.com/agabani/tor-operator/compare/v1.0.3...v1.0.4
-
 [1.0.3]: https://github.com/agabani/tor-operator/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/agabani/tor-operator/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/agabani/tor-operator/compare/v1.0.0...v1.0.1

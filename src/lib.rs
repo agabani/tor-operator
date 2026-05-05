@@ -21,7 +21,9 @@ pub mod tor_proxy;
 #[derive(Debug)]
 pub enum Error {
     Kube(kube::Error),
+    MissingConfiguration(&'static str),
     MissingObjectKey(&'static str),
+    SyncInvariantViolated(usize),
 }
 
 impl std::error::Error for Error {}
