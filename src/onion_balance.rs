@@ -26,9 +26,9 @@ use crate::{
     Error, Result,
     collections::vec_get_or_insert,
     kubernetes::{
-        self, Annotations, Api, ConditionsExt, Labels, Object, Resource as KubernetesResource,
-        ResourceName, SelectorLabels, Subset, Torrc as KubernetesTorrc, error_policy,
-        pod_security_context,
+        self, Annotations, Api, ConditionsExt, ErrorBackoff, Labels, Object,
+        Resource as KubernetesResource, ResourceName, SelectorLabels, Subset,
+        Torrc as KubernetesTorrc, error_policy, pod_security_context,
     },
     metrics::Metrics,
     onion_key::OnionKey,
@@ -438,6 +438,7 @@ pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
         Arc::new(Context {
             client,
             config,
+            error_backoff: ErrorBackoff::default(),
             metrics,
         }),
     )
@@ -453,10 +454,15 @@ pub async fn run_controller(client: Client, config: Config, metrics: Metrics) {
 struct Context {
     client: Client,
     config: Config,
+    error_backoff: ErrorBackoff,
     metrics: Metrics,
 }
 
 impl kubernetes::Context for Context {
+    fn error_backoff(&self) -> &ErrorBackoff {
+        &self.error_backoff
+    }
+
     fn metrics(&self) -> &Metrics {
         &self.metrics
     }
@@ -590,6 +596,8 @@ async fn reconciler(object: Arc<OnionBalance>, ctx: Arc<Context>) -> Result<Acti
         &state,
     )
     .await?;
+
+    ctx.error_backoff.reset(object.as_ref());
 
     tracing::info!("reconciled");
 
