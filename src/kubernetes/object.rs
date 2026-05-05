@@ -14,7 +14,7 @@ use super::{
     resource::Resource,
 };
 
-use crate::Result;
+use crate::{Error, Result};
 
 pub trait Object: kube::ResourceExt<DynamicType = ()> {
     const APP_KUBERNETES_IO_COMPONENT_VALUE: &'static str;
@@ -43,13 +43,13 @@ pub trait Object: kube::ResourceExt<DynamicType = ()> {
     where
         Self: Resource,
     {
-        self.try_uid().map(|uid| {
-            (
-                TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
-                uid.into(),
-                self.controller_owner_ref(&()).unwrap(),
-            )
-        })
+        let uid = self.try_uid()?;
+        Ok((
+            TOR_AGABANI_CO_UK_OWNED_BY_KEY.into(),
+            uid.into(),
+            self.controller_owner_ref(&())
+                .ok_or(Error::MissingObjectKey("uid"))?,
+        ))
     }
 
     fn try_owned_list_params(&self) -> Result<ListParams>

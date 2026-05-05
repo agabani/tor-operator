@@ -381,7 +381,7 @@ async fn reconcile_secret(
 ) -> Result<State> {
     let secret = api.get_opt(&object.secret_name()).await?;
 
-    let (state, secret) = generate_secret(object, secret.as_ref(), annotations, labels);
+    let (state, secret) = generate_secret(object, secret.as_ref(), annotations, labels)?;
 
     if let Some(secret) = secret
         && let State::Ready(_) = state
@@ -427,7 +427,7 @@ fn generate_secret(
     secret: Option<&Secret>,
     annotations: &Annotations,
     labels: &Labels,
-) -> (State, Option<Secret>) {
+) -> Result<(State, Option<Secret>)> {
     fn generate(
         object: &OnionKey,
         annotations: &Annotations,
@@ -435,8 +435,8 @@ fn generate_secret(
         public_key: &PublicKey,
         secret_key: &ExpandedSecretKey,
         hostname: &Hostname,
-    ) -> Secret {
-        Secret {
+    ) -> Result<Secret> {
+        Ok(Secret {
             metadata: ObjectMeta {
                 name: Some(object.secret_name().into()),
                 annotations: Some(
@@ -446,7 +446,11 @@ fn generate_secret(
                         .into(),
                 ),
                 labels: Some(labels.clone().append_reverse(object.secret_labels()).into()),
-                owner_references: Some(vec![object.controller_owner_ref(&()).unwrap()]),
+                owner_references: Some(vec![
+                    object
+                        .controller_owner_ref(&())
+                        .ok_or(crate::Error::MissingObjectKey("uid"))?,
+                ]),
                 ..Default::default()
             },
             data: Some(BTreeMap::from([
@@ -461,14 +465,14 @@ fn generate_secret(
                 ),
             ])),
             ..Default::default()
-        }
+        })
     }
 
     let auto_generate = object.auto_generate();
 
     let Some(secret) = secret else {
         if !auto_generate {
-            return (State::SecretNotFound, None);
+            return Ok((State::SecretNotFound, None));
         }
 
         tracing::info!("generating secret key");
@@ -487,9 +491,8 @@ fn generate_secret(
             &public_key,
             &secret_key,
             &hostname,
-        );
-
-        return (State::Ready(hostname), Some(secret));
+        )?;
+        return Ok((State::Ready(hostname), Some(secret)));
     };
 
     let secret_key = secret
@@ -507,7 +510,7 @@ fn generate_secret(
         Ok(secret_key) => secret_key,
         Err(validation) => {
             if !auto_generate {
-                return (validation, None);
+                return Ok((validation, None));
             }
 
             tracing::info!("generating secret key");
@@ -526,9 +529,8 @@ fn generate_secret(
                 &public_key,
                 &secret_key,
                 &hostname,
-            );
-
-            return (State::Ready(hostname), Some(secret));
+            )?;
+            return Ok((State::Ready(hostname), Some(secret)));
         }
     };
 
@@ -554,7 +556,7 @@ fn generate_secret(
         Ok(public_key) => public_key,
         Err(validation) => {
             if !auto_generate {
-                return (validation, None);
+                return Ok((validation, None));
             }
 
             tracing::info!("generating public key");
@@ -570,9 +572,8 @@ fn generate_secret(
                 &public_key,
                 &secret_key,
                 &hostname,
-            );
-
-            return (State::Ready(hostname), Some(secret));
+            )?;
+            return Ok((State::Ready(hostname), Some(secret)));
         }
     };
 
@@ -594,7 +595,7 @@ fn generate_secret(
         Ok(hostname) => hostname,
         Err(validation) => {
             if !auto_generate {
-                return (validation, None);
+                return Ok((validation, None));
             }
 
             tracing::info!("generating hostname");
@@ -607,9 +608,8 @@ fn generate_secret(
                 &public_key,
                 &secret_key,
                 &hostname,
-            );
-
-            return (State::Ready(hostname), Some(secret));
+            )?;
+            return Ok((State::Ready(hostname), Some(secret)));
         }
     };
 
@@ -623,10 +623,9 @@ fn generate_secret(
             &public_key,
             &secret_key,
             &hostname,
-        );
-
-        return (State::Ready(hostname), Some(secret));
+        )?;
+        return Ok((State::Ready(hostname), Some(secret)));
     }
 
-    (State::Ready(hostname), None)
+    Ok((State::Ready(hostname), None))
 }
