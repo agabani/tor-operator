@@ -29,14 +29,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
             }
         },
         CliCommands::Crd(crd) => match &crd.command {
-            CrdCommands::Generate(generate) => crd_generate(cli, crd, generate),
+            CrdCommands::Generate(generate) => crd_generate(cli, crd, generate)?,
         },
         CliCommands::Markdown(markdown) => match &markdown.command {
-            MarkdownCommands::Generate(help) => markdown_generate(cli, markdown, help),
+            MarkdownCommands::Generate(help) => markdown_generate(cli, markdown, help)?,
         },
         CliCommands::OnionKey(onion_address) => match &onion_address.command {
             OnionKeyCommands::Generate(generate) => {
-                onion_key_generate(cli, onion_address, generate);
+                onion_key_generate(cli, onion_address, generate)?;
             }
         },
     }
@@ -86,7 +86,7 @@ async fn controller_run(
     let metrics = Metrics::new(meter_provider);
 
     tokio::select! {
-        () = http_server::run(addr) => {},
+        result = http_server::run(addr) => { result?; },
         () = onion_balance::run_controller(client.clone(), onion_balance_config, metrics.clone()) => {},
         () = onion_key::run_controller(client.clone(), onion_key_config, metrics.clone()) => {},
         () = onion_service::run_controller(client.clone(),onion_service_config, metrics.clone()) => {},
@@ -97,7 +97,11 @@ async fn controller_run(
     Ok(())
 }
 
-fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
+fn crd_generate(
+    _cli: &CliArgs,
+    _crd: &CrdArgs,
+    generate: &CrdGenerateArgs,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     fn helmify(content: &str) -> String {
         format!(
             "{}\n{}{}\n",
@@ -147,9 +151,9 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
 
     for (name, crd) in crds {
         let content = match generate.format {
-            CrdGenerateArgsFormat::Helm => helmify(&serde_yaml::to_string(&crd).unwrap()),
-            CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd).unwrap(),
-            CrdGenerateArgsFormat::Yaml => serde_yaml::to_string(&crd).unwrap(),
+            CrdGenerateArgsFormat::Helm => helmify(&serde_yaml::to_string(&crd)?),
+            CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd)?,
+            CrdGenerateArgsFormat::Yaml => serde_yaml::to_string(&crd)?,
         };
 
         if let Some(output) = &generate.output {
@@ -160,28 +164,34 @@ fn crd_generate(_cli: &CliArgs, _crd: &CrdArgs, generate: &CrdGenerateArgs) {
                 }
             };
 
-            File::create(path)
-                .unwrap()
-                .write_all(content.as_bytes())
-                .unwrap();
+            File::create(path)?.write_all(content.as_bytes())?;
         } else {
             print!("{content}");
         }
     }
+
+    Ok(())
 }
 
-fn markdown_generate(_cli: &CliArgs, _markdown: &MarkdownArgs, generate: &MarkdownGenerateArgs) {
+fn markdown_generate(
+    _cli: &CliArgs,
+    _markdown: &MarkdownArgs,
+    generate: &MarkdownGenerateArgs,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     if let Some(output) = &generate.output {
-        File::create(output)
-            .unwrap()
-            .write_all(clap_markdown::help_markdown::<CliArgs>().as_bytes())
-            .unwrap();
+        File::create(output)?.write_all(clap_markdown::help_markdown::<CliArgs>().as_bytes())?;
     } else {
         clap_markdown::print_help_markdown::<CliArgs>();
     }
+
+    Ok(())
 }
 
-fn onion_key_generate(_cli: &CliArgs, _onion_key: &OnionKeyArgs, generate: &OnionKeyGenerateArgs) {
+fn onion_key_generate(
+    _cli: &CliArgs,
+    _onion_key: &OnionKeyArgs,
+    generate: &OnionKeyGenerateArgs,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>> {
     let expanded_secret_key = ExpandedSecretKey::generate();
     let public_key = PublicKey::from(&expanded_secret_key);
 
@@ -194,18 +204,13 @@ fn onion_key_generate(_cli: &CliArgs, _onion_key: &OnionKeyArgs, generate: &Onio
         .as_ref()
         .map_or_else(Default::default, Cow::Borrowed);
 
-    File::create(directory.join("hostname"))
-        .unwrap()
-        .write_all(&Vec::<u8>::from(&hostname))
-        .unwrap();
+    File::create(directory.join("hostname"))?.write_all(&Vec::<u8>::from(&hostname))?;
 
-    File::create(directory.join("hs_ed25519_public_key"))
-        .unwrap()
-        .write_all(&Vec::<u8>::from(&hidden_service_public_key))
-        .unwrap();
+    File::create(directory.join("hs_ed25519_public_key"))?
+        .write_all(&Vec::<u8>::from(&hidden_service_public_key))?;
 
-    File::create(directory.join("hs_ed25519_secret_key"))
-        .unwrap()
-        .write_all(&Vec::<u8>::from(&hidden_service_secret_key))
-        .unwrap();
+    File::create(directory.join("hs_ed25519_secret_key"))?
+        .write_all(&Vec::<u8>::from(&hidden_service_secret_key))?;
+
+    Ok(())
 }

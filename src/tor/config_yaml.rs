@@ -36,6 +36,10 @@ impl<'a> From<&'a ConfigYaml> for std::borrow::Cow<'a, str> {
 
 impl std::fmt::Display for ConfigYaml {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", serde_yaml::to_string(self).unwrap())
+        write!(
+            f,
+            "{}",
+            serde_yaml::to_string(self).map_err(|_| std::fmt::Error)?
+        )
     }
 }
