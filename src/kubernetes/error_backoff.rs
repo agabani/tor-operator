@@ -1,10 +1,15 @@
-use std::{collections::HashMap, sync::Mutex, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::Mutex,
+    time::{Duration, Instant},
+};
 
 const BASE_DELAY: Duration = Duration::from_secs(5);
 const MAX_DELAY: Duration = Duration::from_mins(5);
+const STALE_THRESHOLD: Duration = Duration::from_mins(10);
 
 pub struct ErrorBackoff {
-    state: Mutex<HashMap<String, u32>>,
+    state: Mutex<HashMap<String, (u32, Instant)>>,
 }
 
 impl Default for ErrorBackoff {
@@ -22,10 +27,19 @@ impl ErrorBackoff {
     {
         if let Ok(uid) = resource.try_uid() {
             let mut state = self.state.lock().expect("error backoff mutex poisoned");
-            let count = state.entry(uid.into()).or_insert(0);
-            *count = count.saturating_add(1);
-            let shift = count.saturating_sub(1).min(6);
-            BASE_DELAY.saturating_mul(1u32 << shift).min(MAX_DELAY)
+
+            let now = Instant::now();
+
+            state.retain(|_, entry| now.duration_since(entry.1) < STALE_THRESHOLD);
+
+            let entry = state.entry(uid.into()).or_insert((0, now));
+
+            entry.0 = entry.0.saturating_add(1);
+            entry.1 = now;
+
+            BASE_DELAY
+                .saturating_mul(1u32 << entry.0.saturating_sub(1).min(6))
+                .min(MAX_DELAY)
         } else {
             BASE_DELAY
         }
@@ -50,7 +64,7 @@ mod tests {
 
     use super::*;
 
-    fn resource(uid: String) -> ConfigMap {
+    fn test_resource(uid: String) -> ConfigMap {
         ConfigMap {
             metadata: ObjectMeta {
                 uid: Some(uid),
@@ -63,7 +77,7 @@ mod tests {
     #[test]
     fn delay_doubles_per_failure_then_caps_at_max() {
         let backoff = ErrorBackoff::default();
-        let r = resource("uid-1".to_string());
+        let r = test_resource("uid-1".to_string());
         for expected in [5, 10, 20, 40, 80, 160] {
             assert_eq!(backoff.next_delay(&r), Duration::from_secs(expected));
         }
@@ -75,8 +89,8 @@ mod tests {
     #[test]
     fn different_keys_are_tracked_independently() {
         let backoff = ErrorBackoff::default();
-        let r1 = resource("uid-1".to_string());
-        let r2 = resource("uid-2".to_string());
+        let r1 = test_resource("uid-1".to_string());
+        let r2 = test_resource("uid-2".to_string());
         backoff.next_delay(&r1);
         backoff.next_delay(&r1);
 
@@ -87,11 +101,32 @@ mod tests {
     #[test]
     fn recovery_resets_delay_to_base() {
         let backoff = ErrorBackoff::default();
-        let r = resource("uid-1".to_string());
+        let r = test_resource("uid-1".to_string());
         for _ in 0..8 {
             backoff.next_delay(&r);
         }
         backoff.reset(&r);
         assert_eq!(backoff.next_delay(&r), Duration::from_secs(5));
+    }
+
+    #[test]
+    fn missing_uid_returns_base_delay() {
+        let backoff = ErrorBackoff::default();
+        let r = ConfigMap::default();
+        assert_eq!(backoff.next_delay(&r), BASE_DELAY);
+    }
+
+    #[test]
+    fn reset_missing_uid_does_not_panic() {
+        let backoff = ErrorBackoff::default();
+        let r = ConfigMap::default();
+        backoff.reset(&r);
+    }
+
+    #[test]
+    fn reset_unknown_uid_does_not_panic() {
+        let backoff = ErrorBackoff::default();
+        let r = test_resource("never-seen".to_string());
+        backoff.reset(&r);
     }
 }
