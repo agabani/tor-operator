@@ -23,6 +23,7 @@ pub enum Error {
     Kube(kube::Error),
     MissingConfiguration(&'static str),
     MissingObjectKey(&'static str),
+    OtlpExporter(opentelemetry_otlp::ExporterBuildError),
     SyncInvariantViolated(usize),
 }
 
@@ -30,7 +31,18 @@ impl std::error::Error for Error {}
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
+        match self {
+            Self::Kube(e) => write!(f, "kubernetes error: {e}"),
+            Self::MissingConfiguration(msg) => write!(f, "missing configuration: {msg}"),
+            Self::MissingObjectKey(key) => write!(f, "missing object key: {key}"),
+            Self::OtlpExporter(e) => write!(f, "OTLP exporter error: {e}"),
+            Self::SyncInvariantViolated(count) => {
+                write!(
+                    f,
+                    "sync invariant violated: {count} resources were not patched"
+                )
+            }
+        }
     }
 }
 

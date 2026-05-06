@@ -214,7 +214,8 @@ pub struct OnionServiceStatus {
 impl OnionService {
     #[must_use]
     fn default_name(&self) -> ResourceName {
-        self.try_name().unwrap()
+        self.try_name()
+            .expect(".metadata.name is always set on a live resource")
     }
 
     #[must_use]

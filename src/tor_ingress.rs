@@ -441,7 +441,8 @@ pub struct TorIngressStatus {
 impl TorIngress {
     #[must_use]
     fn default_name(&self) -> ResourceName {
-        self.try_name().unwrap()
+        self.try_name()
+            .expect(".metadata.name is always set on a live resource")
     }
 
     #[must_use]
@@ -1421,16 +1422,22 @@ fn generate_onion_balance(
                 name: object.onion_balance_onion_key_name().into(),
             },
             onion_services: (0..onion_service_onion_keys.len())
-                .map(|instance| OnionBalanceSpecOnionService {
-                    onion_key: OnionBalanceSpecOnionServiceOnionKey {
-                        hostname: onion_service_onion_keys
-                            .get(&i32::try_from(instance).unwrap())
-                            .and_then(OnionKey::hostname)
-                            .unwrap()
-                            .into(),
-                    },
+                .map(|instance| -> Result<OnionBalanceSpecOnionService> {
+                    Ok(OnionBalanceSpecOnionService {
+                        onion_key: OnionBalanceSpecOnionServiceOnionKey {
+                            hostname: onion_service_onion_keys
+                                .get(
+                                    &i32::try_from(instance).expect(
+                                        "instance index cannot realistically exceed i32::MAX",
+                                    ),
+                                )
+                                .and_then(OnionKey::hostname)
+                                .ok_or(Error::MissingObjectKey(".status.hostname"))?
+                                .into(),
+                        },
+                    })
                 })
-                .collect(),
+                .collect::<Result<Vec<_>>>()?,
             torrc: object.onion_balance_torrc(),
         },
         status: None,
@@ -1559,7 +1566,10 @@ fn generate_onion_service(
             }),
             onion_balance: Some(OnionServiceSpecOnionBalance {
                 onion_key: OnionServiceSpecOnionBalanceOnionKey {
-                    hostname: onion_balance_onion_key.hostname().unwrap().into(),
+                    hostname: onion_balance_onion_key
+                        .hostname()
+                        .ok_or(Error::MissingObjectKey(".status.hostname"))?
+                        .into(),
                 },
             }),
             onion_key: OnionServiceSpecOnionKey {
@@ -1619,7 +1629,7 @@ fn generate_horizontal_pod_autoscaler(
             scale_target_ref: CrossVersionObjectReference {
                 api_version: Some(TorIngress::api_version(&()).into()),
                 kind: TorIngress::kind(&()).into(),
-                name: object.try_name().unwrap().into(),
+                name: object.try_name()?.into(),
             },
         }),
         ..Default::default()

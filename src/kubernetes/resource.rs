@@ -51,7 +51,9 @@ impl Resource for k8s_openapi::api::core::v1::ConfigMap {
     type Spec = std::collections::BTreeMap<String, String>;
 
     fn spec(&self) -> &Self::Spec {
-        self.data.as_ref().unwrap()
+        self.data
+            .as_ref()
+            .expect("data is always set on managed ConfigMaps")
     }
 }
 
@@ -59,7 +61,9 @@ impl Resource for k8s_openapi::api::apps::v1::Deployment {
     type Spec = k8s_openapi::api::apps::v1::DeploymentSpec;
 
     fn spec(&self) -> &Self::Spec {
-        self.spec.as_ref().unwrap()
+        self.spec
+            .as_ref()
+            .expect("spec is always set on managed Deployments")
     }
 }
 
@@ -67,7 +71,9 @@ impl Resource for k8s_openapi::api::autoscaling::v2::HorizontalPodAutoscaler {
     type Spec = k8s_openapi::api::autoscaling::v2::HorizontalPodAutoscalerSpec;
 
     fn spec(&self) -> &Self::Spec {
-        self.spec.as_ref().unwrap()
+        self.spec
+            .as_ref()
+            .expect("spec is always set on managed HorizontalPodAutoscalers")
     }
 }
 
@@ -75,7 +81,9 @@ impl Resource for k8s_openapi::api::core::v1::Secret {
     type Spec = std::collections::BTreeMap<String, k8s_openapi::ByteString>;
 
     fn spec(&self) -> &Self::Spec {
-        self.data.as_ref().unwrap()
+        self.data
+            .as_ref()
+            .expect("data is always set on managed Secrets")
     }
 }
 
@@ -83,6 +91,8 @@ impl Resource for k8s_openapi::api::core::v1::Service {
     type Spec = k8s_openapi::api::core::v1::ServiceSpec;
 
     fn spec(&self) -> &Self::Spec {
-        self.spec.as_ref().unwrap()
+        self.spec
+            .as_ref()
+            .expect("spec is always set on managed Services")
     }
 }
