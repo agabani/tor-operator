@@ -64,6 +64,7 @@ impl Metrics {
             Error::Kube(_) => "kube",
             Error::MissingConfiguration(_) => "missing configuration",
             Error::MissingObjectKey(_) => "missing object key",
+            Error::OtlpExporter(_) => "otlp exporter",
             Error::SyncInvariantViolated(_) => "sync invariant violated",
         };
         self.reconciliation_errors_total.add(

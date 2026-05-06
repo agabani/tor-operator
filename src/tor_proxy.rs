@@ -249,7 +249,8 @@ pub struct TorProxyStatus {
 impl TorProxy {
     #[must_use]
     fn default_name(&self) -> ResourceName {
-        self.try_name().unwrap()
+        self.try_name()
+            .expect(".metadata.name is always set on a live resource")
     }
 
     #[must_use]
@@ -1135,7 +1136,7 @@ fn generate_horizontal_pod_autoscaler(
             scale_target_ref: CrossVersionObjectReference {
                 api_version: Some(TorProxy::api_version(&()).into()),
                 kind: TorProxy::kind(&()).into(),
-                name: object.try_name().unwrap().into(),
+                name: object.try_name()?.into(),
             },
         }),
         ..Default::default()

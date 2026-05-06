@@ -316,8 +316,9 @@ fn logger_provider(cli: &CliArgs) -> Result<SdkLoggerProvider> {
                         exporter_builder = exporter_builder.with_compression(compression);
                     }
 
-                    provider_builder =
-                        provider_builder.with_batch_exporter(exporter_builder.build().unwrap());
+                    provider_builder = provider_builder.with_batch_exporter(
+                        exporter_builder.build().map_err(Error::OtlpExporter)?,
+                    );
                 }
                 Protocol::HttpBinary | Protocol::HttpJson => {
                     let exporter_builder = opentelemetry_otlp::LogExporter::builder()
@@ -327,8 +328,9 @@ fn logger_provider(cli: &CliArgs) -> Result<SdkLoggerProvider> {
                         .with_protocol(protocol)
                         .with_timeout(Duration::from_millis(timeout));
 
-                    provider_builder =
-                        provider_builder.with_batch_exporter(exporter_builder.build().unwrap());
+                    provider_builder = provider_builder.with_batch_exporter(
+                        exporter_builder.build().map_err(Error::OtlpExporter)?,
+                    );
                 }
             }
         }
@@ -366,8 +368,9 @@ fn meter_provider(cli: &CliArgs) -> Result<SdkMeterProvider> {
                         exporter_builder = exporter_builder.with_compression(compression);
                     }
 
-                    provider_builder =
-                        provider_builder.with_periodic_exporter(exporter_builder.build().unwrap());
+                    provider_builder = provider_builder.with_periodic_exporter(
+                        exporter_builder.build().map_err(Error::OtlpExporter)?,
+                    );
                 }
                 Protocol::HttpBinary | Protocol::HttpJson => {
                     let exporter_builder = opentelemetry_otlp::MetricExporter::builder()
@@ -377,8 +380,9 @@ fn meter_provider(cli: &CliArgs) -> Result<SdkMeterProvider> {
                         .with_protocol(protocol)
                         .with_timeout(Duration::from_millis(timeout));
 
-                    provider_builder =
-                        provider_builder.with_periodic_exporter(exporter_builder.build().unwrap());
+                    provider_builder = provider_builder.with_periodic_exporter(
+                        exporter_builder.build().map_err(Error::OtlpExporter)?,
+                    );
                 }
             }
         }
@@ -416,8 +420,9 @@ fn tracer_provider(cli: &CliArgs) -> Result<SdkTracerProvider> {
                         exporter_builder = exporter_builder.with_compression(compression);
                     }
 
-                    provider_builder =
-                        provider_builder.with_batch_exporter(exporter_builder.build().unwrap());
+                    provider_builder = provider_builder.with_batch_exporter(
+                        exporter_builder.build().map_err(Error::OtlpExporter)?,
+                    );
                 }
                 Protocol::HttpBinary | Protocol::HttpJson => {
                     let exporter_builder = opentelemetry_otlp::SpanExporter::builder()
@@ -427,8 +432,9 @@ fn tracer_provider(cli: &CliArgs) -> Result<SdkTracerProvider> {
                         .with_protocol(protocol)
                         .with_timeout(Duration::from_millis(timeout));
 
-                    provider_builder =
-                        provider_builder.with_batch_exporter(exporter_builder.build().unwrap());
+                    provider_builder = provider_builder.with_batch_exporter(
+                        exporter_builder.build().map_err(Error::OtlpExporter)?,
+                    );
                 }
             }
         }
@@ -458,7 +464,7 @@ fn parse_headers_metadata_map(headers: Option<&str>) -> MetadataMap {
         .map(|headers| {
             MetadataMap::from_headers(
                 parse_headers(headers)
-                    .map(|(key, value)| (key.parse().unwrap(), value.parse().unwrap()))
+                    .filter_map(|(key, value)| Some((key.parse().ok()?, value.parse().ok()?)))
                     .collect(),
             )
         })
@@ -470,7 +476,9 @@ fn parse_headers<'a>(
 ) -> std::iter::Map<std::str::Split<'a, char>, impl FnMut(&'a str) -> (&'a str, &'a str)> {
     headers.split(',').map(|header| {
         let mut parts = header.splitn(2, '=');
-        let key = parts.next().unwrap();
+        let key = parts
+            .next()
+            .expect("splitn(2) always yields at least one element");
         let value = parts.next().unwrap_or("");
         (key, value)
     })

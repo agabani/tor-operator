@@ -198,7 +198,8 @@ pub struct OnionBalanceStatus {
 impl OnionBalance {
     #[must_use]
     fn default_name(&self) -> ResourceName {
-        self.try_name().unwrap()
+        self.try_name()
+            .expect(".metadata.name is always set on a live resource")
     }
 
     #[must_use]
@@ -693,7 +694,8 @@ async fn reconcile_onion_balance(
             } else {
                 None
             },
-            onion_services: i32::try_from(object.spec.onion_services.len()).unwrap(),
+            onion_services: i32::try_from(object.spec.onion_services.len())
+                .expect("onion_services count cannot realistically exceed i32::MAX"),
             summary,
         },
     )
