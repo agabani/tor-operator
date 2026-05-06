@@ -29,6 +29,18 @@ pub enum Error {
 
 impl std::error::Error for Error {}
 
+impl From<kube::Error> for Error {
+    fn from(e: kube::Error) -> Self {
+        Self::Kube(e)
+    }
+}
+
+impl From<opentelemetry_otlp::ExporterBuildError> for Error {
+    fn from(e: opentelemetry_otlp::ExporterBuildError) -> Self {
+        Self::OtlpExporter(e)
+    }
+}
+
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

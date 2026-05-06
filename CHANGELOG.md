@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Fixed
+
+- Error Policy exponential backoff eviction.
+
 ## [1.0.9] - 2026-05-06
 
 ### Fixed
@@ -377,7 +381,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.9...HEAD
-
 [1.0.9]: https://github.com/agabani/tor-operator/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/agabani/tor-operator/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/agabani/tor-operator/compare/v1.0.6...v1.0.7

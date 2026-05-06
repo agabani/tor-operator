@@ -316,9 +316,8 @@ fn logger_provider(cli: &CliArgs) -> Result<SdkLoggerProvider> {
                         exporter_builder = exporter_builder.with_compression(compression);
                     }
 
-                    provider_builder = provider_builder.with_batch_exporter(
-                        exporter_builder.build().map_err(Error::OtlpExporter)?,
-                    );
+                    provider_builder =
+                        provider_builder.with_batch_exporter(exporter_builder.build()?);
                 }
                 Protocol::HttpBinary | Protocol::HttpJson => {
                     let exporter_builder = opentelemetry_otlp::LogExporter::builder()
@@ -328,9 +327,8 @@ fn logger_provider(cli: &CliArgs) -> Result<SdkLoggerProvider> {
                         .with_protocol(protocol)
                         .with_timeout(Duration::from_millis(timeout));
 
-                    provider_builder = provider_builder.with_batch_exporter(
-                        exporter_builder.build().map_err(Error::OtlpExporter)?,
-                    );
+                    provider_builder =
+                        provider_builder.with_batch_exporter(exporter_builder.build()?);
                 }
             }
         }
@@ -368,9 +366,8 @@ fn meter_provider(cli: &CliArgs) -> Result<SdkMeterProvider> {
                         exporter_builder = exporter_builder.with_compression(compression);
                     }
 
-                    provider_builder = provider_builder.with_periodic_exporter(
-                        exporter_builder.build().map_err(Error::OtlpExporter)?,
-                    );
+                    provider_builder =
+                        provider_builder.with_periodic_exporter(exporter_builder.build()?);
                 }
                 Protocol::HttpBinary | Protocol::HttpJson => {
                     let exporter_builder = opentelemetry_otlp::MetricExporter::builder()
@@ -380,9 +377,8 @@ fn meter_provider(cli: &CliArgs) -> Result<SdkMeterProvider> {
                         .with_protocol(protocol)
                         .with_timeout(Duration::from_millis(timeout));
 
-                    provider_builder = provider_builder.with_periodic_exporter(
-                        exporter_builder.build().map_err(Error::OtlpExporter)?,
-                    );
+                    provider_builder =
+                        provider_builder.with_periodic_exporter(exporter_builder.build()?);
                 }
             }
         }
@@ -420,9 +416,8 @@ fn tracer_provider(cli: &CliArgs) -> Result<SdkTracerProvider> {
                         exporter_builder = exporter_builder.with_compression(compression);
                     }
 
-                    provider_builder = provider_builder.with_batch_exporter(
-                        exporter_builder.build().map_err(Error::OtlpExporter)?,
-                    );
+                    provider_builder =
+                        provider_builder.with_batch_exporter(exporter_builder.build()?);
                 }
                 Protocol::HttpBinary | Protocol::HttpJson => {
                     let exporter_builder = opentelemetry_otlp::SpanExporter::builder()
@@ -432,9 +427,8 @@ fn tracer_provider(cli: &CliArgs) -> Result<SdkTracerProvider> {
                         .with_protocol(protocol)
                         .with_timeout(Duration::from_millis(timeout));
 
-                    provider_builder = provider_builder.with_batch_exporter(
-                        exporter_builder.build().map_err(Error::OtlpExporter)?,
-                    );
+                    provider_builder =
+                        provider_builder.with_batch_exporter(exporter_builder.build()?);
                 }
             }
         }

@@ -26,14 +26,12 @@ where
     where
         O: Object,
     {
-        futures::future::join_all(
+        futures::future::try_join_all(
             resources
                 .into_iter()
                 .map(|resource| self.delete(object, resource)),
         )
         .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()
         .map(|_| ())
     }
 
@@ -65,9 +63,8 @@ where
         self.metrics.kubernetes_api_usage_count::<R>("delete");
         self.api
             .delete(&resource.try_name()?, &object.delete_params())
-            .await
-            .map(|_| ())
-            .map_err(Error::Kube)
+            .await?;
+        Ok(())
     }
 
     #[tracing::instrument(
@@ -78,7 +75,7 @@ where
     )]
     pub async fn get_opt(&self, name: &ResourceName) -> Result<Option<R>> {
         self.metrics.kubernetes_api_usage_count::<R>("get");
-        self.api.get_opt(name).await.map_err(Error::Kube)
+        Ok(self.api.get_opt(name).await?)
     }
 
     #[tracing::instrument(
@@ -92,10 +89,7 @@ where
         O: Object + Resource,
     {
         self.metrics.kubernetes_api_usage_count::<R>("list");
-        self.api
-            .list(&object.try_owned_list_params()?)
-            .await
-            .map_err(Error::Kube)
+        Ok(self.api.list(&object.try_owned_list_params()?).await?)
     }
 
     #[tracing::instrument(
@@ -115,9 +109,8 @@ where
                 &object.patch_params(),
                 &kube::api::Patch::Apply(&resource),
             )
-            .await
-            .map(|_| ())
-            .map_err(Error::Kube)
+            .await?;
+        Ok(())
     }
 
     #[tracing::instrument(
@@ -137,9 +130,8 @@ where
                 &object.patch_status_params(),
                 &object.patch_status(status),
             )
-            .await
-            .map(|_| ())
-            .map_err(Error::Kube)
+            .await?;
+        Ok(())
     }
 }
 
@@ -180,25 +172,20 @@ where
             })
             .collect::<Result<HashMap<ResourceName, (I, R)>>>()?;
 
-        futures::future::join_all(resources.iter().map(
+        futures::future::try_join_all(resources.iter().map(
             move |(resource_name, (_, resource))| async {
-                match self.get_opt(resource_name).await {
-                    Ok(api_resource) => match api_resource {
-                        Some(api_resource)
-                            if resource.spec().is_subset(api_resource.spec())
-                                && resource.meta().is_subset(api_resource.meta()) =>
-                        {
-                            Ok(())
-                        }
-                        _ => self.patch(object, resource).await,
-                    },
-                    Err(err) => Err(err),
+                match self.get_opt(resource_name).await? {
+                    Some(api_resource)
+                        if resource.spec().is_subset(api_resource.spec())
+                            && resource.meta().is_subset(api_resource.meta()) =>
+                    {
+                        Ok(())
+                    }
+                    _ => self.patch(object, resource).await,
                 }
             },
         ))
-        .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()?;
+        .await?;
 
         let mut patched = HashMap::new();
         let mut deprecated = Vec::new();
