@@ -6,6 +6,10 @@
 
 - Error Policy exponential backoff eviction.
 
+### Changed
+
+- Third party Tor v0.4.9.8 container image. (linux/amd64, linux/arm64)
+
 ## [1.0.9] - 2026-05-06
 
 ### Fixed
@@ -20,10 +24,14 @@
 
 ## [1.0.8] - 2026-04-12
 
+### Changed
+
 - Third party Tor v0.4.9.6 container image with OpenSSL 3.6.2. (linux/amd64, linux/arm64)
 - Upgrade dependencies.
 
 ## [1.0.7] - 2026-04-01
+
+### Changed
 
 - Third party Tor v0.4.9.6 container image. (linux/amd64, linux/arm64)
 
