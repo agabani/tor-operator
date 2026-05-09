@@ -244,6 +244,7 @@ jobs:
         uses: helm/chart-releaser-action@v1.7.0
         with:
           config: chart-releaser.yaml
+          mark_as_latest: false
           skip_packaging: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
