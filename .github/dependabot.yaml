@@ -9,6 +9,12 @@ updates:
           - kube
           - k8s-openapi
           - schemars
+      opentelemetry:
+        patterns:
+          - opentelemetry
+          - opentelemetry-*
+          - opentelemetry_*
+          - tracing-opentelemetry
     schedule:
       interval: "daily"
 
