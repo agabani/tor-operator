@@ -29,7 +29,7 @@ pub use object::Object;
 pub use pod_security_context::pod_security_context;
 pub use resource::Resource;
 pub use resource_name::ResourceName;
-pub use resource_namespace::ObjectNamespace;
+pub use resource_namespace::ResourceNamespace;
 pub use resource_uid::ResourceUid;
 pub use selector_labels::SelectorLabels;
 pub use subset::Subset;

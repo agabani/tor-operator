@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{Error, Result};
 
-use super::{Object, ObjectNamespace, ResourceName, ResourceUid};
+use super::{Object, ResourceName, ResourceNamespace, ResourceUid};
 
 pub trait Resource: kube::ResourceExt<DynamicType = ()> {
     type Spec: PartialEq + Debug;
@@ -15,10 +15,10 @@ pub trait Resource: kube::ResourceExt<DynamicType = ()> {
             .as_ref()
             .ok_or_else(|| Error::MissingObjectKey(".metadata.name"))
             .map(String::to_string)
-            .map(ResourceName::new)
+            .map(Into::into)
     }
 
-    fn try_namespace(&self) -> Result<ObjectNamespace> {
+    fn try_namespace(&self) -> Result<ResourceNamespace> {
         self.meta()
             .namespace
             .as_ref()
@@ -33,7 +33,7 @@ pub trait Resource: kube::ResourceExt<DynamicType = ()> {
             .as_ref()
             .ok_or_else(|| Error::MissingObjectKey(".metadata.uid"))
             .map(String::to_string)
-            .map(ResourceUid::new)
+            .map(Into::into)
     }
 
     fn try_with_owner(mut self, object: &(impl Object + Resource)) -> Result<Self>
