@@ -25,7 +25,7 @@ opentelemetry = { version = "0.32.0", features = ["metrics"] }
 opentelemetry-appender-tracing = "0.32.0"
 opentelemetry-otlp = { version = "0.32.0", features = ["grpc-tonic", "gzip-http", "gzip-tonic", "http-json", "http-proto", "logs", "metrics", "reqwest-rustls-webpki-roots", "tls-aws-lc", "tls-webpki-roots", "trace", "zstd-http", "zstd-tonic"] }
 opentelemetry-stdout = "0.32.0"
-opentelemetry_sdk = { version = "0.32.0", features = ["rt-tokio"] }
+opentelemetry_sdk = { version = "0.32.1", features = ["rt-tokio"] }
 rand = "0.10.1"
 schemars = "1.2.1"
 serde = { version = "1.0.228", features = ["derive"] }
