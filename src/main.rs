@@ -151,9 +151,9 @@ fn crd_generate(
 
     for (name, crd) in crds {
         let content = match generate.format {
-            CrdGenerateArgsFormat::Helm => helmify(&serde_yaml::to_string(&crd)?),
+            CrdGenerateArgsFormat::Helm => helmify(&serde_saphyr::to_string(&crd)?),
             CrdGenerateArgsFormat::Json => serde_json::to_string_pretty(&crd)?,
-            CrdGenerateArgsFormat::Yaml => serde_yaml::to_string(&crd)?,
+            CrdGenerateArgsFormat::Yaml => serde_saphyr::to_string(&crd)?,
         };
 
         if let Some(output) = &generate.output {

@@ -47,6 +47,7 @@
     "reqwest",
     "rngs",
     "rustls",
+    "saphyr",
     "schemars",
     "serde",
     "storageos",
