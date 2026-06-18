@@ -43,22 +43,22 @@ spec:
           spec:
             description: |-
               An `OnionKey` is an abstraction of a Tor Onion Key.
-
+              
               A Tor Onion Key consists of the following files:
-
+              
               - `hostname`
               - `hs_ed25519_public_key`
               - `hs_ed25519_public_key`
-
+              
               A user can import their existing Tor Onion Key by creating a secret.
-
+              
               ```ignore
               kubectl create secret generic tor-ingress-example \
                 --from-file=hostname=./hostname \
                 --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \
                 --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key
               ```
-
+              
               A user can have the Tor Operator create a new random Tor Onion Key by using the
               auto generate feature controlled by `.autoGenerate`.
             properties:
@@ -66,24 +66,24 @@ spec:
                 default: false
                 description: |-
                   Auto generate a random Onion Key. default: false.
-
+                  
                   ## Auto Generate: False
-
+                  
                   Tor Operator will use an existing Onion Key from the Secret specified
                   in `.secret.name`.
-
+                  
                   ## Auto Generate: True
-
+                  
                   The Tor Operator will generate a random Onion Key and save it in the
                   secret specified in `.secret.name`.
-
+                  
                   If the `OnionKey`'s secret key is missing or malformed, the Tor Operator
                   will recreate the secret key.
-
+                  
                   If the `OnionKey`'s public key is missing, malformed, or does not match
                   the secret key, the Tor Operator will deterministically recreate the
                   public key from the secret key.
-
+                  
                   If the `OnionKey`'s hostname is missing, malformed, or does not match
                   the public key, the Tor Operator will deterministically recreate the
                   hostname from the public key.
@@ -95,19 +95,19 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>'
+                    description: "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: <http://kubernetes.io/docs/user-guide/annotations>"
                     nullable: true
                     type: object
                   labels:
                     additionalProperties:
                       type: string
-                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>'
+                    description: "Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: <http://kubernetes.io/docs/user-guide/labels>"
                     nullable: true
                     type: object
                   name:
                     description: |-
                       Name of the secret.
-
+                      
                       Secret data must have keys `hostname`, `hs_ed25519_public_key` and
                       `hs_ed25519_secret_key`.
                     type: string
@@ -116,7 +116,7 @@ spec:
                 type: object
             required:
             - secret
-            title: '`OnionKey`'
+            title: "`OnionKey`"
             type: object
           status:
             nullable: true
@@ -127,30 +127,45 @@ spec:
               conditions:
                 description: |-
                   Represents the latest available observations of a deployment's current state.
-
+                  
                   ### Ready
-
+                  
                   `SecretNotFound`,
                   `SecretKeyNotFound`, `SecretKeyMalformed`,
                   `PublicKeyNotFound`, `PublicKeyMalformed`, `PublicKeyMismatch`,
                   `HostnameNotFound`, `HostnameMalformed`, `HostnameMismatch`,
                   `Ready`
                 items:
-                  description: Condition contains details for one aspect of the current state of this API Resource.
+                  description: >-
+                    Condition contains details for one aspect of the current state of this API
+                    Resource.
                   properties:
                     lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      description: >-
+                        lastTransitionTime is the last time the condition transitioned from one status
+                        to another. This should be when the underlying condition changed.  If that is not
+                        known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: message is a human readable message indicating details about the transition. This may be an empty string.
+                      description: >-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
                       type: string
                     observedGeneration:
-                      description: observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+                      description: >-
+                        observedGeneration represents the .metadata.generation that the condition was
+                        set based upon. For instance, if .metadata.generation is currently 12, but the
+                        .status.conditions[x].observedGeneration is 9, the condition is out of date with
+                        respect to the current state of the instance.
                       format: int64
                       type: integer
                     reason:
-                      description: reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+                      description: >-
+                        reason contains a programmatic identifier indicating the reason for the
+                        condition's last transition. Producers of specific condition types may define expected
+                        values and meanings for this field, and whether the values are considered a
+                        guaranteed API. The value should be a CamelCase string. This field may not be empty.
                       type: string
                     status:
                       description: status of the condition, one of True, False, Unknown.
@@ -169,7 +184,7 @@ spec:
               hostname:
                 description: |-
                   `OnionKey` hostname.
-
+                  
                   The hostname is only populated once `state` is ready.
                 nullable: true
                 type: string

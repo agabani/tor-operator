@@ -39,7 +39,7 @@ impl std::fmt::Display for ConfigYaml {
         write!(
             f,
             "{}",
-            serde_yaml::to_string(self).map_err(|_| std::fmt::Error)?
+            serde_saphyr::to_string(self).map_err(|_| std::fmt::Error)?
         )
     }
 }
