@@ -241,7 +241,11 @@ jobs:
           helm package ../charts/tor-operator/
           cd ..
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.7.0
+        # Pinned to a post-v1.7.0 `main` commit for the `latest_tag: unbound variable`
+        # fix with `skip_packaging` (helm/chart-releaser-action#202, #171). The `# v1.7.0`
+        # comment keeps Dependabot tracking releases; it will bump to the next tagged
+        # release (which contains the fix) automatically.
+        uses: helm/chart-releaser-action@3e001cb8c68933439c7e721650f20a07a1a5c61e # v1.7.0
         with:
           config: chart-releaser.yaml
           mark_as_latest: false

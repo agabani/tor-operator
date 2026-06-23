@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS build
+FROM ubuntu:26.04 AS build
 
 ARG ONIONBALANCE_VERSION=0.2.4
 
@@ -18,7 +18,7 @@ RUN git fetch && git checkout ${ONIONBALANCE_VERSION}
 
 RUN python3 -m pip install . --break-system-packages
 
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive \
@@ -27,7 +27,7 @@ RUN apt update && \
     python3 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /usr/local/lib/python3.12/ /usr/local/lib/python3.12/
+COPY --from=build /usr/local/lib/python3.14/ /usr/local/lib/python3.14/
 COPY --from=build /usr/local/bin/onionbalance /usr/local/bin
 
 CMD ["onionbalance"]
