@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Third party Onion Balance container image with Ubuntu 26.04. (linux/amd64, linux/arm64)
+- Third party Tor v0.4.9.10 container image with OpenSSL 3.6.3 and Ubuntu 26.04. (linux/amd64, linux/arm64)
 - Minimum Supported Kubernetes Version: 1.32.
 
 ## [1.0.11] - 2026-06-03

@@ -1,4 +1,4 @@
-FROM rust:bookworm AS build
+FROM rust:trixie AS build
 
 # 1a: Prepare toolchain
 RUN cargo install cargo-auditable
