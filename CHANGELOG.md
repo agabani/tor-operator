@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [1.0.12] - 2026-06-23
+
 ### Changed
 
 - Third party Onion Balance container image with Ubuntu 26.04. (linux/amd64, linux/arm64)
@@ -402,7 +404,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.11...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.12...HEAD
+
+[1.0.12]: https://github.com/agabani/tor-operator/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/agabani/tor-operator/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/agabani/tor-operator/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/agabani/tor-operator/compare/v1.0.8...v1.0.9
