@@ -352,13 +352,13 @@ spec:
                   annotations:
                     additionalProperties:
                       type: string
-                    description: 'Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: &lt;http://kubernetes.io/docs/user-guide/annotations&gt;'
+                    description: &quot;Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: &lt;http://kubernetes.io/docs/user-guide/annotations&gt;&quot;
                     nullable: true
                     type: object
                   labels:
                     additionalProperties:
                       type: string
-                    description: 'Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: &lt;http://kubernetes.io/docs/user-guide/labels&gt;'
+                    description: &quot;Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: &lt;http://kubernetes.io/docs/user-guide/labels&gt;&quot;
                     nullable: true
                     type: object
                   name:
@@ -373,7 +373,7 @@ spec:
                 type: object
             required:
             - secret
-            title: '`OnionKey`'
+            title: &quot;`OnionKey`&quot;
             type: object
           status:
             nullable: true
@@ -393,21 +393,36 @@ spec:
                   `HostnameNotFound`, `HostnameMalformed`, `HostnameMismatch`,
                   `Ready`
                 items:
-                  description: Condition contains details for one aspect of the current state of this API Resource.
+                  description: &gt;-
+                    Condition contains details for one aspect of the current state of this API
+                    Resource.
                   properties:
                     lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition transitioned from one status to another. This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      description: &gt;-
+                        lastTransitionTime is the last time the condition transitioned from one status
+                        to another. This should be when the underlying condition changed.  If that is not
+                        known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: message is a human readable message indicating details about the transition. This may be an empty string.
+                      description: &gt;-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
                       type: string
                     observedGeneration:
-                      description: observedGeneration represents the .metadata.generation that the condition was set based upon. For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date with respect to the current state of the instance.
+                      description: &gt;-
+                        observedGeneration represents the .metadata.generation that the condition was
+                        set based upon. For instance, if .metadata.generation is currently 12, but the
+                        .status.conditions[x].observedGeneration is 9, the condition is out of date with
+                        respect to the current state of the instance.
                       format: int64
                       type: integer
                     reason:
-                      description: reason contains a programmatic identifier indicating the reason for the condition's last transition. Producers of specific condition types may define expected values and meanings for this field, and whether the values are considered a guaranteed API. The value should be a CamelCase string. This field may not be empty.
+                      description: &gt;-
+                        reason contains a programmatic identifier indicating the reason for the
+                        condition's last transition. Producers of specific condition types may define expected
+                        values and meanings for this field, and whether the values are considered a
+                        guaranteed API. The value should be a CamelCase string. This field may not be empty.
                       type: string
                     status:
                       description: status of the condition, one of True, False, Unknown.
