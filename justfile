@@ -159,10 +159,8 @@ kube-test:
     --create-namespace \
     --install \
     --namespace tor-operator \
-    --set onionBalance.image.repository=agabani/onion-balance \
-    --set onionBalance.image.tag={{GIT_COMMIT}} \
-    --set tor.image.repository=agabani/tor \
-    --set tor.image.tag={{GIT_COMMIT}} \
+    --set env.ONION_BALANCE_IMAGE_URI.value=agabani/onion-balance:{{GIT_COMMIT}} \
+    --set env.TOR_IMAGE_URI.value=agabani/tor:{{GIT_COMMIT}} \
     --set image.repository=agabani/tor-operator \
     --set image.tag={{GIT_COMMIT}}
   @helm test tor-operator --namespace tor-operator --timeout 15m0s
