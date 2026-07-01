@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [1.0.13] - 2026-07-01
+
 ### Added
 
 -  CLI options full environment variable support.
@@ -417,7 +419,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.12...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.13...HEAD
+
+[1.0.13]: https://github.com/agabani/tor-operator/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/agabani/tor-operator/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/agabani/tor-operator/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/agabani/tor-operator/compare/v1.0.9...v1.0.10
