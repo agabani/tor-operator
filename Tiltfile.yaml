@@ -1,4 +1,8 @@
 env:
+  ONION_BALANCE_IMAGE_URI:
+    value: agabani/onion-balance:dev
+  TOR_IMAGE_URI:
+    value: agabani/tor:dev
   # RUST_LOG:
   #   value: "info,opentelemetry=debug"
 
@@ -65,13 +69,3 @@ env:
 image:
   repository: agabani/tor-operator
   tag: dev
-
-onionBalance:
-  image:
-    repository: agabani/onion-balance
-    tag: dev
-
-tor:
-  image:
-    repository: agabani/tor
-    tag: dev

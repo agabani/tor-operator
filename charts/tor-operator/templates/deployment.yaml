@@ -42,11 +42,13 @@ spec:
             - "controller"
             - "run"
 
+            {{- if .Values.onionBalance }} # depreciated: use .Values.env.ONION_BALANCE_*
             - "--onion-balance-image-pull-policy"
             - "{{ .Values.onionBalance.image.pullPolicy }}"
 
             - "--onion-balance-image-uri"
             - "{{ .Values.onionBalance.image.repository }}:{{ .Values.onionBalance.image.tag }}"
+            {{- end }}
 
             - "--host"
             - "0.0.0.0"
@@ -54,11 +56,13 @@ spec:
             - "--port"
             - "{{ .Values.service.port }}"
 
+            {{- if .Values.tor }} # depreciated: use .Values.env.TOR_*
             - "--tor-image-pull-policy"
             - "{{ .Values.tor.image.pullPolicy }}"
 
             - "--tor-image-uri"
             - "{{ .Values.tor.image.repository }}:{{ .Values.tor.image.tag }}"
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

@@ -2,9 +2,18 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+-  CLI options full environment variable support.
+
 ### Changed
 
 - Third party Tor v0.4.9.11 container image. (linux/amd64, linux/arm64)
+
+### Deprecated
+
+- Helm .Values.onionBalance. (Replaced by .Values.env.ONION_BALANCE_*)
+- Helm .Values.tor. (Replaced by env: .Values.env.TOR_*)
 
 ## [1.0.12] - 2026-06-23
 

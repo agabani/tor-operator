@@ -35,7 +35,7 @@ pub struct CliArgs {
     pub otel_traces_exporter: Option<Vec<CliArgsOtelExporter>>,
 
     /// Specifies the OTLP transport compression to be used for all telemetry data.
-    #[arg(long, value_enum, env)]
+    #[arg(long, env, value_enum)]
     pub otel_exporter_otlp_compression: Option<CliArgsOtelExporterOtlpCompression>,
 
     /// A base endpoint URL for any signal type, with an optionally-specified port number. Helpful for when you’re sending more than one signal to the same endpoint and want one environment variable to control the endpoint.
@@ -47,7 +47,7 @@ pub struct CliArgs {
     pub otel_exporter_otlp_headers: Option<String>,
 
     /// Specifies the OTLP transport protocol to be used for all telemetry data.
-    #[arg(long, value_enum, env)]
+    #[arg(long, env, value_enum)]
     pub otel_exporter_otlp_protocol: Option<CliArgsOtelExporterOtlpProtocol>,
 
     /// The timeout value for all outgoing data (traces, metrics, and logs) in milliseconds.
@@ -55,7 +55,7 @@ pub struct CliArgs {
     pub otel_exporter_otlp_timeout: u64,
 
     /// Specifies the OTLP transport compression to be used for log data.
-    #[arg(long, value_enum, env)]
+    #[arg(long, env, value_enum)]
     pub otel_exporter_otlp_logs_compression: Option<CliArgsOtelExporterOtlpCompression>,
 
     /// Endpoint URL for log data only, with an optionally-specified port number. Typically ends with `v1/logs` when using OTLP/HTTP.
@@ -67,7 +67,7 @@ pub struct CliArgs {
     pub otel_exporter_otlp_logs_headers: Option<String>,
 
     /// Specifies the OTLP transport protocol to be used for log data.
-    #[arg(long, value_enum, env)]
+    #[arg(long, env, value_enum)]
     pub otel_exporter_otlp_logs_protocol: Option<CliArgsOtelExporterOtlpProtocol>,
 
     /// The timeout value for all outgoing logs in milliseconds.
@@ -75,7 +75,7 @@ pub struct CliArgs {
     pub otel_exporter_otlp_logs_timeout: Option<u64>,
 
     /// Specifies the OTLP transport compression to be used for metrics data.
-    #[arg(long, value_enum, env)]
+    #[arg(long, env, value_enum)]
     pub otel_exporter_otlp_metrics_compression: Option<CliArgsOtelExporterOtlpCompression>,
 
     /// Endpoint URL for metric data only, with an optionally-specified port number. Typically ends with `v1/metrics` when using OTLP/HTTP.
@@ -87,7 +87,7 @@ pub struct CliArgs {
     pub otel_exporter_otlp_metrics_headers: Option<String>,
 
     /// Specifies the OTLP transport protocol to be used for metrics data.
-    #[arg(long, value_enum, env)]
+    #[arg(long, env, value_enum)]
     pub otel_exporter_otlp_metrics_protocol: Option<CliArgsOtelExporterOtlpProtocol>,
 
     /// The timeout value for all outgoing metrics in milliseconds.
@@ -95,7 +95,7 @@ pub struct CliArgs {
     pub otel_exporter_otlp_metrics_timeout: Option<u64>,
 
     /// Specifies the OTLP transport compression to be used for trace data.
-    #[arg(long, value_enum, env)]
+    #[arg(long, env, value_enum)]
     pub otel_exporter_otlp_traces_compression: Option<CliArgsOtelExporterOtlpCompression>,
 
     /// Endpoint URL for metric data only, with an optionally-specified port number. Typically ends with `v1/traces` when using OTLP/HTTP.
@@ -107,7 +107,7 @@ pub struct CliArgs {
     pub otel_exporter_otlp_traces_headers: Option<String>,
 
     /// Specifies the OTLP transport protocol to be used for trace data.
-    #[arg(long, value_enum, env)]
+    #[arg(long, env, value_enum)]
     pub otel_exporter_otlp_traces_protocol: Option<CliArgsOtelExporterOtlpProtocol>,
 
     /// The timeout value for all outgoing traces in milliseconds.
@@ -203,30 +203,35 @@ pub enum ControllerCommands {
 #[derive(Args, Debug)]
 pub struct ControllerRunArgs {
     /// Onion Balance image pull policy
-    #[arg(long, default_value = "IfNotPresent")]
+    #[arg(long, env, default_value = "IfNotPresent")]
     pub onion_balance_image_pull_policy: String,
 
     /// Onion Balance image uri
     #[arg(
         long,
+        env,
         default_value = "ghcr.io/agabani/tor-operator:onion-balance-0.2.4.0"
     )]
     pub onion_balance_image_uri: String,
 
     /// Host the web server binds to
-    #[arg(long, default_value = "127.0.0.1")]
+    #[arg(long, env, default_value = "127.0.0.1")]
     pub host: String,
 
     /// Port the web server binds to
-    #[arg(long, default_value_t = 8080)]
+    #[arg(long, env, default_value_t = 8080)]
     pub port: u16,
 
     /// Tor image pull policy
-    #[arg(long, default_value = "IfNotPresent")]
+    #[arg(long, env, default_value = "IfNotPresent")]
     pub tor_image_pull_policy: String,
 
     /// Tor image uri
-    #[arg(long, default_value = "ghcr.io/agabani/tor-operator:tor-0.4.9.11.0")]
+    #[arg(
+        long,
+        env,
+        default_value = "ghcr.io/agabani/tor-operator:tor-0.4.9.11.0"
+    )]
     pub tor_image_uri: String,
 }
 
@@ -250,11 +255,11 @@ pub enum CrdCommands {
 #[derive(Args, Debug)]
 pub struct CrdGenerateArgs {
     /// Format of the CRDs
-    #[arg(long, value_enum, default_value_t = CrdGenerateArgsFormat::Yaml)]
+    #[arg(long, env, value_enum, default_value_t = CrdGenerateArgsFormat::Yaml)]
     pub format: CrdGenerateArgsFormat,
 
     /// Output the CRDs into a directory
-    #[arg(long, value_hint = clap::ValueHint::DirPath)]
+    #[arg(long, env, value_hint = clap::ValueHint::DirPath)]
     pub output: Option<PathBuf>,
 }
 
@@ -286,7 +291,7 @@ pub enum MarkdownCommands {
 #[derive(Args, Debug)]
 pub struct MarkdownGenerateArgs {
     /// Output the CLI help docs to a file
-    #[arg(long, value_hint = clap::ValueHint::DirPath)]
+    #[arg(long, env, value_hint = clap::ValueHint::DirPath)]
     pub output: Option<PathBuf>,
 }
 
@@ -310,6 +315,6 @@ pub enum OnionKeyCommands {
 #[derive(Args, Debug)]
 pub struct OnionKeyGenerateArgs {
     /// Output the Onion Keys into a directory
-    #[arg(long, value_hint = clap::ValueHint::DirPath)]
+    #[arg(long, env, value_hint = clap::ValueHint::DirPath)]
     pub output: Option<PathBuf>,
 }
