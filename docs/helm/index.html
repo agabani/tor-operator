@@ -162,18 +162,6 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: &quot;&quot;
 
-onionBalance:
-  image:
-    repository: ghcr.io/agabani/tor-operator
-    pullPolicy: IfNotPresent
-    tag: &quot;onion-balance-0.2.4.0&quot;
-
-tor:
-  image:
-    repository: ghcr.io/agabani/tor-operator
-    pullPolicy: IfNotPresent
-    tag: &quot;tor-0.4.8.17.0&quot;
-
 imagePullSecrets: []
 nameOverride: &quot;&quot;
 fullnameOverride: &quot;&quot;
@@ -235,8 +223,7 @@ env:
   RUST_LOG:
     value: &quot;info&quot;
 
-resources:
-  {}
+resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
