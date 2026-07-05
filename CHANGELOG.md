@@ -2,6 +2,13 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+-  CLI option ONION_BALANCE_IMAGE_REPOSITORY.
+-  CLI option ONION_BALANCE_IMAGE_TAG.
+-  CLI option TOR_IMAGE_REPOSITORY.
+-  CLI option TOR_IMAGE_TAG.
+
 ## [1.0.13] - 2026-07-01
 
 ### Added

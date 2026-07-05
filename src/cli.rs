@@ -206,13 +206,21 @@ pub struct ControllerRunArgs {
     #[arg(long, env, default_value = "IfNotPresent")]
     pub onion_balance_image_pull_policy: String,
 
+    /// Onion Balance image repository
+    #[arg(long, env)]
+    onion_balance_image_repository: Option<String>,
+
+    /// Onion Balance image tag
+    #[arg(long, env)]
+    onion_balance_image_tag: Option<String>,
+
     /// Onion Balance image uri
     #[arg(
         long,
         env,
         default_value = "ghcr.io/agabani/tor-operator:onion-balance-0.2.4.0"
     )]
-    pub onion_balance_image_uri: String,
+    onion_balance_image_uri: String,
 
     /// Host the web server binds to
     #[arg(long, env, default_value = "127.0.0.1")]
@@ -226,13 +234,60 @@ pub struct ControllerRunArgs {
     #[arg(long, env, default_value = "IfNotPresent")]
     pub tor_image_pull_policy: String,
 
+    /// Tor image repository
+    #[arg(long, env)]
+    tor_image_repository: Option<String>,
+
+    /// Tor image tag
+    #[arg(long, env)]
+    tor_image_tag: Option<String>,
+
     /// Tor image uri
     #[arg(
         long,
         env,
         default_value = "ghcr.io/agabani/tor-operator:tor-0.4.9.11.0"
     )]
-    pub tor_image_uri: String,
+    tor_image_uri: String,
+}
+
+impl ControllerRunArgs {
+    #[must_use]
+    pub fn onion_balance_image_uri(&self) -> String {
+        let mut parts = self.onion_balance_image_uri.split(':');
+
+        let Some(repository) = parts.next() else {
+            return self.onion_balance_image_uri.clone();
+        };
+        let Some(tag) = parts.next() else {
+            return self.onion_balance_image_uri.clone();
+        };
+
+        let repository = self
+            .onion_balance_image_repository
+            .as_deref()
+            .unwrap_or(repository);
+        let tag = self.onion_balance_image_tag.as_deref().unwrap_or(tag);
+
+        format!("{repository}:{tag}")
+    }
+
+    #[must_use]
+    pub fn tor_image_uri(&self) -> String {
+        let mut parts = self.tor_image_uri.split(':');
+
+        let Some(repository) = parts.next() else {
+            return self.tor_image_uri.clone();
+        };
+        let Some(tag) = parts.next() else {
+            return self.tor_image_uri.clone();
+        };
+
+        let repository = self.tor_image_repository.as_deref().unwrap_or(repository);
+        let tag = self.tor_image_tag.as_deref().unwrap_or(tag);
+
+        format!("{repository}:{tag}")
+    }
 }
 
 /*

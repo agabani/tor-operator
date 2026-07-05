@@ -57,11 +57,11 @@ async fn controller_run(
     let onion_balance_config = onion_balance::Config {
         onion_balance_image: onion_balance::ImageConfig {
             pull_policy: run.onion_balance_image_pull_policy.clone(),
-            uri: run.onion_balance_image_uri.clone(),
+            uri: run.onion_balance_image_uri(),
         },
         tor_image: onion_balance::ImageConfig {
             pull_policy: run.tor_image_pull_policy.clone(),
-            uri: run.tor_image_uri.clone(),
+            uri: run.tor_image_uri(),
         },
     };
 
@@ -70,7 +70,7 @@ async fn controller_run(
     let onion_service_config = onion_service::Config {
         tor_image: onion_service::ImageConfig {
             pull_policy: run.tor_image_pull_policy.clone(),
-            uri: run.tor_image_uri.clone(),
+            uri: run.tor_image_uri(),
         },
     };
 
@@ -79,7 +79,7 @@ async fn controller_run(
     let tor_proxy_config = tor_proxy::Config {
         tor_image: tor_proxy::ImageConfig {
             pull_policy: run.tor_image_pull_policy.clone(),
-            uri: run.tor_image_uri.clone(),
+            uri: run.tor_image_uri(),
         },
     };
 

@@ -42,12 +42,19 @@ spec:
             - "controller"
             - "run"
 
-            {{- if .Values.onionBalance }} # depreciated: use .Values.env.ONION_BALANCE_*
+            {{- if (((.Values.onionBalance).image).pullPolicy) }} # depreciated: use .Values.env.ONION_BALANCE_IMAGE_PULL_POLICY
             - "--onion-balance-image-pull-policy"
             - "{{ .Values.onionBalance.image.pullPolicy }}"
+            {{- end }}
 
-            - "--onion-balance-image-uri"
-            - "{{ .Values.onionBalance.image.repository }}:{{ .Values.onionBalance.image.tag }}"
+            {{- if (((.Values.onionBalance).image).repository) }} # depreciated: use .Values.env.ONION_BALANCE_IMAGE_REPOSITORY
+            - "--onion-balance-image-repository"
+            - "{{ .Values.onionBalance.image.repository }}"
+            {{- end }}
+
+            {{- if (((.Values.onionBalance).image).tag) }} # depreciated: use .Values.env.ONION_BALANCE_IMAGE_TAG
+            - "--onion-balance-image-tag"
+            - "{{ .Values.onionBalance.image.tag }}"
             {{- end }}
 
             - "--host"
@@ -56,12 +63,19 @@ spec:
             - "--port"
             - "{{ .Values.service.port }}"
 
-            {{- if .Values.tor }} # depreciated: use .Values.env.TOR_*
+            {{- if (((.Values.tor).image).pullPolicy) }} # depreciated: use .Values.env.TOR_IMAGE_PULL_POLICY
             - "--tor-image-pull-policy"
             - "{{ .Values.tor.image.pullPolicy }}"
+            {{- end }}
 
-            - "--tor-image-uri"
-            - "{{ .Values.tor.image.repository }}:{{ .Values.tor.image.tag }}"
+            {{- if (((.Values.tor).image).repository) }} # depreciated: use .Values.env.TOR_IMAGE_REPOSITORY
+            - "--tor-image-repository"
+            - "{{ .Values.tor.image.repository }}"
+            {{- end }}
+
+            {{- if (((.Values.tor).image).tag) }} # depreciated: use .Values.env.TOR_IMAGE_TAG
+            - "--tor-image-tag"
+            - "{{ .Values.tor.image.tag }}"
             {{- end }}
           ports:
             - name: http
