@@ -4,6 +4,11 @@ updates:
   - package-ecosystem: "cargo"
     directory: "/"
     groups:
+      dalek:
+        patterns:
+          - curve25519-dalek
+          - ed25519-dalek
+          - x25519-dalek
       kube:
         patterns:
           - kube
