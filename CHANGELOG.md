@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [1.0.14] - 2026-07-07
+
 ### Added
 
 -  CLI option ONION_BALANCE_IMAGE_REPOSITORY.
@@ -426,7 +428,9 @@
 
 <!-- next-url -->
 
-[Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.13...HEAD
+[Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.14...HEAD
+
+[1.0.14]: https://github.com/agabani/tor-operator/compare/v1.0.13...v1.0.14
 
 [1.0.13]: https://github.com/agabani/tor-operator/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/agabani/tor-operator/compare/v1.0.11...v1.0.12
