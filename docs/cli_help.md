@@ -114,6 +114,8 @@ Run the Tor Operator
 * `--onion-balance-image-pull-policy <ONION_BALANCE_IMAGE_PULL_POLICY>` — Onion Balance image pull policy
 
   Default value: `IfNotPresent`
+* `--onion-balance-image-repository <ONION_BALANCE_IMAGE_REPOSITORY>` — Onion Balance image repository
+* `--onion-balance-image-tag <ONION_BALANCE_IMAGE_TAG>` — Onion Balance image tag
 * `--onion-balance-image-uri <ONION_BALANCE_IMAGE_URI>` — Onion Balance image uri
 
   Default value: `ghcr.io/agabani/tor-operator:onion-balance-0.2.4.0`
@@ -126,6 +128,8 @@ Run the Tor Operator
 * `--tor-image-pull-policy <TOR_IMAGE_PULL_POLICY>` — Tor image pull policy
 
   Default value: `IfNotPresent`
+* `--tor-image-repository <TOR_IMAGE_REPOSITORY>` — Tor image repository
+* `--tor-image-tag <TOR_IMAGE_TAG>` — Tor image tag
 * `--tor-image-uri <TOR_IMAGE_URI>` — Tor image uri
 
   Default value: `ghcr.io/agabani/tor-operator:tor-0.4.9.11.0`
