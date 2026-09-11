@@ -12,10 +12,8 @@ metadata:
 spec:
   group: tor.agabani.co.uk
   names:
-    categories: []
     kind: OnionBalance
     plural: onionbalances
-    shortNames: []
     singular: onionbalance
   scope: Namespaced
   versions:
