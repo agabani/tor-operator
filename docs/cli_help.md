@@ -132,7 +132,7 @@ Run the Tor Operator
 * `--tor-image-tag <TOR_IMAGE_TAG>` — Tor image tag
 * `--tor-image-uri <TOR_IMAGE_URI>` — Tor image uri
 
-  Default value: `ghcr.io/agabani/tor-operator:tor-0.4.9.11.0`
+  Default value: `ghcr.io/agabani/tor-operator:tor-0.4.9.12.0`
 
 
 

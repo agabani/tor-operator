@@ -2,20 +2,25 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Third party Onion Balance container image with Ubuntu 26.04. (linux/amd64, linux/arm64)
+- Third party Tor v0.4.9.12 container image with OpenSSL 4.0.2 and Libevent 2.1.13. (linux/amd64, linux/arm64)
+
 ## [1.0.14] - 2026-07-07
 
 ### Added
 
--  CLI option ONION_BALANCE_IMAGE_REPOSITORY.
--  CLI option ONION_BALANCE_IMAGE_TAG.
--  CLI option TOR_IMAGE_REPOSITORY.
--  CLI option TOR_IMAGE_TAG.
+- CLI option ONION_BALANCE_IMAGE_REPOSITORY.
+- CLI option ONION_BALANCE_IMAGE_TAG.
+- CLI option TOR_IMAGE_REPOSITORY.
+- CLI option TOR_IMAGE_TAG.
 
 ## [1.0.13] - 2026-07-01
 
 ### Added
 
--  CLI options full environment variable support.
+- CLI options full environment variable support.
 
 ### Changed
 
@@ -23,8 +28,8 @@
 
 ### Deprecated
 
-- Helm .Values.onionBalance. (Replaced by .Values.env.ONION_BALANCE_*)
-- Helm .Values.tor. (Replaced by env: .Values.env.TOR_*)
+- Helm .Values.onionBalance. (Replaced by .Values.env.ONION*BALANCE*\*)
+- Helm .Values.tor. (Replaced by env: .Values.env.TOR\_\*)
 
 ## [1.0.12] - 2026-06-23
 
@@ -429,9 +434,7 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.14...HEAD
-
 [1.0.14]: https://github.com/agabani/tor-operator/compare/v1.0.13...v1.0.14
-
 [1.0.13]: https://github.com/agabani/tor-operator/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/agabani/tor-operator/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/agabani/tor-operator/compare/v1.0.10...v1.0.11

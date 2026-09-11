@@ -12,10 +12,8 @@ metadata:
 spec:
   group: tor.agabani.co.uk
   names:
-    categories: []
     kind: TorIngress
     plural: toringresses
-    shortNames: []
     singular: toringress
   scope: Namespaced
   versions:
