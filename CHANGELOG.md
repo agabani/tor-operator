@@ -2,11 +2,14 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Upgrade dependencies.
+
 ## [1.0.15] - 2026-09-11
 
 ### Changed
 
-- Third party Onion Balance container image with Ubuntu 26.04. (linux/amd64, linux/arm64)
 - Third party Tor v0.4.9.12 container image with OpenSSL 4.0.2 and Libevent 2.1.13. (linux/amd64, linux/arm64)
 
 ## [1.0.14] - 2026-07-07
@@ -253,6 +256,8 @@
 
 ## [0.0.25] - 2024-03-05
 
+### Changed
+
 - Upgrade dependencies.
 
 ## [0.0.24] - 2024-01-27
@@ -436,7 +441,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.15...HEAD
-
 [1.0.15]: https://github.com/agabani/tor-operator/compare/v1.0.14...v1.0.15
 [1.0.14]: https://github.com/agabani/tor-operator/compare/v1.0.13...v1.0.14
 [1.0.13]: https://github.com/agabani/tor-operator/compare/v1.0.12...v1.0.13
