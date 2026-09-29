@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- OTLP exporters trust the platform's certificate store instead of bundled Mozilla roots.
+
 ## [1.0.16] - 2026-09-19
 
 ### Changed
@@ -443,7 +447,6 @@
 <!-- next-url -->
 
 [Unreleased]: https://github.com/agabani/tor-operator/compare/v1.0.16...HEAD
-
 [1.0.16]: https://github.com/agabani/tor-operator/compare/v1.0.15...v1.0.16
 [1.0.15]: https://github.com/agabani/tor-operator/compare/v1.0.14...v1.0.15
 [1.0.14]: https://github.com/agabani/tor-operator/compare/v1.0.13...v1.0.14
