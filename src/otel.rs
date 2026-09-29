@@ -4,7 +4,7 @@ use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::{
     Compression, Protocol, WithExportConfig, WithHttpConfig, WithTonicConfig,
-    tonic_types::metadata::MetadataMap,
+    tonic_types::{metadata::MetadataMap, transport::ClientTlsConfig},
 };
 use opentelemetry_sdk::{
     logs::SdkLoggerProvider, metrics::SdkMeterProvider, trace::SdkTracerProvider,
@@ -158,6 +158,7 @@ fn logs_endpoint(cli: &CliArgs, protocol: Protocol) -> Result<String> {
         return Ok(match protocol {
             Protocol::Grpc => endpoint.clone(),
             Protocol::HttpBinary | Protocol::HttpJson => format!("{endpoint}/v1/logs"),
+            _ => return Err(Error::UnsupportedOtlpProtocol(protocol)),
         });
     }
 
@@ -175,6 +176,7 @@ fn metrics_endpoint(cli: &CliArgs, protocol: Protocol) -> Result<String> {
         return Ok(match protocol {
             Protocol::Grpc => endpoint.clone(),
             Protocol::HttpBinary | Protocol::HttpJson => format!("{endpoint}/v1/metrics"),
+            _ => return Err(Error::UnsupportedOtlpProtocol(protocol)),
         });
     }
 
@@ -192,6 +194,7 @@ fn traces_endpoint(cli: &CliArgs, protocol: Protocol) -> Result<String> {
         return Ok(match protocol {
             Protocol::Grpc => endpoint.clone(),
             Protocol::HttpBinary | Protocol::HttpJson => format!("{endpoint}/v1/traces"),
+            _ => return Err(Error::UnsupportedOtlpProtocol(protocol)),
         });
     }
 
@@ -305,6 +308,8 @@ fn logger_provider(cli: &CliArgs) -> Result<SdkLoggerProvider> {
 
             match protocol {
                 Protocol::Grpc => {
+                    let tls_config = grpc_tls_config(&endpoint);
+
                     let mut exporter_builder = opentelemetry_otlp::LogExporter::builder()
                         .with_tonic()
                         .with_endpoint(endpoint)
@@ -314,6 +319,10 @@ fn logger_provider(cli: &CliArgs) -> Result<SdkLoggerProvider> {
 
                     if let Some(compression) = compression {
                         exporter_builder = exporter_builder.with_compression(compression);
+                    }
+
+                    if let Some(tls_config) = tls_config {
+                        exporter_builder = exporter_builder.with_tls_config(tls_config);
                     }
 
                     provider_builder =
@@ -330,6 +339,7 @@ fn logger_provider(cli: &CliArgs) -> Result<SdkLoggerProvider> {
                     provider_builder =
                         provider_builder.with_batch_exporter(exporter_builder.build()?);
                 }
+                _ => return Err(Error::UnsupportedOtlpProtocol(protocol)),
             }
         }
     }
@@ -355,6 +365,8 @@ fn meter_provider(cli: &CliArgs) -> Result<SdkMeterProvider> {
 
             match protocol {
                 Protocol::Grpc => {
+                    let tls_config = grpc_tls_config(&endpoint);
+
                     let mut exporter_builder = opentelemetry_otlp::MetricExporter::builder()
                         .with_tonic()
                         .with_endpoint(endpoint)
@@ -364,6 +376,10 @@ fn meter_provider(cli: &CliArgs) -> Result<SdkMeterProvider> {
 
                     if let Some(compression) = compression {
                         exporter_builder = exporter_builder.with_compression(compression);
+                    }
+
+                    if let Some(tls_config) = tls_config {
+                        exporter_builder = exporter_builder.with_tls_config(tls_config);
                     }
 
                     provider_builder =
@@ -380,6 +396,7 @@ fn meter_provider(cli: &CliArgs) -> Result<SdkMeterProvider> {
                     provider_builder =
                         provider_builder.with_periodic_exporter(exporter_builder.build()?);
                 }
+                _ => return Err(Error::UnsupportedOtlpProtocol(protocol)),
             }
         }
     }
@@ -405,6 +422,8 @@ fn tracer_provider(cli: &CliArgs) -> Result<SdkTracerProvider> {
 
             match protocol {
                 Protocol::Grpc => {
+                    let tls_config = grpc_tls_config(&endpoint);
+
                     let mut exporter_builder = opentelemetry_otlp::SpanExporter::builder()
                         .with_tonic()
                         .with_endpoint(endpoint)
@@ -414,6 +433,10 @@ fn tracer_provider(cli: &CliArgs) -> Result<SdkTracerProvider> {
 
                     if let Some(compression) = compression {
                         exporter_builder = exporter_builder.with_compression(compression);
+                    }
+
+                    if let Some(tls_config) = tls_config {
+                        exporter_builder = exporter_builder.with_tls_config(tls_config);
                     }
 
                     provider_builder =
@@ -430,6 +453,7 @@ fn tracer_provider(cli: &CliArgs) -> Result<SdkTracerProvider> {
                     provider_builder =
                         provider_builder.with_batch_exporter(exporter_builder.build()?);
                 }
+                _ => return Err(Error::UnsupportedOtlpProtocol(protocol)),
             }
         }
     }
@@ -478,9 +502,42 @@ fn parse_headers<'a>(
     })
 }
 
+/*
+ * ============================================================================
+ * TLS
+ * ============================================================================
+ */
+
+/// The gRPC exporter's default TLS config enables no trust roots, so every certificate fails verification.
+/// Enable the platform's trusted certs.
+fn grpc_tls_config(endpoint: &str) -> Option<ClientTlsConfig> {
+    endpoint
+        .get(..8)
+        .is_some_and(|scheme| scheme.eq_ignore_ascii_case("https://"))
+        .then(|| ClientTlsConfig::new().with_native_roots())
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn grpc_tls_config_http() {
+        let actual = grpc_tls_config("http://localhost:4317");
+
+        assert!(actual.is_none());
+    }
+
+    #[test]
+    fn grpc_tls_config_https() {
+        let actual = grpc_tls_config("https://localhost:4317");
+
+        assert!(actual.is_some());
+
+        let actual = grpc_tls_config("HTTPS://localhost:4317");
+
+        assert!(actual.is_some());
+    }
 
     #[test]
     fn parse_headers_hashmap_none() {

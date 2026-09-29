@@ -25,6 +25,7 @@ pub enum Error {
     MissingObjectKey(&'static str),
     OtlpExporter(opentelemetry_otlp::ExporterBuildError),
     SyncInvariantViolated(usize),
+    UnsupportedOtlpProtocol(opentelemetry_otlp::Protocol),
 }
 
 impl std::error::Error for Error {}
@@ -53,6 +54,9 @@ impl std::fmt::Display for Error {
                     f,
                     "sync invariant violated: {count} resources were not patched"
                 )
+            }
+            Self::UnsupportedOtlpProtocol(protocol) => {
+                write!(f, "unsupported OTLP protocol: {protocol:?}")
             }
         }
     }

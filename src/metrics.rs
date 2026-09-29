@@ -66,6 +66,7 @@ impl Metrics {
             Error::MissingObjectKey(_) => "missing object key",
             Error::OtlpExporter(_) => "otlp exporter",
             Error::SyncInvariantViolated(_) => "sync invariant violated",
+            Error::UnsupportedOtlpProtocol(_) => "unsupported otlp protocol",
         };
         self.reconciliation_errors_total.add(
             1,
