@@ -5,6 +5,7 @@
 ### Changed
 
 - OTLP exporters trust the platform's certificate store instead of bundled Mozilla roots.
+- Third party Tor v0.4.9.13 container image with OpenSSL 4.0.3. (linux/amd64, linux/arm64)
 
 ## [1.0.16] - 2026-09-19
 
