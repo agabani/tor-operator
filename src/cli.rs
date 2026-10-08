@@ -246,7 +246,7 @@ pub struct ControllerRunArgs {
     #[arg(
         long,
         env,
-        default_value = "ghcr.io/agabani/tor-operator:tor-0.4.9.13.0"
+        default_value = "ghcr.io/agabani/tor-operator:tor-0.4.9.14.0"
     )]
     tor_image_uri: String,
 }
