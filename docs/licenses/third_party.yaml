@@ -27981,7 +27981,7 @@ third_party_libraries:
       3. This notice may not be removed or altered from any source distribution.
 
 - package_name: tokio
-  package_version: 1.53.1
+  package_version: 1.53.2
   repository: https://github.com/tokio-rs/tokio
   license: MIT
   licenses:
