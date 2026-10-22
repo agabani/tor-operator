@@ -2,6 +2,10 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Upgrade dependencies.
+
 ## [1.0.18] - 2026-10-08
 
 ### Changed
