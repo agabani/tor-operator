@@ -2,6 +2,18 @@ apiVersion: v1
 entries:
   tor-operator:
   - apiVersion: v2
+    appVersion: 1.0.20
+    created: "2026-11-04T00:14:03.669859342Z"
+    description: Tor Operator is a Kubernetes Operator that manages Onion Balances,
+      Onion Keys and Onion Services to provide a highly available, load balanced and
+      fault tolerate Tor Ingress and Tor Proxy.
+    digest: e88f5978fb21ceb928411e186ea646ee61d0cbe5147240658590722282565c19
+    name: tor-operator
+    type: application
+    urls:
+    - https://github.com/agabani/tor-operator/releases/download/tor-operator-1.0.20/tor-operator-1.0.20.tgz
+    version: 1.0.20
+  - apiVersion: v2
     appVersion: 1.0.19
     created: "2026-10-22T23:50:48.748753021Z"
     description: Tor Operator is a Kubernetes Operator that manages Onion Balances,
@@ -661,4 +673,4 @@ entries:
     urls:
     - https://github.com/agabani/tor-operator/releases/download/tor-operator-0.0.1/tor-operator-0.0.1.tgz
     version: 0.0.1
-generated: "2026-10-22T23:50:48.748862074Z"
+generated: "2026-11-04T00:14:03.670049538Z"
