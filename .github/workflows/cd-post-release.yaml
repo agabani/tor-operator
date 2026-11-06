@@ -245,7 +245,7 @@ jobs:
         # fix with `skip_packaging` (helm/chart-releaser-action#202, #171). The `# v1.7.0`
         # comment keeps Dependabot tracking releases; it will bump to the next tagged
         # release (which contains the fix) automatically.
-        uses: helm/chart-releaser-action@815ca5c8841e9e1f25a68411bf91d99bf012c0c0 # v1.7.0
+        uses: helm/chart-releaser-action@a78f895c7fbc46f07cedd3d091a6b2cb38b0d555 # v1.7.0
         with:
           config: chart-releaser.yaml
           mark_as_latest: false
