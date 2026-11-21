@@ -468,25 +468,21 @@ fn tracer_provider(cli: &CliArgs) -> Result<SdkTracerProvider> {
  */
 
 fn parse_headers_hashmap(headers: Option<&str>) -> HashMap<String, String> {
-    headers
-        .map(|headers| {
-            parse_headers(headers)
-                .map(|(key, value)| (key.into(), value.into()))
-                .collect()
-        })
-        .unwrap_or_default()
+    headers.map_or_default(|headers| {
+        parse_headers(headers)
+            .map(|(key, value)| (key.into(), value.into()))
+            .collect()
+    })
 }
 
 fn parse_headers_metadata_map(headers: Option<&str>) -> MetadataMap {
-    headers
-        .map(|headers| {
-            MetadataMap::from_headers(
-                parse_headers(headers)
-                    .filter_map(|(key, value)| Some((key.parse().ok()?, value.parse().ok()?)))
-                    .collect(),
-            )
-        })
-        .unwrap_or_default()
+    headers.map_or_default(|headers| {
+        MetadataMap::from_headers(
+            parse_headers(headers)
+                .filter_map(|(key, value)| Some((key.parse().ok()?, value.parse().ok()?)))
+                .collect(),
+        )
+    })
 }
 
 fn parse_headers<'a>(
