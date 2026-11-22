@@ -41,22 +41,22 @@ spec:
           spec:
             description: |-
               An `OnionKey` is an abstraction of a Tor Onion Key.
-              
+
               A Tor Onion Key consists of the following files:
-              
+
               - `hostname`
               - `hs_ed25519_public_key`
               - `hs_ed25519_public_key`
-              
+
               A user can import their existing Tor Onion Key by creating a secret.
-              
+
               ```ignore
               kubectl create secret generic tor-ingress-example \
                 --from-file=hostname=./hostname \
                 --from-file=hs_ed25519_public_key=./hs_ed25519_public_key \
                 --from-file=hs_ed25519_secret_key=./hs_ed25519_secret_key
               ```
-              
+
               A user can have the Tor Operator create a new random Tor Onion Key by using the
               auto generate feature controlled by `.autoGenerate`.
             properties:
@@ -64,24 +64,24 @@ spec:
                 default: false
                 description: |-
                   Auto generate a random Onion Key. default: false.
-                  
+
                   ## Auto Generate: False
-                  
+
                   Tor Operator will use an existing Onion Key from the Secret specified
                   in `.secret.name`.
-                  
+
                   ## Auto Generate: True
-                  
+
                   The Tor Operator will generate a random Onion Key and save it in the
                   secret specified in `.secret.name`.
-                  
+
                   If the `OnionKey`'s secret key is missing or malformed, the Tor Operator
                   will recreate the secret key.
-                  
+
                   If the `OnionKey`'s public key is missing, malformed, or does not match
                   the secret key, the Tor Operator will deterministically recreate the
                   public key from the secret key.
-                  
+
                   If the `OnionKey`'s hostname is missing, malformed, or does not match
                   the public key, the Tor Operator will deterministically recreate the
                   hostname from the public key.
@@ -105,7 +105,7 @@ spec:
                   name:
                     description: |-
                       Name of the secret.
-                      
+
                       Secret data must have keys `hostname`, `hs_ed25519_public_key` and
                       `hs_ed25519_secret_key`.
                     type: string
@@ -125,9 +125,9 @@ spec:
               conditions:
                 description: |-
                   Represents the latest available observations of a deployment's current state.
-                  
+
                   ### Ready
-                  
+
                   `SecretNotFound`,
                   `SecretKeyNotFound`, `SecretKeyMalformed`,
                   `PublicKeyNotFound`, `PublicKeyMalformed`, `PublicKeyMismatch`,
@@ -182,7 +182,7 @@ spec:
               hostname:
                 description: |-
                   `OnionKey` hostname.
-                  
+
                   The hostname is only populated once `state` is ready.
                 nullable: true
                 type: string
